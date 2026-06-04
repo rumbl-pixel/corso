@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Run Club — Scanner Kiosk</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="kiosk.css" />
+  <script src="config.js"></script>
+</head>
+<body class="page page-kiosk">
+  <header class="kiosk-header">
+    <div class="kiosk-brand">Run Club Connect</div>
+    <div class="kiosk-status">
+      <span id="kiosk-session">Session: Run Club</span>
+      <span class="kiosk-dot">•</span>
+      <span class="kiosk-connected">Scanner: keyboard mode</span>
+    </div>
+  </header>
+
+  <main class="kiosk-main">
+    <!-- Big, high-contrast feedback banner: the single focal point -->
+    <section id="kiosk-banner" class="kiosk-banner kiosk-banner--ready">
+      <h1 id="kiosk-banner-title">Ready to scan</h1>
+      <p id="kiosk-banner-sub">Hold your barcode under the scanner</p>
+    </section>
+
+    <!-- Hidden input that always holds focus for Bluetooth (HID) scanners -->
+    <input type="text" id="kiosk-scan-input" class="kiosk-hidden-input"
+           autocomplete="off" autocorrect="off" autocapitalize="off"
+           spellcheck="false" aria-label="Barcode scan input" />
+
+    <div class="kiosk-meta">
+      <span id="kiosk-last-scan">Last: —</span>
+      <span id="kiosk-lap-count">Laps this session: 0</span>
+    </div>
+
+    <button id="kiosk-undo" class="kiosk-undo" hidden>Undo last lap</button>
+  </main>
+
+  <footer class="kiosk-footer">
+    <button id="kiosk-exit" class="kiosk-exit">Exit kiosk</button>
+  </footer>
+
+  <script src="scanning.js"></script>
+  <script src="kiosk.js"></script>
+</body>
+</html>
