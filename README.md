@@ -1,4 +1,4 @@
-# Run Club Connect
+# Gwynne Park Run Club
 
 A Marathon Kids-style school run club platform built with plain HTML/JS and Supabase Edge Functions.
 

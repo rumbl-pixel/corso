@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# build.sh — Run Club Connect automated build + deploy
+# build.sh — Gwynne Park Run Club automated build + deploy
 #
 # What it does:
 #   1. Assembles the modular src/ files into the deployable root so static

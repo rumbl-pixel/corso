@@ -1,4 +1,4 @@
-# Run Club Connect — Prioritized Features
+# Gwynne Park Run Club — Prioritized Features
 
 Inspired by Marathon Kids Connect + StrideTrack. Status as of this build.
 
