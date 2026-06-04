@@ -482,7 +482,7 @@
       if(earned.length){
         html+='<div class="cert"><h2>&#127942; Run Club Achievement Certificate</h2><h3>'+s.name+'</h3><p>'+s.year+' – Class '+s.cls+'</p><p>Total laps: <strong>'+s.laps+'</strong> ('+lapsTokm(s.laps).toFixed(2)+' km)</p>';
         earned.forEach(function(m){html+='<span class="badge">&#127942; '+MILESTONE_LABELS[m]+'</span>';});
-        html+='<p style="margin-top:1rem;color:#888;font-size:0.8rem;">Run Club Connect • 2026</p></div>';
+        html+='<p style="margin-top:1rem;color:#888;font-size:0.8rem;">Gwynne Park Run Club • 2026</p></div>';
       }
     });
     html+='</body></html>';
@@ -618,7 +618,7 @@
     var html='<html><head><title>Barcode ID Cards</title><style>body{font-family:sans-serif;padding:1rem;} .cards{display:flex;flex-wrap:wrap;gap:0.5rem;} .card{border:1px solid #ccc;padding:0.5rem;width:200px;font-size:0.75rem;text-align:center;border-radius:4px;} .barcode{font-family:monospace;font-size:1.1rem;font-weight:bold;letter-spacing:0.1em;background:#f4f4f4;padding:0.3rem;border-radius:3px;margin:0.3rem 0;} @media print{@page{margin:1cm;}}</style></head><body>';
     html+='<div class="cards">';
     students.forEach(function(s){
-      html+='<div class="card"><strong>'+s.name+'</strong><br>'+s.year+' – '+s.cls+'<div class="barcode">'+s.barcode+'</div><small>Run Club Connect</small></div>';
+      html+='<div class="card"><strong>'+s.name+'</strong><br>'+s.year+' – '+s.cls+'<div class="barcode">'+s.barcode+'</div><small>Gwynne Park Run Club</small></div>';
     });
     html+='</div></body></html>';
     win.document.write(html); win.document.close(); win.print();

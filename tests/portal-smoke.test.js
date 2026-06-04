@@ -21,6 +21,25 @@ assertFile('config.js');
 assertFile('parent.html');
 assertFile('parent.js');
 
+const brandFiles = [
+  'index.html',
+  'admin.html',
+  'admin-dashboard.html',
+  'student.html',
+  'parent.html',
+  'privacy-policy.html',
+  'kiosk.html',
+  'README.md',
+  'FEATURES.md',
+  '_config.yml'
+];
+for (const file of brandFiles) {
+  const contents = read(file);
+  assert(/Gwynne Park Run Club/.test(contents), `${file} should use the Gwynne Park Run Club brand`);
+  assert(!/Run Club Connect/.test(contents), `${file} should not use the old Run Club Connect brand`);
+  assert(!/runclubconnect/i.test(contents), `${file} should not use old runclubconnect contact details`);
+}
+
 const config = read('config.js');
 assert(/demoMode:\s*true/.test(config), 'config.js should enable safe demo mode');
 assert(!/SUPABASE_SERVICE|service_role|secret/i.test(config), 'config.js should not contain private service secrets');
