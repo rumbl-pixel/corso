@@ -50,7 +50,7 @@
   }
 
   function renderGoals(student) {
-    var goals = Goals.goalsFor(student.id);
+    var goals = Goals.goalsFor(student.id).filter(function (goal) { return Goals.isMetricVisible(goal.metric); });
     document.getElementById('parent-goals').innerHTML = goals.length
       ? goals.map(goalRow).join('')
       : '<p style="color:#888;font-size:0.85rem;">No goals have been set yet.</p>';

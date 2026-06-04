@@ -85,12 +85,14 @@ assert(/lb-medal-filter/.test(adminDashboardHtml), 'admin leaderboard should inc
 assert(/print-leaderboard-btn/.test(adminDashboardHtml), 'admin leaderboard should include a print poster button');
 assert(/medal-rules/.test(adminDashboardHtml), 'admin awards area should show medal tier rules');
 assert(/certificates-list/.test(adminDashboardHtml), 'admin awards area should include a certificates list');
+assert(/sports-carnival-mode/.test(adminDashboardHtml), 'admin dashboard should include a Sports Carnival Mode checkbox');
 
 const adminDashboardJs = read('admin-dashboard.js');
 assert(/MEDAL_TIERS/.test(adminDashboardJs), 'admin dashboard should calculate medal tiers');
 assert(/renderOfflineQueue/.test(adminDashboardJs), 'admin dashboard should render offline queue batches');
 assert(/printLeaderboardPoster/.test(adminDashboardJs), 'admin dashboard should print leaderboard posters');
 assert(/renderCertificates/.test(adminDashboardJs), 'admin dashboard should render certificate readiness');
+assert(/setSportsCarnivalMode/.test(adminDashboardJs), 'admin dashboard should persist Sports Carnival Mode setting');
 
 const parentHtml = read('parent.html');
 assert(/id="parent-form"/.test(parentHtml), 'parent portal should expose a login form');

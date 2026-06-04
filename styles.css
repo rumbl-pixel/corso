@@ -292,6 +292,18 @@ a:hover { text-decoration: underline; }
 =========================== */
 label { display: block; margin-bottom: 0.9rem; font-size: 0.9rem; font-weight: 500; }
 
+.checkbox-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-bottom: 0.5rem;
+}
+
+.checkbox-row input {
+  width: auto;
+  margin: 0;
+}
+
 input[type="text"],
 input[type="email"],
 input[type="password"],

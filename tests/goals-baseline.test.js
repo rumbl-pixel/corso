@@ -49,6 +49,22 @@ const Scan = context.window.RunClubScan;
 const Goals = context.window.RunClubGoals;
 const studentId = 'STUDENT1';
 
+let visibleMetrics = Goals.visibleMetrics();
+assert(visibleMetrics.map((metric) => metric.key).join(',') === 'laps,time,distance', 'default visible metrics should be laps, lap time, and distance only');
+assert(Goals.metricInfo('time').label === 'Lap Time', 'time metric should be labelled Lap Time');
+assert(Goals.isSportsCarnivalMode() === false, 'sports carnival mode should be off by default');
+
+Goals.setSportsCarnivalMode(true);
+visibleMetrics = Goals.visibleMetrics();
+assert(visibleMetrics.some((metric) => metric.key === 'jump'), 'sports carnival mode should reveal jump metric');
+assert(visibleMetrics.some((metric) => metric.key === 'throw'), 'sports carnival mode should reveal throw metric');
+assert(visibleMetrics.some((metric) => metric.key === 'length'), 'sports carnival mode should reveal length metric');
+assert(visibleMetrics.some((metric) => metric.key === 'run'), 'sports carnival mode should reveal run metric');
+
+Goals.setSportsCarnivalMode(false);
+visibleMetrics = Goals.visibleMetrics();
+assert(!visibleMetrics.some((metric) => metric.key === 'jump'), 'jump metric should be hidden when sports carnival mode is off');
+
 const initialStudent = Scan.getStudents().find((student) => student.id === studentId);
 assert(initialStudent.laps === 12, 'test expects demo STUDENT1 to start with 12 laps');
 
