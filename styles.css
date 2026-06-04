@@ -34,7 +34,19 @@ a:hover { text-decoration: underline; }
 
 .brand { display: flex; align-items: center; gap: 0.5rem; }
 .brand h1 { margin: 0; font-size: 1.4rem; color: white; }
+.brand-home-link { color: white; text-decoration: none; border-radius: 6px; }
+.brand-home-link:hover { text-decoration: none; }
+.brand-home-link:focus-visible { outline: 3px solid rgba(255,255,255,0.85); outline-offset: 4px; }
 .brand-icon { font-size: 1.6rem; }
+.brand-logo {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  display: block;
+  object-fit: contain;
+  background: #ffffff;
+  border-radius: 4px;
+}
 .tagline { margin: 0.5rem 0 0; font-size: 0.9rem; opacity: 0.88; }
 
 .main-nav {
