@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gwynne Park Run Club - Leaderboard</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="config.js"></script>
+  </head>
+  <body class="page page-leaderboard">
+    <header class="site-header">
+      <div class="header-inner">
+        <div class="brand"><span class="brand-icon">&#127942;</span><h1>Gwynne Park Run Club</h1></div>
+        <nav class="main-nav">
+          <a href="index.html">Home</a>
+          <a href="student.html">Student portal</a>
+          <a href="parent.html">Parent portal</a>
+          <a href="admin.html">Admin login</a>
+        </nav>
+      </div>
+      <p class="tagline">Leaderboard - whole school, divisions, and year groups.</p>
+    </header>
+
+    <main class="content">
+      <section class="card">
+        <h2>Total Leaderboard</h2>
+        <p style="color:#555;font-size:0.9rem;">Whole-school rankings by total distance.</p>
+        <div id="total-leaderboard"></div>
+      </section>
+
+      <section class="card">
+        <h2>Divisions</h2>
+        <div class="leaderboard-grid">
+          <div>
+            <h3>Senior <span style="color:#888;font-size:0.85rem;">Year 5 + 6</span></h3>
+            <div id="division-senior"></div>
+          </div>
+          <div>
+            <h3>Intermediate <span style="color:#888;font-size:0.85rem;">Year 3 + 4</span></h3>
+            <div id="division-intermediate"></div>
+          </div>
+          <div>
+            <h3>Junior <span style="color:#888;font-size:0.85rem;">Year 1 + 2</span></h3>
+            <div id="division-junior"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Year Groups</h2>
+        <div class="leaderboard-grid">
+          <div><h3>Year 2</h3><div id="year-2"></div></div>
+          <div><h3>Year 3</h3><div id="year-3"></div></div>
+          <div><h3>Year 4</h3><div id="year-4"></div></div>
+          <div><h3>Year 5</h3><div id="year-5"></div></div>
+          <div><h3>Year 6</h3><div id="year-6"></div></div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>Gwynne Park Run Club &copy; 2026 &middot; <a href="privacy-policy.html">Privacy Policy</a></p>
+    </footer>
+    <script src="scanning.js"></script>
+    <script src="leaderboard.js"></script>
+  </body>
+</html>

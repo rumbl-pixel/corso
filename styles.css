@@ -250,6 +250,44 @@ a:hover { text-decoration: underline; }
 .portal-card span { font-size: 0.8rem; color: #555; }
 
 /* ===========================
+   Leaderboard
+=========================== */
+.leaderboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.leaderboard-grid h3 {
+  margin: 0 0 0.65rem;
+  color: #0c5aa8;
+}
+
+.leaderboard-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.leaderboard-table th {
+  text-align: left;
+  background: #f4f6fb;
+  color: #334155;
+  padding: 0.45rem 0.5rem;
+}
+
+.leaderboard-table td {
+  border-bottom: 1px solid #eef2f7;
+  padding: 0.45rem 0.5rem;
+}
+
+.leaderboard-rank {
+  font-weight: 800;
+  color: #0c5aa8;
+  white-space: nowrap;
+}
+
+/* ===========================
    Forms
 =========================== */
 label { display: block; margin-bottom: 0.9rem; font-size: 0.9rem; font-weight: 500; }

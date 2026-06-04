@@ -20,12 +20,14 @@ function assertFile(file) {
 assertFile('config.js');
 assertFile('parent.html');
 assertFile('parent.js');
+assertFile('leaderboard.html');
 
 const brandFiles = [
   'index.html',
   'admin.html',
   'admin-dashboard.html',
   'student.html',
+  'leaderboard.html',
   'parent.html',
   'privacy-policy.html',
   'kiosk.html',
@@ -64,6 +66,7 @@ assert(/MEDAL_TIERS/.test(studentJs), 'student portal should calculate medal pro
 
 const homeHtml = read('index.html');
 assert(!/href="kiosk\.html"|Scanner kiosk/.test(homeHtml), 'public home page should not link directly to the admin-only kiosk');
+assert(/href="leaderboard\.html"/.test(homeHtml), 'home page should link to the public leaderboard page');
 assert(homeHtml.indexOf('Admin login</a>') > homeHtml.indexOf('Parent portal</a>'), 'home nav should place admin login at the far right');
 assert(homeHtml.indexOf('Admin portal</a>') > homeHtml.indexOf('Student login</a>'), 'hero buttons should place admin portal after student login');
 assert(homeHtml.indexOf('<strong>Admin Portal</strong>') > homeHtml.indexOf('<strong>Privacy Policy</strong>'), 'portal grid should place Admin Portal at the far-right/end position');
@@ -100,5 +103,18 @@ assert(/DEMO/.test(parentJs), 'parent portal should handle DEMO bypass');
 assert(/RunClubScan/.test(parentJs), 'parent portal should use shared scanning roster data');
 assert(/RunClubGoals/.test(parentJs), 'parent portal should use shared goals data');
 assert(!/parent-activity-form|rc_selfreports/.test(parentJs), 'parent portal should not submit home activity logs');
+
+const leaderboardHtml = read('leaderboard.html');
+assert(/Total Leaderboard/.test(leaderboardHtml), 'leaderboard page should include a whole-school total leaderboard');
+assert(/Senior/.test(leaderboardHtml) && /Year 5 \+ 6/.test(leaderboardHtml), 'leaderboard page should include Senior division');
+assert(/Intermediate/.test(leaderboardHtml) && /Year 3 \+ 4/.test(leaderboardHtml), 'leaderboard page should include Intermediate division');
+assert(/Junior/.test(leaderboardHtml) && /Year 1 \+ 2/.test(leaderboardHtml), 'leaderboard page should include Junior division');
+assert(/Year 2/.test(leaderboardHtml) && /Year 3/.test(leaderboardHtml) && /Year 4/.test(leaderboardHtml) && /Year 5/.test(leaderboardHtml) && /Year 6/.test(leaderboardHtml), 'leaderboard page should include Year 2 through Year 6 views');
+assert(/leaderboard\.js/.test(leaderboardHtml), 'leaderboard page should load leaderboard.js');
+
+const leaderboardJs = read('leaderboard.js');
+assert(/renderTotalLeaderboard/.test(leaderboardJs), 'leaderboard script should render total leaderboard');
+assert(/DIVISIONS/.test(leaderboardJs), 'leaderboard script should define division groups');
+assert(/YEAR_GROUPS/.test(leaderboardJs), 'leaderboard script should define year group views');
 
 console.log('portal smoke checks passed');
