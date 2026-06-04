@@ -12,6 +12,16 @@
 (function () {
   'use strict';
 
+  function getAdminSession() {
+    try { return JSON.parse(localStorage.getItem('runClubAdminSession')); }
+    catch (e) { return null; }
+  }
+
+  if (!getAdminSession()) {
+    window.location.href = 'admin.html';
+    return;
+  }
+
   var Scan = window.RunClubScan;
   var input = document.getElementById('kiosk-scan-input');
   var banner = document.getElementById('kiosk-banner');

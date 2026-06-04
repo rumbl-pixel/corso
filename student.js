@@ -131,23 +131,6 @@
     });
   }
 
-  // --- Home activity self-report (kept from original) ---
-  function wireSelfReport() {
-    document.getElementById('self-report-form').addEventListener('submit', function (e) {
-      e.preventDefault();
-      var type = document.getElementById('sr-type').value;
-      var minutes = document.getElementById('sr-minutes').value;
-      if (!type || !minutes) { return; }
-      var queue = Scan.load('rc_selfreports', []);
-      queue.push({ id: 'sr-' + Date.now(), studentId: currentStudent.id, name: currentStudent.name, type: type, minutes: Number(minutes), status: 'pending', date: new Date().toISOString() });
-      Scan.save('rc_selfreports', queue);
-      var el = document.getElementById('sr-result');
-      el.hidden = false;
-      el.textContent = 'Submitted “' + type + '” (' + minutes + ' min). Your teacher will approve it.';
-      e.target.reset();
-    });
-  }
-
   function handleLogin(e) {
     e.preventDefault();
     var code = document.getElementById('code').value.trim().toUpperCase();
@@ -164,5 +147,4 @@
   // --- Init ---
   document.getElementById('student-form').addEventListener('submit', handleLogin);
   wireAddGoal();
-  wireSelfReport();
 })();
