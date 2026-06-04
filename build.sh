@@ -33,6 +33,8 @@ copy() { echo "    + $2"; cp "$1" "$2"; }
 
 copy src/scanning/scanning.js  scanning.js
 copy src/data/tracking.js      tracking.js
+copy src/goals/goals.js        goals.js
+copy src/goals/admin-goals.js  admin-goals.js
 copy src/kiosk/kiosk.html      kiosk.html
 copy src/kiosk/kiosk.js        kiosk.js
 copy src/kiosk/kiosk.css       kiosk.css

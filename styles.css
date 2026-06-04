@@ -463,3 +463,28 @@ pre {
   .features-grid { grid-template-columns: 1fr; }
   .athlete-stats { gap: 0.75rem; }
 }
+
+/* --- Goals (student portal) --- */
+.add-goal-btn { background:#0c5aa8; color:#fff; border:none; border-radius:8px; padding:6px 14px; font-weight:600; cursor:pointer; }
+.add-goal-panel { background:#f5f8fc; border:1px solid #dce6f2; border-radius:10px; padding:14px; margin:10px 0; }
+.goal-item { border:1px solid #e5e9f0; border-radius:10px; padding:12px; margin-bottom:10px; }
+.goal-head { font-size:0.98rem; margin-bottom:4px; }
+.goal-meta { color:#555; font-size:0.82rem; margin-bottom:8px; }
+.goal-bar { background:#e9eef5; border-radius:999px; height:10px; overflow:hidden; }
+.goal-bar-fill { background:#1b8a4b; height:100%; transition:width .3s ease; }
+.goal-actions { margin-top:8px; display:flex; gap:12px; }
+.link-btn { background:none; border:none; color:#0c5aa8; cursor:pointer; font-size:0.82rem; padding:0; text-decoration:underline; }
+
+/* --- Admin goals modal --- */
+.ag-overlay { position:fixed; inset:0; background:rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center; z-index:1000; padding:16px; }
+.ag-modal { background:#fff; border-radius:14px; max-width:560px; width:100%; max-height:85vh; overflow:auto; padding:20px; }
+.ag-head { display:flex; justify-content:space-between; align-items:center; }
+.ag-head h3 { margin:0; }
+.ag-close { background:none; border:none; font-size:1.6rem; cursor:pointer; line-height:1; color:#666; }
+.ag-row { border:1px solid #e5e9f0; border-radius:8px; padding:10px; margin:8px 0; display:flex; justify-content:space-between; gap:10px; align-items:center; font-size:0.9rem; }
+.ag-ctrls { display:flex; gap:10px; white-space:nowrap; }
+.ag-add { margin-top:14px; border-top:1px solid #eee; padding-top:12px; }
+.ag-add h4 { margin:0 0 8px; }
+.ag-add form { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+.ag-add select, .ag-add input { padding:7px 9px; border:1px solid #ccd5e0; border-radius:8px; }
+.ag-add button { background:#0c5aa8; color:#fff; border:none; border-radius:8px; padding:8px 16px; cursor:pointer; }
