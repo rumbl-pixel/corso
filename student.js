@@ -30,6 +30,73 @@
     });
   }
 
+  function escapeHtml(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, function (ch) {
+      return ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[ch];
+    });
+  }
+
+  function barcodeBarsHtml(code) {
+    var patterns = {
+      '0':'nnnwwnwnn','1':'wnnwnnnnw','2':'nnwwnnnnw','3':'wnwwnnnnn','4':'nnnwwnnnw',
+      '5':'wnnwwnnnn','6':'nnwwwnnnn','7':'nnnwnnwnw','8':'wnnwnnwnn','9':'nnwwnnwnn',
+      'A':'wnnnnwnnw','B':'nnwnnwnnw','C':'wnwnnwnnn','D':'nnnnwwnnw','E':'wnnnwwnnn',
+      'F':'nnwnwwnnn','G':'nnnnnwwnw','H':'wnnnnwwnn','I':'nnwnnwwnn','J':'nnnnwwwnn',
+      'K':'wnnnnnnww','L':'nnwnnnnww','M':'wnwnnnnwn','N':'nnnnwnnww','O':'wnnnwnnwn',
+      'P':'nnwnwnnwn','Q':'nnnnnnwww','R':'wnnnnnwwn','S':'nnwnnnwwn','T':'nnnnwnwwn',
+      'U':'wwnnnnnnw','V':'nwwnnnnnw','W':'wwwnnnnnn','X':'nwnnwnnnw','Y':'wwnnwnnnn',
+      'Z':'nwwnwnnnn','-':'nwnnnnwnw','.':'wwnnnnwnn',' ':'nwwnnnwnn','*':'nwnnwnwnn'
+    };
+    var clean = String(code || '').toUpperCase().replace(/[^A-Z0-9 .-]/g, '');
+    var encoded = '*' + clean + '*';
+    var bars = '';
+    for (var i = 0; i < encoded.length; i++) {
+      var pattern = patterns[encoded.charAt(i)] || patterns['0'];
+      for (var j = 0; j < pattern.length; j++) {
+        var width = pattern.charAt(j) === 'w' ? 4 : 1.6;
+        var color = j % 2 === 0 ? '#0b1f38' : 'transparent';
+        bars += '<span style="width:' + width + 'px;background:' + color + ';"></span>';
+      }
+      bars += '<span style="width:1.6px;background:transparent;"></span>';
+    }
+    return '<div class="barcode-bars" aria-label="Barcode ' + escapeHtml(clean) + '">' + bars + '</div>';
+  }
+
+  function barcodeCardHtml(student) {
+    return '<div class="barcode-card-preview">' +
+      '<div class="barcode-card-school">Gwynne Park Run Club</div>' +
+      '<strong class="barcode-card-name">' + escapeHtml(student.name) + '</strong>' +
+      '<div class="barcode-card-meta">' + escapeHtml(student.year) + ' / ' + escapeHtml(student.cls) + '</div>' +
+      barcodeBarsHtml(student.barcode || student.id) +
+      '<div class="barcode-code">' + escapeHtml(student.barcode || student.id) + '</div>' +
+      '</div>';
+  }
+
+  function printStudentBarcodeCard(student) {
+    var win = window.open('', '_blank');
+    if (!win) { return; }
+    var html = '<html><head><title>' + escapeHtml(student.name) + ' Barcode Card</title>' +
+      '<style>@page{size:85.6mm 53.98mm;margin:0;}*{box-sizing:border-box;}body{margin:0;width:85.6mm;height:53.98mm;font-family:Arial,sans-serif;color:#102a43;}.barcode-card-print{width:85.6mm;height:53.98mm;border:0.35mm solid #0c5aa8;padding:5mm;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:1.6mm;}.barcode-card-school{font-size:3.2mm;font-weight:700;color:#0c5aa8;text-transform:uppercase;}.barcode-card-name{font-size:5.3mm;line-height:1.1;}.barcode-card-meta{font-size:3.1mm;color:#52616b;}.barcode-bars{height:14mm;display:flex;align-items:stretch;justify-content:center;gap:0.55mm;width:68mm;margin-top:1mm;}.barcode-bars span{display:block;background:#0b1f38;height:100%;}.barcode-code{font-family:Consolas,monospace;font-size:5mm;font-weight:700;letter-spacing:0.8mm;color:#0b1f38;}@media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact;}}</style>' +
+      '</head><body><div class="barcode-card-print">' +
+      '<div class="barcode-card-school">Gwynne Park Run Club</div>' +
+      '<strong class="barcode-card-name">' + escapeHtml(student.name) + '</strong>' +
+      '<div class="barcode-card-meta">' + escapeHtml(student.year) + ' / ' + escapeHtml(student.cls) + '</div>' +
+      barcodeBarsHtml(student.barcode || student.id) +
+      '<div class="barcode-code">' + escapeHtml(student.barcode || student.id) + '</div>' +
+      '</div></body></html>';
+    win.document.write(html);
+    win.document.close();
+    win.focus();
+    win.print();
+  }
+
+  function renderStudentBarcode(student) {
+    document.getElementById('student-barcode-display').innerHTML = barcodeCardHtml(student);
+    document.getElementById('print-student-barcode-btn').onclick = function () {
+      printStudentBarcodeCard(student);
+    };
+  }
+
   function renderAthlete(s) {
     var km = Scan.lapsToKm(s.laps).toFixed(2);
     document.getElementById('athlete-name').textContent = '🏃 ' + s.name;
@@ -53,6 +120,7 @@
       : '<p style="color:#888;font-size:0.85rem;">Keep running to earn your first award at 5 laps!</p>';
 
     document.getElementById('result-card').hidden = false;
+    renderStudentBarcode(s);
     renderMedalProgress(s);
     renderGoals();
   }
