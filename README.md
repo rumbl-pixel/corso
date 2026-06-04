@@ -8,11 +8,14 @@ A Marathon Kids-style school run club platform built with plain HTML/JS and Supa
 - `admin.html` – Admin login
 - `admin-dashboard.html` – Admin console (students, scanner, leaderboards, activity, reports)
 - `student.html` – Student login by code
+- `parent.html` – Parent progress portal
+- `kiosk.html` – Tablet scanner kiosk
 - `privacy-policy.html` – Privacy policy
 
 ## Config
 
-Copy `config.js` and set:
+`config.js` is a safe public demo config and must not contain private keys.
+Use `config.local.js` for local-only overrides if needed.
 
 ```js
 window.RUN_CLUB_CONFIG = {
@@ -43,3 +46,11 @@ Then open `http://localhost:8080/index.html`
 ## Lovable / Next.js migration
 
 This static scaffold is designed to be imported into Lovable or Cursor to generate a full Next.js + Supabase app. All flows and endpoints are pre-defined in `config.js`.
+
+## Privacy readiness
+
+This repository currently ships a safe public demo config with `demoMode: true`.
+Do not enter real student data into the public GitHub Pages demo. Before real
+rosters are imported, replace localStorage with authenticated backend storage,
+disable universal demo access, enforce school-scoped row-level security, and
+keep private service credentials out of browser files.

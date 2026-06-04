@@ -8,14 +8,15 @@
     e.preventDefault();
     errorEl.textContent = '';
 
-    var email = document.getElementById('admin-email').value;
-    var password = document.getElementById('admin-password').value;
+    var email = document.getElementById('admin-email').value.trim();
+    var password = document.getElementById('admin-password').value.trim();
+    var demoBypass = email.toUpperCase() === 'DEMO' || password.toUpperCase() === 'DEMO';
 
     // Demo mode: skip real auth, store session, go to dashboard.
-    if (cfg.demoMode !== false) {
+    if (demoBypass || cfg.demoMode !== false) {
       window.localStorage.setItem(
         'runClubAdminSession',
-        JSON.stringify({ email: email, mode: 'demo', access_token: 'demo-token' })
+        JSON.stringify({ email: demoBypass ? 'DEMO' : email, mode: 'demo', access_token: 'demo-token' })
       );
       window.location.href = 'admin-dashboard.html';
       return;

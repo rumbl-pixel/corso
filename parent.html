@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Run Club - Parent Portal</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="config.js"></script>
+  </head>
+  <body class="page page-parent">
+    <header class="site-header">
+      <div class="header-inner">
+        <div class="brand"><span class="brand-icon">&#127939;</span><h1>Run Club Connect</h1></div>
+        <nav class="main-nav">
+          <a href="index.html">Home</a>
+          <a href="student.html">Student portal</a>
+          <a href="admin.html">Admin login</a>
+        </nav>
+      </div>
+      <p class="tagline">Parent portal - view your child's run club progress.</p>
+    </header>
+
+    <main class="content">
+      <div style="max-width:640px;margin:0 auto;">
+        <h2 style="margin-bottom:1rem;">Parent Login</h2>
+        <form id="parent-form" class="card">
+          <label>Child code
+            <input type="text" id="parent-code" required placeholder="e.g. STUDENT1 or DEMO" autocomplete="off" autocapitalize="characters" />
+          </label>
+          <button type="submit">View progress</button>
+          <p id="parent-error" class="error-message"></p>
+          <p style="margin-top:0.75rem;font-size:0.82rem;color:#888;">Use the code from your child's barcode card. Type DEMO to open a sample child profile.</p>
+        </form>
+
+        <section id="parent-result" hidden>
+          <div class="athlete-card">
+            <h3 id="parent-athlete-name">Runner Profile</h3>
+            <div class="athlete-stats" id="parent-athlete-stats"></div>
+          </div>
+
+          <div class="card">
+            <h2>Milestone Awards</h2>
+            <div id="parent-awards"></div>
+          </div>
+
+          <div class="card">
+            <h2>Goals</h2>
+            <p style="color:#555;font-size:0.9rem;">Student and coach goals are shown read-only here.</p>
+            <div id="parent-goals"></div>
+          </div>
+
+          <div class="card">
+            <h2>Home Activity</h2>
+            <p style="color:#555;font-size:0.9rem;">Submit a home activity for teacher review. Approved activities can later count toward distance totals.</p>
+            <form id="parent-activity-form">
+              <label>Activity type <input type="text" id="parent-activity-type" placeholder="e.g. Weekend park run" /></label>
+              <label>Minutes <input type="number" id="parent-activity-minutes" min="1" placeholder="20" /></label>
+              <button type="submit">Submit activity</button>
+            </form>
+            <pre id="parent-activity-result" hidden></pre>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <p>Run Club Connect &copy; 2026 &middot; <a href="privacy-policy.html">Privacy Policy</a></p>
+    </footer>
+    <script src="scanning.js"></script>
+    <script src="goals.js"></script>
+    <script src="parent.js"></script>
+  </body>
+</html>
