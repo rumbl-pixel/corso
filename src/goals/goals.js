@@ -11,6 +11,8 @@
 
   var Scan = global.RunClubScan;
   var STORE = 'rc_goals';
+  var SETTINGS_STORE = 'rc_goal_settings';
+  var BASE_METRICS = ['laps', 'time', 'distance'];
 
   // --- Metric catalogue -----------------------------------------------------
   // kind: 'cumulative' (fills up toward target, auto-tracked from laps)
@@ -18,8 +20,8 @@
   //       'pb-low'      (lower is better — time)
   var METRICS = {
     laps:     { label: 'Laps',          unit: 'laps', kind: 'cumulative', auto: true },
+    time:     { label: 'Lap Time',      unit: 's',    kind: 'pb-low',     auto: false },
     distance: { label: 'Distance',      unit: 'km',   kind: 'cumulative', auto: true },
-    time:     { label: 'Time (PB)',     unit: 's',    kind: 'pb-low',     auto: false },
     jump:     { label: 'Jump (PB)',     unit: 'm',    kind: 'pb-high',    auto: false },
     throw:    { label: 'Throw (PB)',    unit: 'm',    kind: 'pb-high',    auto: false },
     length:   { label: 'Length (PB)',   unit: 'm',    kind: 'pb-high',    auto: false },
@@ -27,6 +29,41 @@
   };
 
   function metricInfo(metric) { return METRICS[metric] || METRICS.laps; }
+
+  function loadSettings() {
+    try {
+      var raw = localStorage.getItem(SETTINGS_STORE);
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function saveSettings(settings) {
+    localStorage.setItem(SETTINGS_STORE, JSON.stringify(settings));
+  }
+
+  function isSportsCarnivalMode() {
+    return loadSettings().sportsCarnivalMode === true;
+  }
+
+  function setSportsCarnivalMode(enabled) {
+    var settings = loadSettings();
+    settings.sportsCarnivalMode = enabled === true;
+    saveSettings(settings);
+  }
+
+  function isMetricVisible(metric) {
+    return isSportsCarnivalMode() || BASE_METRICS.indexOf(metric) !== -1;
+  }
+
+  function visibleMetrics() {
+    return Object.keys(METRICS)
+      .filter(isMetricVisible)
+      .map(function (key) {
+        return Object.assign({ key: key }, METRICS[key]);
+      });
+  }
 
   // --- Storage --------------------------------------------------------------
   function loadAll() {
@@ -154,6 +191,10 @@
   global.RunClubGoals = {
     METRICS: METRICS,
     metricInfo: metricInfo,
+    visibleMetrics: visibleMetrics,
+    isMetricVisible: isMetricVisible,
+    isSportsCarnivalMode: isSportsCarnivalMode,
+    setSportsCarnivalMode: setSportsCarnivalMode,
     goalsFor: goalsFor,
     addGoal: addGoal,
     updateGoal: updateGoal,

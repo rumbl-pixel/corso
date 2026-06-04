@@ -98,7 +98,7 @@
   }
 
   function renderGoals() {
-    var all = Goals.goalsFor(currentStudent.id);
+    var all = Goals.goalsFor(currentStudent.id).filter(function (g) { return Goals.isMetricVisible(g.metric); });
     var mine = all.filter(function (g) { return g.owner === 'student'; });
     var coach = all.filter(function (g) { return g.owner === 'coach'; });
 
@@ -129,8 +129,8 @@
 
   // --- Add-goal form (the "+" button) ---
   function buildMetricOptions() {
-    return Object.keys(Goals.METRICS).map(function (k) {
-      return '<option value="' + k + '">' + Goals.METRICS[k].label + ' (' + Goals.METRICS[k].unit + ')</option>';
+    return Goals.visibleMetrics().map(function (metric) {
+      return '<option value="' + metric.key + '">' + metric.label + ' (' + metric.unit + ')</option>';
     }).join('');
   }
 

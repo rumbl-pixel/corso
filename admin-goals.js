@@ -35,10 +35,6 @@
     modal.querySelector('#ag-close').addEventListener('click', close);
     modal.addEventListener('click', function (e) { if (e.target === modal) { close(); } });
 
-    modal.querySelector('#ag-metric').innerHTML = Object.keys(Goals.METRICS).map(function (k) {
-      return '<option value="' + k + '">' + Goals.METRICS[k].label + ' (' + Goals.METRICS[k].unit + ')</option>';
-    }).join('');
-
     modal.querySelector('#ag-form').addEventListener('submit', function (e) {
       e.preventDefault();
       var metric = modal.querySelector('#ag-metric').value;
@@ -72,7 +68,10 @@
   }
 
   function render() {
-    var goals = Goals.goalsFor(current.id);
+    modal.querySelector('#ag-metric').innerHTML = Goals.visibleMetrics().map(function (metric) {
+      return '<option value="' + metric.key + '">' + metric.label + ' (' + metric.unit + ')</option>';
+    }).join('');
+    var goals = Goals.goalsFor(current.id).filter(function (goal) { return Goals.isMetricVisible(goal.metric); });
     body.innerHTML = goals.length
       ? goals.map(row).join('')
       : '<p style="color:#888;">No goals yet for this student.</p>';

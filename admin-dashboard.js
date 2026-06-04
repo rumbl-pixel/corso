@@ -291,6 +291,12 @@
   renderStudentList();
   studentSearchEl.addEventListener('input',renderStudentList);
 
+  var sportsCarnivalModeEl=document.getElementById('sports-carnival-mode');
+  sportsCarnivalModeEl.checked=window.RunClubGoals.isSportsCarnivalMode();
+  sportsCarnivalModeEl.addEventListener('change',function(){
+    window.RunClubGoals.setSportsCarnivalMode(sportsCarnivalModeEl.checked);
+  });
+
   // === LEADERBOARD ===
   var lbYearEl=document.getElementById('lb-year-filter');
   var lbClassEl=document.getElementById('lb-class-filter');
