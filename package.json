@@ -5,7 +5,7 @@
   "scripts": {
     "build": "node scripts/build.js",
     "deploy": "node scripts/build.js --deploy",
-    "test": "node tests/portal-smoke.test.js",
+    "test": "node tests/portal-smoke.test.js && node tests/goals-baseline.test.js",
     "serve": "python3 -m http.server 8080"
   },
   "license": "UNLICENSED",

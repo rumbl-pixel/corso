@@ -76,6 +76,7 @@
     var p = Goals.progress(currentStudent.id, g);
     var info = Goals.metricInfo(g.metric);
     var currentTxt = p.current == null ? '—' : p.current + ' ' + g.unit;
+    var progressLabel = info.kind === 'cumulative' ? 'Since set' : 'Best';
     var lock = editable ? '' : '<span title="Set by your coach" style="margin-left:6px;">🔒</span>';
     var status = p.met ? '<span class="award-badge">✓ Achieved</span>' : '';
     var deadline = g.deadline ? '<span style="color:#888;font-size:0.78rem;">by ' + g.deadline + '</span>' : '';
@@ -90,7 +91,7 @@
 
     return '<div class="goal-item">' +
       '<div class="goal-head"><strong>' + g.title + '</strong> ' + lock + ' ' + status + '</div>' +
-      '<div class="goal-meta">Target: ' + g.target + ' ' + g.unit + ' · Now: ' + currentTxt + ' ' + deadline + '</div>' +
+      '<div class="goal-meta">Target: ' + g.target + ' ' + g.unit + ' · ' + progressLabel + ': ' + currentTxt + ' ' + deadline + '</div>' +
       '<div class="goal-bar"><div class="goal-bar-fill" style="width:' + p.percent + '%"></div></div>' +
       '<div class="goal-actions">' + logBtn + ' ' + actions + '</div>' +
       '</div>';
