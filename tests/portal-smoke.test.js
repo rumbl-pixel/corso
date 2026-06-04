@@ -64,6 +64,9 @@ assert(/MEDAL_TIERS/.test(studentJs), 'student portal should calculate medal pro
 
 const homeHtml = read('index.html');
 assert(!/href="kiosk\.html"|Scanner kiosk/.test(homeHtml), 'public home page should not link directly to the admin-only kiosk');
+assert(homeHtml.indexOf('Admin login</a>') > homeHtml.indexOf('Parent portal</a>'), 'home nav should place admin login at the far right');
+assert(homeHtml.indexOf('Admin portal</a>') > homeHtml.indexOf('Student login</a>'), 'hero buttons should place admin portal after student login');
+assert(homeHtml.indexOf('<strong>Admin Portal</strong>') > homeHtml.indexOf('<strong>Privacy Policy</strong>'), 'portal grid should place Admin Portal at the far-right/end position');
 
 const kioskJs = read('kiosk.js');
 assert(/runClubAdminSession/.test(kioskJs), 'kiosk should require an admin session');
@@ -71,6 +74,9 @@ assert(/admin\.html/.test(kioskJs), 'kiosk should redirect unauthenticated users
 assert(/PRAISE_MESSAGES/.test(kioskJs), 'kiosk should rotate playful praise messages after scans');
 
 const adminDashboardHtml = read('admin-dashboard.html');
+assert(/assets\/gwynne-park-logo\.svg/.test(adminDashboardHtml), 'admin dashboard should use the sharp Gwynne Park logo asset');
+const dashboardBrandLink = adminDashboardHtml.match(/<a[^>]*brand-home-link[^>]*>/);
+assert(dashboardBrandLink && /href="index\.html"/.test(dashboardBrandLink[0]), 'admin dashboard logo/banner should link back to the home page');
 assert(/offline-queue-card/.test(adminDashboardHtml), 'admin dashboard should include an offline scan queue panel');
 assert(/lb-medal-filter/.test(adminDashboardHtml), 'admin leaderboard should include a medal tier filter');
 assert(/print-leaderboard-btn/.test(adminDashboardHtml), 'admin leaderboard should include a print poster button');
