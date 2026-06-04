@@ -3,42 +3,55 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Run Club – Student Login</title>
+    <title>Run Club – Student Portal</title>
     <link rel="stylesheet" href="styles.css" />
     <script src="config.js"></script>
   </head>
   <body class="page page-student">
     <header class="site-header">
       <div class="header-inner">
-        <div class="brand">
-          <span class="brand-icon">&#127939;</span>
-          <h1>Run Club Connect</h1>
-        </div>
+        <div class="brand"><span class="brand-icon">&#127939;</span><h1>Run Club Connect</h1></div>
         <nav class="main-nav">
           <a href="index.html">Home</a>
-          <a href="admin.html">Admin login</a>
+          <a href="parent.html">Parent portal</a>
         </nav>
       </div>
+      <p class="tagline">Student portal – see your laps, distance, awards and challenges.</p>
     </header>
 
     <main class="content">
-      <div style="max-width: 420px; margin: 0 auto;">
-        <h2 style="margin-bottom: 1rem;">Student Login</h2>
+      <div style="max-width:480px;margin:0 auto;">
+        <h2 style="margin-bottom:1rem;">&#127939; Student Login</h2>
         <form id="student-form" class="card">
-          <label>
-            Your code
+          <label>Your code
             <input type="text" id="code" required placeholder="e.g. JSMITH42" autocomplete="off" autocapitalize="characters" />
           </label>
           <button id="submit-btn" type="submit">Sign in</button>
-          <p style="margin-top: 0.75rem; font-size: 0.82rem; color: #888;">
-            Your teacher gave you this code. Type it exactly as shown on your card.
-          </p>
+          <p style="margin-top:0.75rem;font-size:0.82rem;color:#888;">Your teacher gave you this code on your barcode card.</p>
         </form>
 
-        <section class="card" id="result-card" hidden>
-          <h2>&#127939; Your Profile</h2>
-          <div id="athlete-display"></div>
-          <pre id="result" hidden></pre>
+        <!-- ATHLETE PROFILE -->
+        <section id="result-card" hidden>
+          <div class="athlete-card">
+            <h3 id="athlete-name">&#127939; Runner Profile</h3>
+            <div class="athlete-stats" id="athlete-stats"></div>
+          </div>
+
+          <div class="card">
+            <h2>&#127942; My Awards</h2>
+            <div id="athlete-awards"></div>
+          </div>
+
+          <div class="card">
+            <h2>&#127968; Log Home Activity</h2>
+            <p style="color:#555;font-size:0.9rem;">Did you run, walk, or play sport at home? Log it here. Your teacher will approve it and it will count towards your total distance.</p>
+            <form id="self-report-form">
+              <label>Activity type <input type="text" id="sr-type" placeholder="e.g. Walk to school, backyard cricket" /></label>
+              <label>Minutes <input type="number" id="sr-minutes" min="1" placeholder="20" /></label>
+              <button type="submit">Submit activity</button>
+            </form>
+            <pre id="sr-result" hidden></pre>
+          </div>
         </section>
       </div>
     </main>
@@ -46,7 +59,6 @@
     <footer class="site-footer">
       <p>Run Club Connect &copy; 2026 &middot; <a href="privacy-policy.html">Privacy Policy</a></p>
     </footer>
-
     <script src="student.js"></script>
   </body>
 </html>

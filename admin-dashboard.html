@@ -10,13 +10,12 @@
   <body class="page page-admin-dashboard">
     <header class="site-header">
       <div class="header-inner">
-        <div class="brand">
-          <span class="brand-icon">&#127939;</span>
-          <h1>Run Club Connect</h1>
-        </div>
+        <div class="brand"><span class="brand-icon">&#127939;</span><h1>Run Club Connect</h1></div>
         <nav class="main-nav">
           <a href="index.html">Home</a>
-          <a href="student.html">Student login</a>
+          <a href="kiosk.html">Kiosk</a>
+          <a href="student.html">Student</a>
+          <a href="parent.html">Parent</a>
           <button id="logout-btn" type="button">Log out</button>
         </nav>
       </div>
@@ -25,71 +24,212 @@
 
     <main class="content">
 
-      <!-- STUDENT PROFILES -->
-      <section class="card" id="student-profiles">
-        <h2>&#128101; Student Profiles</h2>
-        <p style="color:#555; font-size:0.9rem;">Demo students loaded from local data. Upload a CSV later to replace these.</p>
-        <ul id="student-list"></ul>
-      </section>
+      <!-- TABS -->
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="scanner">&#128247; Scanner</button>
+        <button class="tab-btn" data-tab="students">&#128101; Students</button>
+        <button class="tab-btn" data-tab="leaderboard">&#127942; Leaderboard</button>
+        <button class="tab-btn" data-tab="activity">&#9201; Activity</button>
+        <button class="tab-btn" data-tab="events">&#127939; Events</button>
+        <button class="tab-btn" data-tab="awards">&#127885; Awards</button>
+        <button class="tab-btn" data-tab="reports">&#128202; Reports</button>
+        <button class="tab-btn" data-tab="import">&#128229; Import</button>
+      </div>
 
-      <!-- SCANNER -->
-      <section class="card" id="scanner-section">
-        <h2>&#128247; Run Session Scanner</h2>
-        <p style="color:#555; font-size:0.9rem;">
-          Type or scan a student barcode and press Enter. A Bluetooth scanner
-          acts as a keyboard and will auto-submit.
-        </p>
-        <div style="display:flex; gap:0.5rem; align-items:flex-end;">
-          <label style="flex:1; margin-bottom:0;">
-            Barcode
-            <input type="text" id="scan-input" placeholder="e.g. STUDENT1" />
+      <!-- SCANNER TAB -->
+      <div class="tab-panel active" id="tab-scanner">
+        <div class="card">
+          <h2>&#128247; Run Session Scanner</h2>
+          <p style="color:#555;font-size:0.9rem;">Scan a student barcode or type an ID and press Enter. Bluetooth scanners work as keyboard input and auto-submit.</p>
+          <div id="session-state" style="margin-bottom:1rem;padding:0.5rem 0.75rem;border-radius:0.4rem;background:#f0fff4;border:1px solid #c6f0d4;font-size:0.85rem;">No session open</div>
+          <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1rem;">
+            <button id="start-session-btn" type="button">Start session</button>
+            <button id="finish-session-btn" type="button" class="secondary">Finish session</button>
+          </div>
+          <div style="display:flex;gap:0.5rem;align-items:flex-end;">
+            <label style="flex:1;margin-bottom:0;">Barcode / ID
+              <input type="text" id="scan-input" placeholder="e.g. STUDENT1" autocomplete="off" />
+            </label>
+            <button id="scan-btn" type="button">Scan</button>
+          </div>
+          <pre id="scan-result" hidden></pre>
+          <div id="session-log" style="margin-top:1rem;"></div>
+          <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:1rem;">
+            <button id="download-session-btn" type="button" class="secondary">Download session JSON</button>
+            <button id="export-session-csv-btn" type="button" class="secondary">Export session CSV</button>
+          </div>
+        </div>
+
+        <!-- TIMED LAP / TIMED MILE -->
+        <div class="card">
+          <h2>&#9201; Timed Lap Events</h2>
+          <p style="color:#555;font-size:0.9rem;">Record split times and best times. Use for timed mile or timed lap events.</p>
+          <label>Student
+            <select id="timed-student"></select>
           </label>
-          <button id="scan-btn" type="button">Scan</button>
+          <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+            <button id="start-timed-btn" type="button">Start timer</button>
+            <button id="stop-timed-btn" type="button" class="secondary">Stop &amp; save</button>
+          </div>
+          <p id="timed-state" style="margin-top:0.75rem;font-size:0.88rem;color:#555;">No timed run active.</p>
+          <div id="timed-results" style="margin-top:0.75rem;"></div>
         </div>
-        <pre id="scan-result" hidden></pre>
-      </section>
+      </div>
 
-      <!-- LEADERBOARD -->
-      <section class="card" id="leaderboards">
-        <h2>&#127942; Leaderboard</h2>
-        <p style="color:#555; font-size:0.9rem;">Updates live as you scan. Sorted by total laps.</p>
-        <pre id="leaderboard-output" hidden></pre>
-      </section>
-
-      <!-- ACTIVITY -->
-      <section class="card" id="activity-section">
-        <h2>&#127939; Log Activity / Challenge</h2>
-        <p style="color:#555; font-size:0.9rem;">
-          Record distance-learning activity or create a challenge event.
-        </p>
-        <label>
-          Student
-          <select id="activity-student"></select>
-        </label>
-        <label>
-          Activity type
-          <input type="text" id="activity-type" placeholder="e.g. Lunch run" />
-        </label>
-        <label>
-          Minutes
-          <input type="number" id="activity-minutes" min="1" placeholder="20" />
-        </label>
-        <button id="log-activity-btn" type="button">Log activity</button>
-        <pre id="activity-result" hidden></pre>
-        <div id="activity-log-list" style="margin-top:1rem;"></div>
-      </section>
-
-      <!-- REPORTS -->
-      <section class="card" id="reports-section">
-        <h2>&#128202; Reports &amp; Awards</h2>
-        <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
-          <button id="export-report-json-btn" type="button">Export JSON report</button>
-          <button id="export-report-csv-btn" type="button" class="secondary">Export CSV leaderboard</button>
-          <button id="generate-awards-btn" type="button" class="secondary">Generate award cards</button>
+      <!-- STUDENTS TAB -->
+      <div class="tab-panel" id="tab-students">
+        <div class="card">
+          <h2>&#128101; Student Profiles</h2>
+          <p style="color:#555;font-size:0.9rem;">Demo students stored in localStorage. Use the Import tab to load your real roster.</p>
+          <input type="text" id="student-search" placeholder="Search by name, ID, year or class..." style="margin-bottom:1rem;" />
+          <ul id="student-list"></ul>
         </div>
-        <pre id="reports-result" hidden></pre>
-        <div id="awards-list" style="margin-top:1rem;"></div>
-      </section>
+      </div>
+
+      <!-- LEADERBOARD TAB -->
+      <div class="tab-panel" id="tab-leaderboard">
+        <div class="card">
+          <h2>&#127942; Leaderboard</h2>
+          <div style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:center;margin-bottom:1rem;">
+            <label style="margin:0;">Filter by year
+              <select id="lb-year-filter"><option value="">All years</option></select>
+            </label>
+            <label style="margin:0;">Filter by class
+              <select id="lb-class-filter"><option value="">All classes</option></select>
+            </label>
+          </div>
+          <div id="leaderboard-table"></div>
+        </div>
+      </div>
+
+      <!-- ACTIVITY TAB -->
+      <div class="tab-panel" id="tab-activity">
+        <div class="card">
+          <h2>&#9201; Log Activity Minutes</h2>
+          <p style="color:#555;font-size:0.9rem;">Record distance-learning or off-track activity. 20 minutes of heart-pumping activity = 1 km credit.</p>
+          <label>Student <select id="activity-student"></select></label>
+          <label>Activity type <input type="text" id="activity-type" placeholder="e.g. Lunch run, home activity" /></label>
+          <label>Minutes <input type="number" id="activity-minutes" min="1" placeholder="20" /></label>
+          <button id="log-activity-btn" type="button">Log activity</button>
+          <pre id="activity-result" hidden></pre>
+          <div id="activity-log-list" style="margin-top:1rem;"></div>
+        </div>
+
+        <!-- SELF-REPORTED ACTIVITY APPROVAL -->
+        <div class="card">
+          <h2>&#127968; Student Self-Reported Activity</h2>
+          <p style="color:#555;font-size:0.9rem;">Students can log home activity. Review and approve or reject submissions here.</p>
+          <div id="self-report-queue">
+            <p style="color:#888;font-size:0.85rem;">No pending self-reports. (Students submit via the Student portal.)</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- EVENTS TAB -->
+      <div class="tab-panel" id="tab-events">
+        <div class="card">
+          <h2>&#127939; Program Events</h2>
+          <p style="color:#555;font-size:0.9rem;">Create named events (Jog-a-thon, Run Club, PE class, Move-a-thon, etc.) to segment lap reports by event type.</p>
+          <label>Event name <input type="text" id="event-name" placeholder="e.g. Term 2 Jog-a-thon" /></label>
+          <label>Event type
+            <select id="event-type">
+              <option>Run Club</option>
+              <option>Jog-a-thon</option>
+              <option>PE Class</option>
+              <option>Move-a-thon</option>
+              <option>Recess</option>
+              <option>Brain Booster</option>
+              <option>Girls Run Club</option>
+              <option>Other</option>
+            </select>
+          </label>
+          <label>Date <input type="date" id="event-date" /></label>
+          <button id="create-event-btn" type="button">Create event</button>
+          <pre id="event-result" hidden></pre>
+          <div id="events-list" style="margin-top:1rem;"></div>
+        </div>
+      </div>
+
+      <!-- AWARDS TAB -->
+      <div class="tab-panel" id="tab-awards">
+        <div class="card">
+          <h2>&#127885; Milestone Awards</h2>
+          <p style="color:#555;font-size:0.9rem;">Awards auto-trigger at milestones. Print certificates or export for distribution.</p>
+          <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1rem;">
+            <button id="refresh-awards-btn" type="button">Refresh awards</button>
+            <button id="print-certificates-btn" type="button" class="secondary">Print certificates</button>
+          </div>
+          <div id="awards-display"></div>
+        </div>
+
+        <!-- CHALLENGES -->
+        <div class="card">
+          <h2>&#127919; Challenges</h2>
+          <p style="color:#555;font-size:0.9rem;">Set club-wide goals and fun challenges to keep participants motivated.</p>
+          <label>Challenge name <input type="text" id="challenge-name" placeholder="e.g. 20 laps in Term 2" /></label>
+          <label>Goal (laps or minutes) <input type="text" id="challenge-goal" placeholder="e.g. 20 laps" /></label>
+          <button id="create-challenge-btn" type="button">Create challenge</button>
+          <pre id="challenge-result" hidden></pre>
+          <div id="challenges-list" style="margin-top:1rem;"></div>
+        </div>
+      </div>
+
+      <!-- REPORTS TAB -->
+      <div class="tab-panel" id="tab-reports">
+        <div class="card">
+          <h2>&#128202; Reports</h2>
+          <p style="color:#555;font-size:0.9rem;">Export data by individual, class, year, or event. Use date range filters for event-specific reports.</p>
+          <div style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:center;margin-bottom:1rem;">
+            <label style="margin:0;">From <input type="date" id="report-from" style="width:auto;" /></label>
+            <label style="margin:0;">To <input type="date" id="report-to" style="width:auto;" /></label>
+          </div>
+          <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+            <button id="export-report-json-btn" type="button">Export JSON report</button>
+            <button id="export-report-csv-btn" type="button" class="secondary">Export CSV leaderboard</button>
+            <button id="export-activity-csv-btn" type="button" class="secondary">Export activity CSV</button>
+            <button id="print-report-btn" type="button" class="secondary">Print report</button>
+          </div>
+          <pre id="reports-result" hidden></pre>
+        </div>
+
+        <!-- SCHOOL SUMMARY -->
+        <div class="card">
+          <h2>&#127758; School-wide summary</h2>
+          <div id="school-summary"></div>
+        </div>
+      </div>
+
+      <!-- IMPORT TAB -->
+      <div class="tab-panel" id="tab-import">
+        <div class="card">
+          <h2>&#128229; CSV Roster Import</h2>
+          <p style="color:#555;font-size:0.9rem;">Upload a CSV to bulk-import students. Classes are created automatically if they don't exist.</p>
+          <p><strong>Required columns:</strong> <code>firstname, lastname, yeargroup, classname</code></p>
+          <p><em>barcodeid is auto-generated. Duplicate rows are skipped.</em></p>
+          <form id="import-form">
+            <label>CSV file <input type="file" id="csv-file" accept=".csv" /></label>
+            <button type="submit">Import students</button>
+          </form>
+          <pre id="import-result" hidden></pre>
+          <a id="download-template" href="#" style="font-size:0.85rem;margin-top:0.5rem;display:inline-block;">&#11015; Download CSV template</a>
+        </div>
+
+        <!-- BARCODE CARD PRINT -->
+        <div class="card">
+          <h2>&#128203; Print Barcode ID Cards</h2>
+          <p style="color:#555;font-size:0.9rem;">Auto-generated barcode cards for every student. Print on card stock and laminate. Available in 4 sizes.</p>
+          <label>Card size
+            <select id="card-size">
+              <option value="small">Small (label sticker)</option>
+              <option value="medium" selected>Medium (wallet card)</option>
+              <option value="large">Large (3" x 4")</option>
+              <option value="full">Full page</option>
+            </select>
+          </label>
+          <button id="print-barcodes-btn" type="button">Generate &amp; print barcode cards</button>
+          <div id="barcode-print-area" style="margin-top:1rem;"></div>
+        </div>
+      </div>
 
     </main>
 

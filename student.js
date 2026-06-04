@@ -2,98 +2,48 @@
 (function () {
 
   function getConfig() {
-    if (!window.RUN_CLUB_CONFIG) {
-      throw new Error('Missing config.js. Make sure config.js is loaded before student.js.');
-    }
+    if (!window.RUN_CLUB_CONFIG) throw new Error('Missing config.js');
     return window.RUN_CLUB_CONFIG;
   }
 
-  function fakeStudentLogin(code) {
+  var MILESTONES=[5,10,25,50,100,200,500];
+  var MILESTONE_LABELS={5:'First 5 Laps',10:'10 Lap Club',25:'Quarter Century',50:'Half Century',100:'Century Club',200:'Double Century',500:'Elite Runner'};
+
+  function lapsTokm(l){return l*0.25;}
+
+  function fakeLogin(code) {
     return {
-      success: true,
-      first_login: false,
-      demo_mode: true,
-      session: {
-        access_token: 'demo-access-token',
-        refresh_token: 'demo-refresh-token',
-        expires_at: Date.now() + 3600 * 1000
-      },
-      athlete: {
-        id: 'demo-athlete-1',
-        first_name: 'Demo',
-        last_name: 'Student',
-        year_group: 'Year 5',
-        class_id: '5B',
-        total_laps: 12,
-        school_rank: 8,
-        class_rank: 2,
-        school_size: 120,
-        class_size: 24
-      },
-      message: 'Demo sign-in succeeded for code ' + code + '.'
+      success:true, demo_mode:true,
+      athlete:{id:'demo-1',first_name:'Demo',last_name:'Student',year_group:'Year 5',class_id:'5B',total_laps:12,total_minutes:40,school_rank:8,class_rank:2,school_size:120,class_size:24},
+      message:'Demo sign-in for code '+code
     };
   }
 
-  function renderAthlete(athlete) {
-    var el = document.getElementById('athlete-display');
-    if (!el) return;
-    var km = (athlete.total_laps * 0.25).toFixed(2);
-    el.innerHTML =
-      '<p><strong>' + athlete.first_name + ' ' + athlete.last_name + '</strong> &middot; ' + athlete.year_group + '</p>' +
-      '<ul style="padding:0;list-style:none;margin:0.5rem 0 0;">' +
-      '<li>&#127939; Total laps: <strong>' + athlete.total_laps + '</strong> (' + km + ' km)</li>' +
-      '<li>&#127942; School rank: <strong>' + athlete.school_rank + '</strong> of ' + athlete.school_size + '</li>' +
-      '<li>&#127942; Class rank: <strong>' + athlete.class_rank + '</strong> of ' + athlete.class_size + '</li>' +
-      '</ul>';
-    document.getElementById('result-card').hidden = false;
-  }
+  function renderAthlete(a) {
+    var km=lapsTokm(a.total_laps).toFixed(2);
+    var minuteKm=(a.total_minutes?a.total_minutes/20:0).toFixed(2);
+    document.getElementById('athlete-name').textContent='\uD83C\uDFC3 '+a.first_name+' '+a.last_name;
+    document.getElementById('athlete-stats').innerHTML=
+      '<div class="stat-box"><div class="stat-value">'+a.total_laps+'</div><div class="stat-label">Laps</div></div>'+
+      '<div class="stat-box"><div class="stat-value">'+km+'</div><div class="stat-label">Km</div></div>'+
+      '<div class="stat-box"><div class="stat-value">#'+a.school_rank+'</div><div class="stat-label">School rank</div></div>'+
+      '<div class="stat-box"><div class="stat-value">#'+a.class_rank+'</div><div class="stat-label">Class rank</div></div>';
 
-  function showRaw(payload) {
-    var el = document.getElementById('result');
-    el.hidden = false;
-    el.textContent = JSON.stringify(payload, null, 2);
-  }
-
-  async function handleStudentLogin(event) {
-    event.preventDefault();
-
-    var form      = event.currentTarget;
-    var codeInput = form.querySelector('#code');
-    var submitBtn = form.querySelector('#submit-btn');
-
-    var code = codeInput.value.trim().toUpperCase();
-    if (!code) return;
-
-    var config = getConfig();
-
-    if (!config.endpoints || !config.endpoints.studentAuth || config.demoMode) {
-      var fake = fakeStudentLogin(code);
-      renderAthlete(fake.athlete);
-      return;
+    var earned=MILESTONES.filter(function(m){return a.total_laps>=m;});
+    var awardsEl=document.getElementById('athlete-awards');
+    if(earned.length){
+      awardsEl.innerHTML=earned.map(function(m){return '<span class="award-badge">&#127942; '+MILESTONE_LABELS[m]+'</span>';}).join('');
+    } else {
+      awardsEl.innerHTML='<p style="color:#888;font-size:0.85rem;">Keep running to earn your first award at 5 laps!</p>';
     }
 
-    submitBtn.disabled = true;
-
-    try {
-      var response = await fetch(config.endpoints.studentAuth, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: code })
-      });
-      var data = await response.json();
-      if (data.success && data.athlete) {
-        renderAthlete(data.athlete);
-      } else {
-        showRaw(data);
-      }
-    } catch (err) {
-      showRaw({ success: false, error: err.message || 'Request failed' });
-    } finally {
-      submitBtn.disabled = false;
-    }
+    document.getElementById('result-card').hidden=false;
   }
 
-  var form = document.querySelector('#student-form');
-  if (form) form.addEventListener('submit', handleStudentLogin);
-
-})();
+  async function handleLogin(e) {
+    e.preventDefault();
+    var code=document.getElementById('code').value.trim().toUpperCase();
+    if(!code)return;
+    var cfg=getConfig();
+    if(!cfg.endpoints||!cfg.endpoints.studentAuth||cfg.demoMode){
+      renderAthlete(f

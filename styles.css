@@ -1,5 +1,5 @@
 /* ===========================
-   Base reset + typography
+   Reset + base
 =========================== */
 *, *::before, *::after { box-sizing: border-box; }
 
@@ -19,7 +19,7 @@ a:hover { text-decoration: underline; }
    Header
 =========================== */
 .site-header {
-  background: #0c5aa8;
+  background: linear-gradient(135deg, #0c5aa8 0%, #1976d2 100%);
   color: white;
   padding: 1rem 2rem 1.25rem;
 }
@@ -32,31 +32,11 @@ a:hover { text-decoration: underline; }
   gap: 0.75rem;
 }
 
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
+.brand { display: flex; align-items: center; gap: 0.5rem; }
+.brand h1 { margin: 0; font-size: 1.4rem; color: white; }
+.brand-icon { font-size: 1.6rem; }
+.tagline { margin: 0.5rem 0 0; font-size: 0.9rem; opacity: 0.88; }
 
-.brand h1 {
-  margin: 0;
-  font-size: 1.4rem;
-  color: white;
-}
-
-.brand-icon {
-  font-size: 1.6rem;
-}
-
-.tagline {
-  margin: 0.5rem 0 0;
-  font-size: 0.9rem;
-  opacity: 0.85;
-}
-
-/* ===========================
-   Navigation
-=========================== */
 .main-nav {
   display: flex;
   gap: 0.5rem;
@@ -64,39 +44,77 @@ a:hover { text-decoration: underline; }
   align-items: center;
 }
 
-.main-nav a {
+.main-nav a, .main-nav button {
   color: white;
   padding: 0.35rem 0.85rem;
   border-radius: 999px;
   border: 1px solid rgba(255,255,255,0.4);
   font-size: 0.85rem;
-  background: rgba(255,255,255,0.1);
-  transition: background 0.15s;
-}
-
-.main-nav a:hover { background: rgba(255,255,255,0.25); text-decoration: none; }
-
-.main-nav button {
-  color: white;
-  padding: 0.35rem 0.85rem;
-  border-radius: 999px;
-  border: 1px solid rgba(255,255,255,0.4);
-  font-size: 0.85rem;
-  background: rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.12);
   cursor: pointer;
   font: inherit;
   transition: background 0.15s;
 }
-
-.main-nav button:hover { background: rgba(255,255,255,0.25); }
+.main-nav a:hover, .main-nav button:hover { background: rgba(255,255,255,0.28); text-decoration: none; }
 
 /* ===========================
    Layout
 =========================== */
-.content {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 2rem 1.5rem;
+.content { max-width: 1040px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+/* ===========================
+   Hero
+=========================== */
+.hero-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-bottom: 1.5rem;
+  align-items: start;
+}
+
+.hero-text h2 { margin-top: 0; font-size: 1.8rem; color: #0c5aa8; }
+.hero-text p { color: #444; }
+
+.hero-buttons { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1rem; }
+
+.btn-primary {
+  padding: 0.6rem 1.3rem;
+  border-radius: 999px;
+  background: #0c5aa8;
+  color: white;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border: none;
+}
+.btn-primary:hover { background: #0a4d94; text-decoration: none; }
+
+.btn-secondary {
+  padding: 0.6rem 1.3rem;
+  border-radius: 999px;
+  background: white;
+  color: #0c5aa8;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border: 1px solid #0c5aa8;
+}
+.btn-secondary:hover { background: #e6f0ff; text-decoration: none; }
+
+.hero-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-content: flex-start;
+}
+
+.stat-chip {
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  background: #e6f0ff;
+  border: 1px solid #c2d4f5;
+  font-size: 0.82rem;
+  color: #0c5aa8;
+  font-weight: 500;
 }
 
 /* ===========================
@@ -104,25 +122,99 @@ a:hover { text-decoration: underline; }
 =========================== */
 .card {
   background: #ffffff;
-  border-radius: 0.75rem;
+  border-radius: 0.85rem;
   border: 1px solid #e2e8f0;
   padding: 1.5rem;
   margin-bottom: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
 }
 
-.card h2 {
-  margin-top: 0;
-  font-size: 1.15rem;
-  color: #0c5aa8;
+.card h2 { margin-top: 0; font-size: 1.15rem; color: #0c5aa8; }
+
+/* ===========================
+   Steps
+=========================== */
+.steps-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.25rem;
+  margin-top: 0.75rem;
 }
+
+.step {
+  background: #f8faff;
+  border-radius: 0.6rem;
+  padding: 1rem;
+  border: 1px solid #e2e8f0;
+}
+
+.step-num {
+  display: inline-block;
+  width: 2rem; height: 2rem;
+  border-radius: 50%;
+  background: #0c5aa8;
+  color: white;
+  font-weight: 700;
+  text-align: center;
+  line-height: 2rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.step strong { display: block; margin-bottom: 0.25rem; }
+.step p { margin: 0; font-size: 0.85rem; color: #555; }
+
+/* ===========================
+   Features grid
+=========================== */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+  margin-top: 0.75rem;
+}
+
+.feature-item {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  background: #f8faff;
+  border: 1px solid #e8eef8;
+}
+
+.feature-item > span { font-size: 1.5rem; flex-shrink: 0; }
+.feature-item strong { font-size: 0.9rem; }
+.feature-item div { font-size: 0.82rem; color: #555; line-height: 1.5; }
+.feature-item div strong { color: #1a1a2e; display: block; margin-bottom: 0.1rem; }
+
+/* ===========================
+   Implementation grid
+=========================== */
+.impl-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-top: 0.75rem;
+}
+
+.impl-item {
+  padding: 0.85rem;
+  border-radius: 0.5rem;
+  background: #f0fff4;
+  border: 1px solid #c6f0d4;
+}
+
+.impl-item strong { display: block; margin-bottom: 0.25rem; font-size: 0.92rem; }
+.impl-item p { margin: 0; font-size: 0.82rem; color: #444; }
 
 /* ===========================
    Portal grid
 =========================== */
 .portal-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 1rem;
   margin-top: 0.75rem;
 }
@@ -140,33 +232,22 @@ a:hover { text-decoration: underline; }
   color: #1a1a2e;
 }
 
-.portal-card:hover {
-  background: #d5e5ff;
-  box-shadow: 0 2px 8px rgba(12,90,168,0.1);
-  text-decoration: none;
-}
-
+.portal-card:hover { background: #d5e5ff; box-shadow: 0 2px 8px rgba(12,90,168,0.1); text-decoration: none; }
 .portal-icon { font-size: 1.5rem; }
-.portal-card strong { font-size: 1rem; }
-.portal-card span { font-size: 0.82rem; color: #555; }
+.portal-card strong { font-size: 0.95rem; }
+.portal-card span { font-size: 0.8rem; color: #555; }
 
 /* ===========================
    Forms
 =========================== */
-label {
-  display: block;
-  margin-bottom: 0.9rem;
-  font-size: 0.9rem;
-  font-weight: 500;
-}
+label { display: block; margin-bottom: 0.9rem; font-size: 0.9rem; font-weight: 500; }
 
 input[type="text"],
 input[type="email"],
 input[type="password"],
 input[type="number"],
 input[type="date"],
-textarea,
-select {
+textarea, select {
   display: block;
   width: 100%;
   padding: 0.5rem 0.7rem;
@@ -205,23 +286,20 @@ button.secondary {
   background: white;
   color: #0c5aa8;
 }
-
 button.secondary:hover { background: #e6f0ff; }
 
-/* ===========================
-   Messages / results
-=========================== */
-.error-message {
+button.danger {
+  background: white;
   color: #b00020;
-  font-size: 0.88rem;
-  margin-top: 0.5rem;
+  border-color: #b00020;
 }
+button.danger:hover { background: #fff0f2; }
 
-.success-message {
-  color: #1a7f37;
-  font-size: 0.88rem;
-  margin-top: 0.5rem;
-}
+/* ===========================
+   Messages
+=========================== */
+.error-message { color: #b00020; font-size: 0.88rem; margin-top: 0.5rem; }
+.success-message { color: #1a7f37; font-size: 0.88rem; margin-top: 0.5rem; }
 
 pre {
   background: #111827;
@@ -234,13 +312,97 @@ pre {
 }
 
 /* ===========================
-   Session info bar
+   Session bar
 =========================== */
-.session-bar {
-  font-size: 0.82rem;
-  color: rgba(255,255,255,0.8);
-  margin-top: 0.4rem;
+.session-bar { font-size: 0.82rem; color: rgba(255,255,255,0.82); margin-top: 0.4rem; }
+
+/* ===========================
+   Tabs
+=========================== */
+.tabs {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  border-bottom: 2px solid #e2e8f0;
+  margin-bottom: 1.5rem;
 }
+
+.tab-btn {
+  padding: 0.5rem 1rem;
+  border-radius: 0.4rem 0.4rem 0 0;
+  border: 1px solid transparent;
+  border-bottom: none;
+  background: transparent;
+  color: #555;
+  font-size: 0.88rem;
+  cursor: pointer;
+  margin-bottom: -2px;
+}
+
+.tab-btn.active {
+  background: white;
+  border-color: #e2e8f0;
+  border-bottom-color: white;
+  color: #0c5aa8;
+  font-weight: 600;
+}
+
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ===========================
+   Student / athlete display
+=========================== */
+.athlete-card {
+  background: linear-gradient(135deg, #e6f0ff 0%, #f0fff4 100%);
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  border: 1px solid #c2d4f5;
+  margin-bottom: 1rem;
+}
+
+.athlete-card h3 { margin: 0 0 0.5rem; color: #0c5aa8; }
+.athlete-stats { display: flex; gap: 1.5rem; flex-wrap: wrap; margin-top: 0.75rem; }
+
+.stat-box {
+  text-align: center;
+  background: white;
+  border-radius: 0.5rem;
+  padding: 0.6rem 1rem;
+  border: 1px solid #e2e8f0;
+  min-width: 80px;
+}
+
+.stat-box .stat-value { font-size: 1.5rem; font-weight: 700; color: #0c5aa8; }
+.stat-box .stat-label { font-size: 0.72rem; color: #888; text-transform: uppercase; letter-spacing: 0.05em; }
+
+.award-badge {
+  display: inline-block;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  background: #fff8e1;
+  border: 1px solid #f59e0b;
+  font-size: 0.78rem;
+  color: #92400e;
+  margin: 0.2rem;
+}
+
+/* ===========================
+   Lists
+=========================== */
+#student-list {
+  padding: 0;
+  list-style: none;
+  margin: 0;
+}
+
+#student-list li {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 0.88rem;
+}
+
+#student-list li:last-child { border-bottom: none; }
 
 /* ===========================
    Footer
@@ -253,31 +415,51 @@ pre {
   border-top: 1px solid #e2e8f0;
   margin-top: 2rem;
 }
-
 .site-footer a { color: #888; }
 
 /* ===========================
-   Leaderboard / list items
+   Kiosk mode
 =========================== */
-#student-list {
-  padding: 0;
-  list-style: none;
-  margin: 0;
+.kiosk-scan-area {
+  background: #0c5aa8;
+  border-radius: 1rem;
+  padding: 2.5rem;
+  text-align: center;
+  color: white;
+  margin-bottom: 1.5rem;
 }
 
-#student-list li {
-  padding: 0.5rem 0;
-  border-bottom: 1px solid #f0f0f0;
-  font-size: 0.9rem;
+.kiosk-scan-area h2 { color: white; font-size: 1.8rem; margin: 0 0 0.5rem; }
+.kiosk-scan-area p { opacity: 0.88; margin: 0 0 1.5rem; }
+
+.kiosk-input {
+  font-size: 1.5rem !important;
+  text-align: center;
+  letter-spacing: 0.15em;
+  max-width: 320px;
+  margin: 0 auto;
 }
 
-#student-list li:last-child { border-bottom: none; }
+.kiosk-result {
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.kiosk-ok { color: #22c55e; }
+.kiosk-err { color: #ef4444; }
 
 /* ===========================
    Responsive
 =========================== */
-@media (max-width: 600px) {
+@media (max-width: 700px) {
   .header-inner { flex-direction: column; align-items: flex-start; }
   .content { padding: 1rem; }
+  .hero-section { grid-template-columns: 1fr; }
   .portal-grid { grid-template-columns: 1fr 1fr; }
+  .features-grid { grid-template-columns: 1fr; }
+  .athlete-stats { gap: 0.75rem; }
 }
