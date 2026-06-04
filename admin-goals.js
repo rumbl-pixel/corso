@@ -57,6 +57,7 @@
     var info = Goals.metricInfo(g.metric);
     var who = g.owner === 'coach' ? '👨‍🏫 Coach' : '🏃 Student';
     var nowTxt = p.current == null ? '—' : p.current + ' ' + g.unit;
+    var progressLabel = info.kind === 'cumulative' ? 'since set' : 'best';
     var status = p.met ? ' ✓' : '';
     var ctrls = '';
     if (g.owner === 'coach') {
@@ -66,7 +67,7 @@
       ctrls = '<span style="color:#888;font-size:0.78rem;">read-only</span>';
     }
     return '<div class="ag-row"><div><strong>' + who + '</strong>: ' + g.title +
-      ' — ' + g.target + ' ' + g.unit + ' (now ' + nowTxt + status + ', ' + p.percent + '%)</div>' +
+      ' — ' + g.target + ' ' + g.unit + ' (' + progressLabel + ' ' + nowTxt + status + ', ' + p.percent + '%)</div>' +
       '<div class="ag-ctrls">' + ctrls + '</div></div>';
   }
 

@@ -37,12 +37,14 @@
 
   function goalRow(goal) {
     var p = Goals.progress(currentStudent.id, goal);
+    var info = Goals.metricInfo(goal.metric);
     var owner = goal.owner === 'coach' ? 'Coach' : 'Student';
     var current = p.current == null ? 'No result yet' : p.current + ' ' + goal.unit;
+    var progressLabel = info.kind === 'cumulative' ? 'Since set' : 'Best';
     var status = p.met ? '<span class="award-badge">Achieved</span>' : '';
     return '<div class="goal-item">' +
       '<div class="goal-head"><strong>' + goal.title + '</strong> <span style="color:#888;font-size:0.78rem;">' + owner + '</span> ' + status + '</div>' +
-      '<div class="goal-meta">Target: ' + goal.target + ' ' + goal.unit + ' · Now: ' + current + '</div>' +
+      '<div class="goal-meta">Target: ' + goal.target + ' ' + goal.unit + ' · ' + progressLabel + ': ' + current + '</div>' +
       '<div class="goal-bar"><div class="goal-bar-fill" style="width:' + p.percent + '%"></div></div>' +
       '</div>';
   }

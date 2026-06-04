@@ -37,7 +37,20 @@
 
   function goalsFor(studentId) {
     var all = loadAll();
-    return (all[studentId] || []).slice();
+    var goals = (all[studentId] || []).slice();
+    var changed = false;
+    goals.forEach(function (goal) {
+      var m = metricInfo(goal.metric);
+      if (m.kind === 'cumulative' && goal.baseline == null) {
+        goal.baseline = currentCumulativeValue(studentId, goal.metric);
+        changed = true;
+      }
+    });
+    if (changed) {
+      all[studentId] = goals;
+      saveAll(all);
+    }
+    return goals;
   }
   function setGoalsFor(studentId, goals) {
     var all = loadAll();
@@ -47,10 +60,19 @@
 
   function uid() { return 'g-' + Date.now() + '-' + Math.floor(Math.random() * 1000); }
 
+  function currentCumulativeValue(studentId, metric) {
+    var student = Scan.getStudents().find(function (s) { return s.id === studentId; });
+    if (!student) { return 0; }
+    return metric === 'distance' ? Scan.totalKm(student) : student.laps;
+  }
+
   // --- CRUD -----------------------------------------------------------------
   // goal = { metric, target (number), deadline (optional), title (optional) }
   function addGoal(studentId, owner, goal) {
     var m = metricInfo(goal.metric);
+    var baseline = m.kind === 'cumulative'
+      ? currentCumulativeValue(studentId, goal.metric)
+      : null;
     var g = {
       id: uid(),
       owner: owner === 'coach' ? 'coach' : 'student',
@@ -58,6 +80,7 @@
       unit: m.unit,
       title: goal.title || (m.label + ' goal'),
       target: Number(goal.target),
+      baseline: baseline,
       deadline: goal.deadline || null,
       best: null,          // best logged result (PB metrics)
       created: new Date().toISOString(),
@@ -105,10 +128,8 @@
     var current = 0;
 
     if (m.kind === 'cumulative') {
-      var student = Scan.getStudents().find(function (s) { return s.id === studentId; });
-      if (student) {
-        current = goal.metric === 'distance' ? Scan.totalKm(student) : student.laps;
-      }
+      current = currentCumulativeValue(studentId, goal.metric) - (Number(goal.baseline) || 0);
+      current = Math.max(0, current);
       var pct = goal.target > 0 ? Math.min(100, (current / goal.target) * 100) : 0;
       return { current: +current.toFixed(2), target: goal.target, percent: Math.round(pct), met: current >= goal.target, label: m.label };
     }
