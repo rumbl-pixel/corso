@@ -68,7 +68,7 @@ const homeHtml = read('index.html');
 assert(!/href="kiosk\.html"|Scanner kiosk/.test(homeHtml), 'public home page should not link directly to the admin-only kiosk');
 assert(/href="leaderboard\.html"/.test(homeHtml), 'home page should link to the public leaderboard page');
 assert(homeHtml.indexOf('Admin login</a>') > homeHtml.indexOf('Parent portal</a>'), 'home nav should place admin login at the far right');
-assert(homeHtml.indexOf('Admin portal</a>') > homeHtml.indexOf('Student login</a>'), 'hero buttons should place admin portal after student login');
+assert(!/class="hero-buttons"/.test(homeHtml), 'home page should not show duplicate hero login buttons');
 assert(homeHtml.indexOf('<strong>Admin Portal</strong>') > homeHtml.indexOf('<strong>Privacy Policy</strong>'), 'portal grid should place Admin Portal at the far-right/end position');
 
 const kioskJs = read('kiosk.js');
