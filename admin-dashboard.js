@@ -201,7 +201,14 @@
     studentListEl.innerHTML='';
     students.forEach(function(s){
       var li=document.createElement('li');
-      li.textContent=s.name+' ('+s.barcode+') – '+s.year+', '+s.cls+' – '+s.laps+' laps / '+lapsTokm(s.laps).toFixed(2)+' km';
+      li.style.display='flex'; li.style.justifyContent='space-between'; li.style.alignItems='center'; li.style.gap='8px';
+      var label=document.createElement('span');
+      label.textContent=s.name+' ('+s.barcode+') – '+s.year+', '+s.cls+' – '+s.laps+' laps / '+lapsTokm(s.laps).toFixed(2)+' km';
+      var goalsBtn=document.createElement('button');
+      goalsBtn.textContent='🎯 Goals';
+      goalsBtn.className='link-btn';
+      goalsBtn.addEventListener('click',function(){ if(window.AdminGoals){ window.AdminGoals.open(s); } });
+      li.appendChild(label); li.appendChild(goalsBtn);
       studentListEl.appendChild(li);
     });
   }

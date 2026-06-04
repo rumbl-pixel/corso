@@ -42,6 +42,36 @@
             <div id="athlete-awards"></div>
           </div>
 
+          <!-- MY GOALS (student-set, editable by student) -->
+          <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <h2 style="margin:0;">&#127919; My Goals</h2>
+              <button id="add-goal-btn" type="button" class="add-goal-btn">+ Add goal</button>
+            </div>
+            <p style="color:#555;font-size:0.85rem;">Set your own challenges. You can add as many as you like.</p>
+
+            <div id="add-goal-panel" class="add-goal-panel" hidden>
+              <form id="add-goal-form">
+                <label>What kind of goal?
+                  <select id="metric"></select>
+                </label>
+                <label>Target <input type="number" id="goal-target" step="any" min="0" placeholder="e.g. 50" required /></label>
+                <label>Name (optional) <input type="text" id="goal-title" placeholder="e.g. Beat my best 1km" /></label>
+                <label>Finish by (optional) <input type="date" id="goal-deadline" /></label>
+                <button type="submit">Save goal</button>
+              </form>
+            </div>
+
+            <div id="my-goals-list"></div>
+          </div>
+
+          <!-- COACH GOALS (assigned by coach, read-only to student) -->
+          <div class="card">
+            <h2>&#128104;&#8205;&#127979; Coach Goals</h2>
+            <p style="color:#555;font-size:0.85rem;">Goals your coach has set for you. You can see your progress but only your coach can change these.</p>
+            <div id="coach-goals-list"></div>
+          </div>
+
           <div class="card">
             <h2>&#127968; Log Home Activity</h2>
             <p style="color:#555;font-size:0.9rem;">Did you run, walk, or play sport at home? Log it here. Your teacher will approve it and it will count towards your total distance.</p>
@@ -59,6 +89,8 @@
     <footer class="site-footer">
       <p>Run Club Connect &copy; 2026 &middot; <a href="privacy-policy.html">Privacy Policy</a></p>
     </footer>
+    <script src="scanning.js"></script>
+    <script src="goals.js"></script>
     <script src="student.js"></script>
   </body>
 </html>

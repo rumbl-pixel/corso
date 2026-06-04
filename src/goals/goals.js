@@ -1,0 +1,143 @@
+// src/goals/goals.js
+// Shared goals logic for the Run Club platform.
+//   - Student goals: owner = 'student', editable by the student.
+//   - Coach goals:   owner = 'coach',   read-only to students, editable by coaches.
+// Stored per-student under localStorage key rc_goals.
+// Reuses window.RunClubScan for laps-based auto-progress.
+//
+// Exposes a single global: window.RunClubGoals
+(function (global) {
+  'use strict';
+
+  var Scan = global.RunClubScan;
+  var STORE = 'rc_goals';
+
+  // --- Metric catalogue -----------------------------------------------------
+  // kind: 'cumulative' (fills up toward target, auto-tracked from laps)
+  //       'pb-high'     (higher is better — jump/throw/length)
+  //       'pb-low'      (lower is better — time)
+  var METRICS = {
+    laps:     { label: 'Laps',          unit: 'laps', kind: 'cumulative', auto: true },
+    distance: { label: 'Distance',      unit: 'km',   kind: 'cumulative', auto: true },
+    time:     { label: 'Time (PB)',     unit: 's',    kind: 'pb-low',     auto: false },
+    jump:     { label: 'Jump (PB)',     unit: 'm',    kind: 'pb-high',    auto: false },
+    throw:    { label: 'Throw (PB)',    unit: 'm',    kind: 'pb-high',    auto: false },
+    length:   { label: 'Length (PB)',   unit: 'm',    kind: 'pb-high',    auto: false },
+    run:      { label: 'Run / sprint (PB)', unit: 's', kind: 'pb-low',    auto: false }
+  };
+
+  function metricInfo(metric) { return METRICS[metric] || METRICS.laps; }
+
+  // --- Storage --------------------------------------------------------------
+  function loadAll() {
+    try { var r = localStorage.getItem(STORE); return r ? JSON.parse(r) : {}; }
+    catch (e) { return {}; }
+  }
+  function saveAll(obj) { localStorage.setItem(STORE, JSON.stringify(obj)); }
+
+  function goalsFor(studentId) {
+    var all = loadAll();
+    return (all[studentId] || []).slice();
+  }
+  function setGoalsFor(studentId, goals) {
+    var all = loadAll();
+    all[studentId] = goals;
+    saveAll(all);
+  }
+
+  function uid() { return 'g-' + Date.now() + '-' + Math.floor(Math.random() * 1000); }
+
+  // --- CRUD -----------------------------------------------------------------
+  // goal = { metric, target (number), deadline (optional), title (optional) }
+  function addGoal(studentId, owner, goal) {
+    var m = metricInfo(goal.metric);
+    var g = {
+      id: uid(),
+      owner: owner === 'coach' ? 'coach' : 'student',
+      metric: goal.metric,
+      unit: m.unit,
+      title: goal.title || (m.label + ' goal'),
+      target: Number(goal.target),
+      deadline: goal.deadline || null,
+      best: null,          // best logged result (PB metrics)
+      created: new Date().toISOString(),
+      updated: new Date().toISOString()
+    };
+    var goals = goalsFor(studentId);
+    goals.push(g);
+    setGoalsFor(studentId, goals);
+    return g;
+  }
+
+  function updateGoal(studentId, goalId, patch) {
+    var goals = goalsFor(studentId);
+    var g = goals.find(function (x) { return x.id === goalId; });
+    if (!g) { return null; }
+    Object.keys(patch).forEach(function (k) { g[k] = patch[k]; });
+    g.updated = new Date().toISOString();
+    setGoalsFor(studentId, goals);
+    return g;
+  }
+
+  function deleteGoal(studentId, goalId) {
+    setGoalsFor(studentId, goalsFor(studentId).filter(function (g) { return g.id !== goalId; }));
+  }
+
+  // Log a result for a PB metric — stores only if it's a new best.
+  function logResult(studentId, goalId, value) {
+    var goals = goalsFor(studentId);
+    var g = goals.find(function (x) { return x.id === goalId; });
+    if (!g) { return null; }
+    var v = Number(value);
+    var m = metricInfo(g.metric);
+    if (g.best == null) { g.best = v; }
+    else if (m.kind === 'pb-low' && v < g.best) { g.best = v; }
+    else if (m.kind === 'pb-high' && v > g.best) { g.best = v; }
+    g.updated = new Date().toISOString();
+    setGoalsFor(studentId, goals);
+    return g;
+  }
+
+  // --- Progress -------------------------------------------------------------
+  // Returns { current, target, percent (0-100), met (bool), label }.
+  function progress(studentId, goal) {
+    var m = metricInfo(goal.metric);
+    var current = 0;
+
+    if (m.kind === 'cumulative') {
+      var student = Scan.getStudents().find(function (s) { return s.id === studentId; });
+      if (student) {
+        current = goal.metric === 'distance' ? Scan.totalKm(student) : student.laps;
+      }
+      var pct = goal.target > 0 ? Math.min(100, (current / goal.target) * 100) : 0;
+      return { current: +current.toFixed(2), target: goal.target, percent: Math.round(pct), met: current >= goal.target, label: m.label };
+    }
+
+    // PB metrics use the best logged result.
+    current = goal.best;
+    if (current == null) {
+      return { current: null, target: goal.target, percent: 0, met: false, label: m.label };
+    }
+    var met, percent;
+    if (m.kind === 'pb-low') {            // faster is better
+      met = current <= goal.target;
+      // progress: how close are we, from a generous 2x-target start point
+      percent = Math.max(0, Math.min(100, Math.round(((2 * goal.target - current) / goal.target) * 100)));
+    } else {                              // pb-high: bigger is better
+      met = current >= goal.target;
+      percent = goal.target > 0 ? Math.min(100, Math.round((current / goal.target) * 100)) : 0;
+    }
+    return { current: current, target: goal.target, percent: percent, met: met, label: m.label };
+  }
+
+  global.RunClubGoals = {
+    METRICS: METRICS,
+    metricInfo: metricInfo,
+    goalsFor: goalsFor,
+    addGoal: addGoal,
+    updateGoal: updateGoal,
+    deleteGoal: deleteGoal,
+    logResult: logResult,
+    progress: progress
+  };
+})(window);
