@@ -1,0 +1,12 @@
+{
+  "name": "runclub-platform",
+  "version": "1.1.0",
+  "description": "School run club platform (Marathon Kids + StrideTrack inspired) — barcode lap tracking, kiosk, awards, reports.",
+  "scripts": {
+    "build": "bash build.sh",
+    "deploy": "bash build.sh --deploy",
+    "serve": "python3 -m http.server 8080"
+  },
+  "license": "UNLICENSED",
+  "private": true
+}
