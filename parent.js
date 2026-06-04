@@ -74,27 +74,4 @@
     render(student);
   });
 
-  document.getElementById('parent-activity-form').addEventListener('submit', function (e) {
-    e.preventDefault();
-    if (!currentStudent) { return; }
-    var type = document.getElementById('parent-activity-type').value.trim();
-    var minutes = Number(document.getElementById('parent-activity-minutes').value || 0);
-    if (!type || minutes <= 0) { return; }
-    var queue = Scan.load('rc_selfreports', []);
-    queue.push({
-      id: 'sr-' + Date.now(),
-      studentId: currentStudent.id,
-      name: currentStudent.name,
-      submittedBy: 'parent',
-      type: type,
-      minutes: minutes,
-      status: 'pending',
-      date: new Date().toISOString()
-    });
-    Scan.save('rc_selfreports', queue);
-    var result = document.getElementById('parent-activity-result');
-    result.hidden = false;
-    result.textContent = 'Submitted "' + type + '" (' + minutes + ' min) for teacher review.';
-    e.target.reset();
-  });
 })();
