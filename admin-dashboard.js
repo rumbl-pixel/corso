@@ -67,6 +67,83 @@
   // --- Helpers ---
   function showResult(el,payload) { el.hidden=false; el.textContent=JSON.stringify(payload,null,2); }
 
+  function escapeHtml(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, function (ch) {
+      return ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[ch];
+    });
+  }
+
+  function barcodeBarsHtml(code) {
+    var patterns = {
+      '0':'nnnwwnwnn','1':'wnnwnnnnw','2':'nnwwnnnnw','3':'wnwwnnnnn','4':'nnnwwnnnw',
+      '5':'wnnwwnnnn','6':'nnwwwnnnn','7':'nnnwnnwnw','8':'wnnwnnwnn','9':'nnwwnnwnn',
+      'A':'wnnnnwnnw','B':'nnwnnwnnw','C':'wnwnnwnnn','D':'nnnnwwnnw','E':'wnnnwwnnn',
+      'F':'nnwnwwnnn','G':'nnnnnwwnw','H':'wnnnnwwnn','I':'nnwnnwwnn','J':'nnnnwwwnn',
+      'K':'wnnnnnnww','L':'nnwnnnnww','M':'wnwnnnnwn','N':'nnnnwnnww','O':'wnnnwnnwn',
+      'P':'nnwnwnnwn','Q':'nnnnnnwww','R':'wnnnnnwwn','S':'nnwnnnwwn','T':'nnnnwnwwn',
+      'U':'wwnnnnnnw','V':'nwwnnnnnw','W':'wwwnnnnnn','X':'nwnnwnnnw','Y':'wwnnwnnnn',
+      'Z':'nwwnwnnnn','-':'nwnnnnwnw','.':'wwnnnnwnn',' ':'nwwnnnwnn','*':'nwnnwnwnn'
+    };
+    var clean = String(code || '').toUpperCase().replace(/[^A-Z0-9 .-]/g, '');
+    var encoded = '*' + clean + '*';
+    var bars = '';
+    for (var i = 0; i < encoded.length; i++) {
+      var pattern = patterns[encoded.charAt(i)] || patterns['0'];
+      for (var j = 0; j < pattern.length; j++) {
+        var width = pattern.charAt(j) === 'w' ? 4 : 1.6;
+        var color = j % 2 === 0 ? '#0b1f38' : 'transparent';
+        bars += '<span style="width:' + width + 'px;background:' + color + ';"></span>';
+      }
+      bars += '<span style="width:1.6px;background:transparent;"></span>';
+    }
+    return '<div class="barcode-bars" aria-label="Barcode ' + escapeHtml(clean) + '">' + bars + '</div>';
+  }
+
+  function barcodeCardHtml(student) {
+    return '<div class="barcode-card-preview">' +
+      '<div class="barcode-card-school">Gwynne Park Run Club</div>' +
+      '<strong class="barcode-card-name">' + escapeHtml(student.name) + '</strong>' +
+      '<div class="barcode-card-meta">' + escapeHtml(student.year) + ' / ' + escapeHtml(student.cls) + '</div>' +
+      barcodeBarsHtml(student.barcode || student.id) +
+      '<div class="barcode-code">' + escapeHtml(student.barcode || student.id) + '</div>' +
+      '</div>';
+  }
+
+  function printStudentBarcodeCard(student) {
+    var win = window.open('', '_blank');
+    if (!win) { return; }
+    var html = '<html><head><title>' + escapeHtml(student.name) + ' Barcode Card</title>' +
+      '<style>@page{size:85.6mm 53.98mm;margin:0;}*{box-sizing:border-box;}body{margin:0;width:85.6mm;height:53.98mm;font-family:Arial,sans-serif;color:#102a43;}.barcode-card-print{width:85.6mm;height:53.98mm;border:0.35mm solid #0c5aa8;padding:5mm;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:1.6mm;}.barcode-card-school{font-size:3.2mm;font-weight:700;color:#0c5aa8;text-transform:uppercase;}.barcode-card-name{font-size:5.3mm;line-height:1.1;}.barcode-card-meta{font-size:3.1mm;color:#52616b;}.barcode-bars{height:14mm;display:flex;align-items:stretch;justify-content:center;gap:0.55mm;width:68mm;margin-top:1mm;}.barcode-bars span{display:block;background:#0b1f38;height:100%;}.barcode-code{font-family:Consolas,monospace;font-size:5mm;font-weight:700;letter-spacing:0.8mm;color:#0b1f38;}@media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact;}}</style>' +
+      '</head><body><div class="barcode-card-print">' +
+      '<div class="barcode-card-school">Gwynne Park Run Club</div>' +
+      '<strong class="barcode-card-name">' + escapeHtml(student.name) + '</strong>' +
+      '<div class="barcode-card-meta">' + escapeHtml(student.year) + ' / ' + escapeHtml(student.cls) + '</div>' +
+      barcodeBarsHtml(student.barcode || student.id) +
+      '<div class="barcode-code">' + escapeHtml(student.barcode || student.id) + '</div>' +
+      '</div></body></html>';
+    win.document.write(html);
+    win.document.close();
+    win.focus();
+    win.print();
+  }
+
+  function generateBarcodeId(first, last, students) {
+    var stem = (String(last || '').slice(0, 5) + String(first || '').slice(0, 1)).toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (!stem) { stem = 'STUDENT'; }
+    var used = {};
+    students.forEach(function (s) {
+      used[String(s.id || '').toUpperCase()] = true;
+      used[String(s.barcode || '').toUpperCase()] = true;
+    });
+    var n = 1;
+    var candidate = stem + String(n).padStart(2, '0');
+    while (used[candidate]) {
+      n += 1;
+      candidate = stem + String(n).padStart(2, '0');
+    }
+    return candidate;
+  }
+
   function dlJson(filename,data) {
     var b=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
     var u=URL.createObjectURL(b); var a=document.createElement('a');
@@ -269,6 +346,19 @@
   // === STUDENTS ===
   var studentListEl=document.getElementById('student-list');
   var studentSearchEl=document.getElementById('student-search');
+  var addStudentFormEl=document.getElementById('add-student-form');
+  var addStudentResultEl=document.getElementById('add-student-result');
+
+  function refreshStudentViews(){
+    renderStudentList();
+    populateLbFilters();
+    renderLeaderboard();
+    populateActivityStudents();
+    populateTimedStudents();
+    renderMedals();
+    renderCertificates();
+    renderSchoolSummary();
+  }
 
   function renderStudentList(){
     var students=getStudents();
@@ -284,12 +374,38 @@
       goalsBtn.textContent='🎯 Goals';
       goalsBtn.className='link-btn';
       goalsBtn.addEventListener('click',function(){ if(window.AdminGoals){ window.AdminGoals.open(s); } });
-      li.appendChild(label); li.appendChild(goalsBtn);
+      var barcodeBtn=document.createElement('button');
+      barcodeBtn.textContent='Barcode';
+      barcodeBtn.className='link-btn';
+      barcodeBtn.addEventListener('click',function(){ printStudentBarcodeCard(s); });
+      var actions=document.createElement('span');
+      actions.className='student-list-actions';
+      actions.appendChild(barcodeBtn);
+      actions.appendChild(goalsBtn);
+      li.appendChild(label); li.appendChild(actions);
       studentListEl.appendChild(li);
     });
   }
   renderStudentList();
   studentSearchEl.addEventListener('input',renderStudentList);
+
+  addStudentFormEl.addEventListener('submit',function(e){
+    e.preventDefault();
+    var first=document.getElementById('new-student-first').value.trim();
+    var last=document.getElementById('new-student-last').value.trim();
+    var year=document.getElementById('new-student-year').value;
+    var cls=document.getElementById('new-student-class').value.trim().toUpperCase();
+    if(!first||!last||!year||!cls){showResult(addStudentResultEl,{success:false,error:'Enter first name, last name, year and class.'});return;}
+    var students=getStudents();
+    var id=generateBarcodeId(first,last,students);
+    var student={id:id,barcode:id,first:first,last:last,name:first+' '+last,year:year,cls:cls,laps:0,minutes:0,events:[]};
+    students.push(student);
+    saveStudents(students);
+    addStudentFormEl.reset();
+    refreshStudentViews();
+    showResult(addStudentResultEl,{success:true,message:'Student added and barcode generated.',student:{name:student.name,year:student.year,cls:student.cls,barcode:student.barcode}});
+    printStudentBarcodeCard(student);
+  });
 
   var sportsCarnivalModeEl=document.getElementById('sports-carnival-mode');
   sportsCarnivalModeEl.checked=window.RunClubGoals.isSportsCarnivalMode();
@@ -596,13 +712,12 @@
         var name=first+' '+last;
         var exists=students.find(function(s){return s.name===name&&s.year===year;});
         if(exists){skipped++;return;}
-        var code=(last.substring(0,5)+first.substring(0,1)).toUpperCase().replace(/[^A-Z]/g,'');
-        var id=code+(Math.floor(Math.random()*90)+10);
+        var id=generateBarcodeId(first,last,students);
         students.push({id:id,barcode:id,first:first,last:last,name:name,year:year,cls:cls,laps:0,minutes:0,events:[]});
         added++;
       });
       saveStudents(students);
-      renderStudentList(); renderLeaderboard(); populateActivityStudents(); populateTimedStudents(); populateLbFilters(); renderMedals(); renderCertificates(); renderSchoolSummary();
+      refreshStudentViews();
       showResult(importResultEl,{success:true,added:added,skipped:skipped,total:students.length});
     };
     reader.readAsText(file);
@@ -621,13 +736,14 @@
   document.getElementById('print-barcodes-btn').addEventListener('click',function(){
     var students=getStudents();
     var win=window.open('','_blank');
-    var html='<html><head><title>Barcode ID Cards</title><style>body{font-family:sans-serif;padding:1rem;} .cards{display:flex;flex-wrap:wrap;gap:0.5rem;} .card{border:1px solid #ccc;padding:0.5rem;width:200px;font-size:0.75rem;text-align:center;border-radius:4px;} .barcode{font-family:monospace;font-size:1.1rem;font-weight:bold;letter-spacing:0.1em;background:#f4f4f4;padding:0.3rem;border-radius:3px;margin:0.3rem 0;} @media print{@page{margin:1cm;}}</style></head><body>';
+    if(!win){return;}
+    var html='<html><head><title>Barcode ID Cards</title><style>@page{size:A4;margin:10mm;}*{box-sizing:border-box;}body{font-family:Arial,sans-serif;padding:0;margin:0;color:#102a43;}.cards{display:flex;flex-wrap:wrap;gap:6mm;align-items:flex-start;}.barcode-card-print{width:85.6mm;height:53.98mm;border:0.35mm solid #0c5aa8;padding:5mm;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:1.6mm;break-inside:avoid;page-break-inside:avoid;}.barcode-card-school{font-size:3.2mm;font-weight:700;color:#0c5aa8;text-transform:uppercase;}.barcode-card-name{font-size:5.3mm;line-height:1.1;}.barcode-card-meta{font-size:3.1mm;color:#52616b;}.barcode-bars{height:14mm;display:flex;align-items:stretch;justify-content:center;gap:0.55mm;width:68mm;margin-top:1mm;}.barcode-bars span{display:block;background:#0b1f38;height:100%;}.barcode-code{font-family:Consolas,monospace;font-size:5mm;font-weight:700;letter-spacing:0.8mm;color:#0b1f38;}@media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact;}}</style></head><body>';
     html+='<div class="cards">';
     students.forEach(function(s){
-      html+='<div class="card"><strong>'+s.name+'</strong><br>'+s.year+' – '+s.cls+'<div class="barcode">'+s.barcode+'</div><small>Gwynne Park Run Club</small></div>';
+      html+='<div class="barcode-card-print"><div class="barcode-card-school">Gwynne Park Run Club</div><strong class="barcode-card-name">'+escapeHtml(s.name)+'</strong><div class="barcode-card-meta">'+escapeHtml(s.year)+' / '+escapeHtml(s.cls)+'</div>'+barcodeBarsHtml(s.barcode||s.id)+'<div class="barcode-code">'+escapeHtml(s.barcode||s.id)+'</div></div>';
     });
     html+='</div></body></html>';
-    win.document.write(html); win.document.close(); win.print();
+    win.document.write(html); win.document.close(); win.focus(); win.print();
   });
 
 })();

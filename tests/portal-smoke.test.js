@@ -58,11 +58,15 @@ const studentHtml = read('student.html');
 assert(/DEMO/.test(studentHtml), 'student login should show a DEMO hint');
 assert(!/Log Home Activity|self-report-form|sr-type|sr-minutes/.test(studentHtml), 'student portal should not include home activity logging');
 assert(/medal-progress/.test(studentHtml), 'student portal should show read-only medal progress');
+assert(/student-barcode-card/.test(studentHtml), 'student portal should show the student barcode card area');
+assert(/print-student-barcode-btn/.test(studentHtml), 'student portal should let students print a credit-card-sized barcode card');
 
 const studentJs = read('student.js');
 assert(/DEMO/.test(studentJs), 'student login should handle DEMO bypass');
 assert(!/self-report-form|rc_selfreports|wireSelfReport/.test(studentJs), 'student portal should not submit home activity logs');
 assert(/MEDAL_TIERS/.test(studentJs), 'student portal should calculate medal progress');
+assert(/renderStudentBarcode/.test(studentJs), 'student portal should render the signed-in student barcode');
+assert(/printStudentBarcodeCard/.test(studentJs), 'student portal should print individual student barcode cards');
 
 const homeHtml = read('index.html');
 assert(!/href="kiosk\.html"|Scanner kiosk/.test(homeHtml), 'public home page should not link directly to the admin-only kiosk');
@@ -86,6 +90,9 @@ assert(/print-leaderboard-btn/.test(adminDashboardHtml), 'admin leaderboard shou
 assert(/medal-rules/.test(adminDashboardHtml), 'admin awards area should show medal tier rules');
 assert(/certificates-list/.test(adminDashboardHtml), 'admin awards area should include a certificates list');
 assert(/sports-carnival-mode/.test(adminDashboardHtml), 'admin dashboard should include a Sports Carnival Mode checkbox');
+assert(/add-student-form/.test(adminDashboardHtml), 'admin students area should include a manual add-student form');
+assert(/generate-student-barcode-btn/.test(adminDashboardHtml), 'admin students area should include a generate barcode button');
+assert(/new-student-first/.test(adminDashboardHtml) && /new-student-last/.test(adminDashboardHtml), 'admin add-student form should collect student names');
 
 const adminDashboardJs = read('admin-dashboard.js');
 assert(/MEDAL_TIERS/.test(adminDashboardJs), 'admin dashboard should calculate medal tiers');
@@ -93,6 +100,8 @@ assert(/renderOfflineQueue/.test(adminDashboardJs), 'admin dashboard should rend
 assert(/printLeaderboardPoster/.test(adminDashboardJs), 'admin dashboard should print leaderboard posters');
 assert(/renderCertificates/.test(adminDashboardJs), 'admin dashboard should render certificate readiness');
 assert(/setSportsCarnivalMode/.test(adminDashboardJs), 'admin dashboard should persist Sports Carnival Mode setting');
+assert(/generateBarcodeId/.test(adminDashboardJs), 'admin dashboard should generate unique student barcode IDs');
+assert(/printStudentBarcodeCard/.test(adminDashboardJs), 'admin dashboard should print individual student barcode cards');
 
 const parentHtml = read('parent.html');
 assert(/id="parent-form"/.test(parentHtml), 'parent portal should expose a login form');

@@ -88,8 +88,37 @@
       <!-- STUDENTS TAB -->
       <div class="tab-panel" id="tab-students">
         <div class="card">
+          <h2>&#10133; Add Student</h2>
+          <form id="add-student-form" class="compact-form">
+            <div class="form-grid">
+              <label>First name
+                <input type="text" id="new-student-first" required autocomplete="off" />
+              </label>
+              <label>Last name
+                <input type="text" id="new-student-last" required autocomplete="off" />
+              </label>
+              <label>Year group
+                <select id="new-student-year" required>
+                  <option value="Year 1">Year 1</option>
+                  <option value="Year 2">Year 2</option>
+                  <option value="Year 3">Year 3</option>
+                  <option value="Year 4">Year 4</option>
+                  <option value="Year 5">Year 5</option>
+                  <option value="Year 6">Year 6</option>
+                </select>
+              </label>
+              <label>Class
+                <input type="text" id="new-student-class" required placeholder="e.g. 5B" autocomplete="off" />
+              </label>
+            </div>
+            <button id="generate-student-barcode-btn" type="submit">Generate barcode</button>
+          </form>
+          <pre id="add-student-result" hidden></pre>
+        </div>
+
+        <div class="card">
           <h2>&#128101; Student Profiles</h2>
-          <p style="color:#555;font-size:0.9rem;">Demo students stored in localStorage. Use the Import tab to load your real roster.</p>
+          <p style="color:#555;font-size:0.9rem;">Students are stored locally for this demo. Add one here or use the Import tab for a full roster.</p>
           <input type="text" id="student-search" placeholder="Search by name, ID, year or class..." style="margin-bottom:1rem;" />
           <ul id="student-list"></ul>
         </div>
