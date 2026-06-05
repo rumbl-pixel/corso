@@ -27,6 +27,7 @@ const brandFiles = [
   'admin.html',
   'admin-dashboard.html',
   'student.html',
+  'student-profile.html',
   'leaderboard.html',
   'parent.html',
   'privacy-policy.html',
@@ -57,9 +58,14 @@ assert(/DEMO/.test(adminJs), 'admin login should handle DEMO bypass');
 const studentHtml = read('student.html');
 assert(/DEMO/.test(studentHtml), 'student login should show a DEMO hint');
 assert(!/Log Home Activity|self-report-form|sr-type|sr-minutes/.test(studentHtml), 'student portal should not include home activity logging');
-assert(/medal-progress/.test(studentHtml), 'student portal should show read-only medal progress');
-assert(/student-barcode-card/.test(studentHtml), 'student portal should show the student barcode card area');
-assert(/print-student-barcode-btn/.test(studentHtml), 'student portal should let students print a credit-card-sized barcode card');
+assert(/student-profile\.html/.test(studentHtml), 'student login should hand signed-in students to the profile page');
+assert(!/id="submit-btn"[^>]*hidden/.test(studentHtml), 'student login page should keep the sign-in button available before login');
+
+const studentProfileHtml = read('student-profile.html');
+assert(!/id="student-form"|id="submit-btn"/.test(studentProfileHtml), 'student profile page should not show the login form or sign-in button');
+assert(/medal-progress/.test(studentProfileHtml), 'student profile page should show read-only medal progress');
+assert(/student-barcode-card/.test(studentProfileHtml), 'student profile page should show the student barcode card area');
+assert(/print-student-barcode-btn/.test(studentProfileHtml), 'student profile page should let students print a credit-card-sized barcode card');
 
 const studentJs = read('student.js');
 assert(/DEMO/.test(studentJs), 'student login should handle DEMO bypass');
@@ -67,6 +73,8 @@ assert(!/self-report-form|rc_selfreports|wireSelfReport/.test(studentJs), 'stude
 assert(/MEDAL_TIERS/.test(studentJs), 'student portal should calculate medal progress');
 assert(/renderStudentBarcode/.test(studentJs), 'student portal should render the signed-in student barcode');
 assert(/printStudentBarcodeCard/.test(studentJs), 'student portal should print individual student barcode cards');
+assert(/runClubStudentSession/.test(studentJs), 'student portal should persist student login sessions');
+assert(/student-profile\.html/.test(studentJs), 'student login should redirect to the separate profile page');
 
 const homeHtml = read('index.html');
 assert(!/href="kiosk\.html"|Scanner kiosk/.test(homeHtml), 'public home page should not link directly to the admin-only kiosk');

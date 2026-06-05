@@ -22,7 +22,7 @@
     <main class="content">
       <div style="max-width:480px;margin:0 auto;">
         <h2 style="margin-bottom:1rem;">&#127939; Student Login</h2>
-        <form id="student-form" class="card">
+        <form id="student-form" class="card" action="student-profile.html">
           <label>Your code
             <input type="text" id="code" required placeholder="e.g. STUDENT1 or DEMO" autocomplete="off" autocapitalize="characters" />
           </label>
@@ -30,59 +30,6 @@
           <p style="margin-top:0.75rem;font-size:0.82rem;color:#888;">Your teacher gave you this code on your barcode card. Type DEMO to open a sample student profile.</p>
         </form>
 
-        <!-- ATHLETE PROFILE -->
-        <section id="result-card" hidden>
-          <div class="athlete-card">
-            <h3 id="athlete-name">&#127939; Runner Profile</h3>
-            <div class="athlete-stats" id="athlete-stats"></div>
-          </div>
-
-          <div class="card" id="student-barcode-card">
-            <h2>&#128179; My Barcode Card</h2>
-            <div id="student-barcode-display"></div>
-            <button id="print-student-barcode-btn" type="button" class="secondary">Print credit card size</button>
-          </div>
-
-          <div class="card">
-            <h2>&#127942; My Awards</h2>
-            <div id="athlete-awards"></div>
-          </div>
-
-          <div class="card">
-            <h2>&#129351; Medal Progress</h2>
-            <div id="medal-progress"></div>
-          </div>
-
-          <!-- MY GOALS (student-set, editable by student) -->
-          <div class="card">
-            <div style="display:flex;justify-content:space-between;align-items:center;">
-              <h2 style="margin:0;">&#127919; My Goals</h2>
-              <button id="add-goal-btn" type="button" class="add-goal-btn">+ Add goal</button>
-            </div>
-            <p style="color:#555;font-size:0.85rem;">Set your own challenges. You can add as many as you like.</p>
-
-            <div id="add-goal-panel" class="add-goal-panel" hidden>
-              <form id="add-goal-form">
-                <label>What kind of goal?
-                  <select id="metric"></select>
-                </label>
-                <label>Target <input type="number" id="goal-target" step="any" min="0" placeholder="e.g. 50" required /></label>
-                <label>Name (optional) <input type="text" id="goal-title" placeholder="e.g. Beat my best 1km" /></label>
-                <label>Finish by (optional) <input type="date" id="goal-deadline" /></label>
-                <button type="submit">Save goal</button>
-              </form>
-            </div>
-
-            <div id="my-goals-list"></div>
-          </div>
-
-          <!-- COACH GOALS (assigned by coach, read-only to student) -->
-          <div class="card">
-            <h2>&#128104;&#8205;&#127979; Coach Goals</h2>
-            <p style="color:#555;font-size:0.85rem;">Goals your coach has set for you. You can see your progress but only your coach can change these.</p>
-            <div id="coach-goals-list"></div>
-          </div>
-        </section>
       </div>
     </main>
 

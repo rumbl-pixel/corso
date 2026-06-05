@@ -7,6 +7,7 @@
 
   var Scan = window.RunClubScan;
   var Goals = window.RunClubGoals;
+  var STUDENT_SESSION_KEY = 'runClubStudentSession';
 
   var MILESTONE_LABELS = { 5: 'First 5 Laps', 10: '10 Lap Club', 25: 'Quarter Century', 50: 'Half Century', 100: 'Century Club', 200: 'Double Century', 500: 'Elite Runner' };
   var MEDAL_TIERS = [
@@ -18,6 +19,32 @@
   ];
 
   var currentStudent = null;
+
+  function getStudentSession() {
+    try {
+      return JSON.parse(localStorage.getItem(STUDENT_SESSION_KEY));
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function saveStudentSession(student) {
+    localStorage.setItem(STUDENT_SESSION_KEY, JSON.stringify({
+      code: student.barcode || student.id,
+      student_id: student.id,
+      saved_at: new Date().toISOString()
+    }));
+  }
+
+  function clearStudentSession() {
+    localStorage.removeItem(STUDENT_SESSION_KEY);
+  }
+
+  function sessionStudent() {
+    var session = getStudentSession();
+    if (!session || !session.code) { return null; }
+    return findStudent(session.code);
+  }
 
   // --- Login: look up the code against the shared roster ---
   function findStudent(code) {
@@ -231,11 +258,38 @@
       alert('Code not recognised. Check your barcode card or ask your teacher.');
       return;
     }
-    currentStudent = student;
-    renderAthlete(student);
+    saveStudentSession(student);
+    window.location.href = 'student-profile.html';
   }
 
   // --- Init ---
-  document.getElementById('student-form').addEventListener('submit', handleLogin);
-  wireAddGoal();
+  var studentForm = document.getElementById('student-form');
+  var resultCard = document.getElementById('result-card');
+
+  if (studentForm) {
+    if (sessionStudent()) {
+      window.location.href = 'student-profile.html';
+      return;
+    }
+    studentForm.addEventListener('submit', handleLogin);
+  }
+
+  if (resultCard) {
+    var student = sessionStudent();
+    if (!student) {
+      window.location.href = 'student.html';
+      return;
+    }
+    currentStudent = student;
+    renderAthlete(student);
+    wireAddGoal();
+
+    var logoutBtn = document.getElementById('student-logout-btn');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', function () {
+        clearStudentSession();
+        window.location.href = 'student.html';
+      });
+    }
+  }
 })();
