@@ -66,6 +66,7 @@ assert(!/id="student-form"|id="submit-btn"/.test(studentProfileHtml), 'student p
 assert(/medal-progress/.test(studentProfileHtml), 'student profile page should show read-only medal progress');
 assert(/student-barcode-card/.test(studentProfileHtml), 'student profile page should show the student barcode card area');
 assert(/print-student-barcode-btn/.test(studentProfileHtml), 'student profile page should let students print a credit-card-sized barcode card');
+assert(/assets\/qrcode-generator\.js/.test(studentProfileHtml), 'student profile should load the local QR generator');
 
 const studentJs = read('student.js');
 assert(/DEMO/.test(studentJs), 'student login should handle DEMO bypass');
@@ -73,6 +74,7 @@ assert(!/self-report-form|rc_selfreports|wireSelfReport/.test(studentJs), 'stude
 assert(/MEDAL_TIERS/.test(studentJs), 'student portal should calculate medal progress');
 assert(/renderStudentBarcode/.test(studentJs), 'student portal should render the signed-in student barcode');
 assert(/printStudentBarcodeCard/.test(studentJs), 'student portal should print individual student barcode cards');
+assert(/qrCodeHtml/.test(studentJs), 'student portal should render real QR codes on student cards');
 assert(/runClubStudentSession/.test(studentJs), 'student portal should persist student login sessions');
 assert(/student-profile\.html/.test(studentJs), 'student login should redirect to the separate profile page');
 
@@ -91,11 +93,17 @@ assert(/index\.html/.test(kioskJs) && !/Enter teacher PIN/.test(kioskJs), 'kiosk
 assert(/getUserMedia/.test(kioskJs) && /BarcodeDetector/.test(kioskJs), 'kiosk should support camera barcode scanning when available');
 assert(/camera-scan-btn/.test(read('kiosk.html')), 'kiosk should expose a tap-to-start camera scanning button');
 
+const scanningJs = read('scanning.js');
+assert(/scanAudit/.test(scanningJs), 'shared scanning should write a basic scan audit trail');
+assert(/duplicateWindowMs/.test(scanningJs), 'shared scanning should protect against rapid duplicate scans');
+assert(/scanner_id/.test(scanningJs), 'scan audit entries should record who or what scanned');
+
 const adminDashboardHtml = read('admin-dashboard.html');
-assert(/assets\/gwynne-park-logo\.svg/.test(adminDashboardHtml), 'admin dashboard should use the sharp Gwynne Park logo asset');
+assert(/assets\/gwynne-park-logo\.png/.test(adminDashboardHtml), 'admin dashboard should use the official Gwynne Park logo image');
 const dashboardBrandLink = adminDashboardHtml.match(/<a[^>]*brand-home-link[^>]*>/);
 assert(dashboardBrandLink && /href="index\.html"/.test(dashboardBrandLink[0]), 'admin dashboard logo/banner should link back to the home page');
 assert(/offline-queue-card/.test(adminDashboardHtml), 'admin dashboard should include an offline scan queue panel');
+assert(/undo-admin-scan-btn/.test(adminDashboardHtml), 'admin scanner should include an undo last scan button');
 assert(/lb-medal-filter/.test(adminDashboardHtml), 'admin leaderboard should include a medal tier filter');
 assert(/print-leaderboard-btn/.test(adminDashboardHtml), 'admin leaderboard should include a print poster button');
 assert(/medal-rules/.test(adminDashboardHtml), 'admin awards area should show medal tier rules');
@@ -107,8 +115,13 @@ assert(/new-student-first/.test(adminDashboardHtml) && /new-student-last/.test(a
 assert(/student-editor-modal/.test(adminDashboardHtml), 'admin students area should include an edit-student modal');
 assert(/edit-student-form/.test(adminDashboardHtml), 'admin students area should include an edit-student form');
 assert(/barcode-confirmation/.test(adminDashboardHtml), 'admin add-student flow should show an inline barcode confirmation area');
+assert(/Print Barcode \/ QR ID Cards/.test(adminDashboardHtml), 'admin dashboard should print barcode and QR ID cards');
+assert(/assets\/qrcode-generator\.js/.test(adminDashboardHtml), 'admin dashboard should load the local QR generator');
 assert(!/Student Self-Reported Activity|self-report-queue/.test(adminDashboardHtml), 'admin activity tab should not include student self-reported activity');
 assert(/custom-award-name/.test(adminDashboardHtml), 'admin awards area should include custom award creation');
+assert(/import-summary/.test(adminDashboardHtml), 'admin import area should show a readable CSV import summary');
+assert(/audit-trail-list/.test(adminDashboardHtml), 'admin reports area should include a scan audit trail preview');
+assert(/Export scan audit/.test(adminDashboardHtml), 'admin reports area should export scan audit rows');
 
 const adminDashboardJs = read('admin-dashboard.js');
 assert(/MEDAL_TIERS/.test(adminDashboardJs), 'admin dashboard should calculate medal tiers');
@@ -118,11 +131,20 @@ assert(/renderCertificates/.test(adminDashboardJs), 'admin dashboard should rend
 assert(/setSportsCarnivalMode/.test(adminDashboardJs), 'admin dashboard should persist Sports Carnival Mode setting');
 assert(/generateBarcodeId/.test(adminDashboardJs), 'admin dashboard should generate unique student barcode IDs');
 assert(/printStudentBarcodeCard/.test(adminDashboardJs), 'admin dashboard should print individual student barcode cards');
+assert(/qrCodeHtml/.test(adminDashboardJs), 'admin dashboard should render real QR codes on student cards');
 assert(/openStudentEditor/.test(adminDashboardJs), 'admin dashboard should let admins edit student details');
 assert(/deleteStudent/.test(adminDashboardJs), 'admin dashboard should let admins remove students');
 assert(/Edit/.test(adminDashboardJs) && /Remove/.test(adminDashboardJs), 'student list should expose edit and remove actions');
 assert(/renderBarcodeConfirmation/.test(adminDashboardJs), 'admin add-student flow should render a compact barcode confirmation');
 assert(/createCustomAward/.test(adminDashboardJs), 'admin dashboard should create custom awards');
+assert(/parseCsvLine/.test(adminDashboardJs), 'admin dashboard should parse quoted CSV roster rows');
+assert(/rosterDuplicateKey/.test(adminDashboardJs), 'admin dashboard should detect duplicate roster rows consistently');
+assert(/skipped_details/.test(adminDashboardJs), 'admin dashboard should report duplicate and invalid CSV rows');
+assert(/RunClubScan\.logLap/.test(adminDashboardJs), 'admin scanner should use shared scan logging');
+assert(/duplicate/.test(adminDashboardJs), 'admin scanner should surface duplicate scan protection');
+assert(/renderAuditTrail/.test(adminDashboardJs), 'admin dashboard should render scan audit trail rows');
+assert(/export-audit-csv-btn/.test(adminDashboardHtml), 'admin reports should include scan audit CSV export');
+assert(/undoLastAdminScan/.test(adminDashboardJs), 'admin scanner should undo the last scan when needed');
 
 const adminGoalsJs = read('admin-goals.js');
 assert(/assign-selected-students/.test(adminGoalsJs), 'admin goals modal should assign a goal to selected students');

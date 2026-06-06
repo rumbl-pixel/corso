@@ -89,27 +89,39 @@
     return '<div class="barcode-bars" aria-label="Barcode ' + escapeHtml(clean) + '">' + bars + '</div>';
   }
 
+  function qrCodeHtml(code) {
+    if (typeof qrcode !== 'function') {
+      return '<div class="qr-code-fallback">' + escapeHtml(code) + '</div>';
+    }
+    var qr = qrcode(0, 'M');
+    qr.addData(String(code || ''));
+    qr.make();
+    return '<div class="qr-code" aria-label="QR code ' + escapeHtml(code) + '">' + qr.createSvgTag(3, 1) + '</div>';
+  }
+
   function barcodeCardHtml(student) {
+    var code = student.barcode || student.id;
     return '<div class="barcode-card-preview">' +
       '<div class="barcode-card-school">Gwynne Park Run Club</div>' +
       '<strong class="barcode-card-name">' + escapeHtml(student.name) + '</strong>' +
       '<div class="barcode-card-meta">' + escapeHtml(student.year) + ' / ' + escapeHtml(student.cls) + '</div>' +
-      barcodeBarsHtml(student.barcode || student.id) +
-      '<div class="barcode-code">' + escapeHtml(student.barcode || student.id) + '</div>' +
+      '<div class="barcode-qr-row">' + barcodeBarsHtml(code) + qrCodeHtml(code) + '</div>' +
+      '<div class="barcode-code">' + escapeHtml(code) + '</div>' +
       '</div>';
   }
 
   function printStudentBarcodeCard(student) {
     var win = window.open('', '_blank');
     if (!win) { return; }
+    var code = student.barcode || student.id;
     var html = '<html><head><title>' + escapeHtml(student.name) + ' Barcode Card</title>' +
-      '<style>@page{size:85.6mm 53.98mm;margin:0;}*{box-sizing:border-box;}body{margin:0;width:85.6mm;height:53.98mm;font-family:Arial,sans-serif;color:#102a43;}.barcode-card-print{width:85.6mm;height:53.98mm;border:0.35mm solid #0c5aa8;padding:5mm;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:1.6mm;}.barcode-card-school{font-size:3.2mm;font-weight:700;color:#0c5aa8;text-transform:uppercase;}.barcode-card-name{font-size:5.3mm;line-height:1.1;}.barcode-card-meta{font-size:3.1mm;color:#52616b;}.barcode-bars{height:14mm;display:flex;align-items:stretch;justify-content:center;gap:0.55mm;width:68mm;margin-top:1mm;}.barcode-bars span{display:block;background:#0b1f38;height:100%;}.barcode-code{font-family:Consolas,monospace;font-size:5mm;font-weight:700;letter-spacing:0.8mm;color:#0b1f38;}@media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact;}}</style>' +
+      '<style>@page{size:85.6mm 53.98mm;margin:0;}*{box-sizing:border-box;}body{margin:0;width:85.6mm;height:53.98mm;font-family:Arial,sans-serif;color:#102a43;}.barcode-card-print{width:85.6mm;height:53.98mm;border:0.35mm solid #0c5aa8;padding:4mm;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:1.2mm;}.barcode-card-school{font-size:3mm;font-weight:700;color:#0c5aa8;text-transform:uppercase;}.barcode-card-name{font-size:4.8mm;line-height:1.1;}.barcode-card-meta{font-size:2.9mm;color:#52616b;}.barcode-qr-row{display:flex;align-items:center;justify-content:center;gap:3mm;width:100%;}.barcode-bars{height:13mm;display:flex;align-items:stretch;justify-content:center;gap:0.45mm;width:54mm;margin-top:1mm;}.barcode-bars span{display:block;background:#0b1f38;height:100%;}.qr-code svg{display:block;width:18mm;height:18mm;}.qr-code-fallback{border:0.3mm solid #0b1f38;padding:2mm;font-size:2.2mm;}.barcode-code{font-family:Consolas,monospace;font-size:4.2mm;font-weight:700;letter-spacing:0.45mm;color:#0b1f38;}@media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact;}}</style>' +
       '</head><body><div class="barcode-card-print">' +
       '<div class="barcode-card-school">Gwynne Park Run Club</div>' +
       '<strong class="barcode-card-name">' + escapeHtml(student.name) + '</strong>' +
       '<div class="barcode-card-meta">' + escapeHtml(student.year) + ' / ' + escapeHtml(student.cls) + '</div>' +
-      barcodeBarsHtml(student.barcode || student.id) +
-      '<div class="barcode-code">' + escapeHtml(student.barcode || student.id) + '</div>' +
+      '<div class="barcode-qr-row">' + barcodeBarsHtml(code) + qrCodeHtml(code) + '</div>' +
+      '<div class="barcode-code">' + escapeHtml(code) + '</div>' +
       '</div></body></html>';
     win.document.write(html);
     win.document.close();

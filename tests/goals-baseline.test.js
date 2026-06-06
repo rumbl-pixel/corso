@@ -78,7 +78,7 @@ let progress = Goals.progress(studentId, lapsGoal);
 assert(progress.current === 0, 'new laps goal should start from 0 after-goal laps');
 assert(progress.met === false, 'new laps goal should not complete from existing lifetime laps');
 
-Scan.logLap(studentId);
+Scan.logLap(studentId, { duplicateWindowMs: 0 });
 progress = Goals.progress(studentId, lapsGoal);
 assert(progress.current === 1, 'laps goal should progress after a later scan is logged');
 assert(progress.met === true, 'laps goal should complete after the next logged lap reaches target');
@@ -93,7 +93,7 @@ progress = Goals.progress(studentId, distanceGoal);
 assert(progress.current === 0, 'new distance goal should start from 0 after-goal km');
 assert(progress.met === false, 'new distance goal should not complete from existing lifetime distance');
 
-Scan.logLap(studentId);
+Scan.logLap(studentId, { duplicateWindowMs: 0 });
 progress = Goals.progress(studentId, distanceGoal);
 assert(progress.current === 0.25, 'distance goal should progress after a later lap is logged');
 assert(progress.met === true, 'distance goal should complete after a later lap reaches target');
@@ -118,7 +118,7 @@ progress = Goals.progress('STUDENT2', legacyGoal);
 assert(progress.current === 0, 'legacy cumulative goals should be baselined when read');
 assert(progress.met === false, 'legacy cumulative goals should not complete from lifetime laps');
 
-Scan.logLap('STUDENT2');
+Scan.logLap('STUDENT2', { duplicateWindowMs: 0 });
 progress = Goals.progress('STUDENT2', Goals.goalsFor('STUDENT2')[0]);
 assert(progress.current === 1, 'legacy cumulative goals should progress after a later scan');
 assert(progress.met === true, 'legacy cumulative goals should complete after a later scan reaches target');

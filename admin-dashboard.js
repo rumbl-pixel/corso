@@ -15,7 +15,7 @@
   });
 
   // --- Storage keys ---
-  var K = { students:'rc_students', activity:'rc_activity', sessions:'rc_sessions', events:'rc_events', challenges:'rc_challenges', timedRuns:'rc_timed', customAwards:'rc_custom_awards' };
+  var K = { students:'rc_students', activity:'rc_activity', sessions:'rc_sessions', events:'rc_events', challenges:'rc_challenges', timedRuns:'rc_timed', customAwards:'rc_custom_awards', scanAudit:'rc_scan_audit' };
 
   function load(key, def) { try { var r=localStorage.getItem(key); return r?JSON.parse(r):def; } catch{return def;} }
   function save(key,val) { localStorage.setItem(key,JSON.stringify(val)); }
@@ -99,27 +99,39 @@
     return '<div class="barcode-bars" aria-label="Barcode ' + escapeHtml(clean) + '">' + bars + '</div>';
   }
 
+  function qrCodeHtml(code) {
+    if (typeof qrcode !== 'function') {
+      return '<div class="qr-code-fallback">' + escapeHtml(code) + '</div>';
+    }
+    var qr = qrcode(0, 'M');
+    qr.addData(String(code || ''));
+    qr.make();
+    return '<div class="qr-code" aria-label="QR code ' + escapeHtml(code) + '">' + qr.createSvgTag(3, 1) + '</div>';
+  }
+
   function barcodeCardHtml(student) {
+    var code = student.barcode || student.id;
     return '<div class="barcode-card-preview">' +
       '<div class="barcode-card-school">Gwynne Park Run Club</div>' +
       '<strong class="barcode-card-name">' + escapeHtml(student.name) + '</strong>' +
       '<div class="barcode-card-meta">' + escapeHtml(student.year) + ' / ' + escapeHtml(student.cls) + '</div>' +
-      barcodeBarsHtml(student.barcode || student.id) +
-      '<div class="barcode-code">' + escapeHtml(student.barcode || student.id) + '</div>' +
+      '<div class="barcode-qr-row">' + barcodeBarsHtml(code) + qrCodeHtml(code) + '</div>' +
+      '<div class="barcode-code">' + escapeHtml(code) + '</div>' +
       '</div>';
   }
 
   function printStudentBarcodeCard(student) {
     var win = window.open('', '_blank');
     if (!win) { return; }
+    var code = student.barcode || student.id;
     var html = '<html><head><title>' + escapeHtml(student.name) + ' Barcode Card</title>' +
-      '<style>@page{size:85.6mm 53.98mm;margin:0;}*{box-sizing:border-box;}body{margin:0;width:85.6mm;height:53.98mm;font-family:Arial,sans-serif;color:#102a43;}.barcode-card-print{width:85.6mm;height:53.98mm;border:0.35mm solid #0c5aa8;padding:5mm;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:1.6mm;}.barcode-card-school{font-size:3.2mm;font-weight:700;color:#0c5aa8;text-transform:uppercase;}.barcode-card-name{font-size:5.3mm;line-height:1.1;}.barcode-card-meta{font-size:3.1mm;color:#52616b;}.barcode-bars{height:14mm;display:flex;align-items:stretch;justify-content:center;gap:0.55mm;width:68mm;margin-top:1mm;}.barcode-bars span{display:block;background:#0b1f38;height:100%;}.barcode-code{font-family:Consolas,monospace;font-size:5mm;font-weight:700;letter-spacing:0.8mm;color:#0b1f38;}@media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact;}}</style>' +
+      '<style>@page{size:85.6mm 53.98mm;margin:0;}*{box-sizing:border-box;}body{margin:0;width:85.6mm;height:53.98mm;font-family:Arial,sans-serif;color:#102a43;}.barcode-card-print{width:85.6mm;height:53.98mm;border:0.35mm solid #0c5aa8;padding:4mm;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:1.2mm;}.barcode-card-school{font-size:3mm;font-weight:700;color:#0c5aa8;text-transform:uppercase;}.barcode-card-name{font-size:4.8mm;line-height:1.1;}.barcode-card-meta{font-size:2.9mm;color:#52616b;}.barcode-qr-row{display:flex;align-items:center;justify-content:center;gap:3mm;width:100%;}.barcode-bars{height:13mm;display:flex;align-items:stretch;justify-content:center;gap:0.45mm;width:54mm;margin-top:1mm;}.barcode-bars span{display:block;background:#0b1f38;height:100%;}.qr-code svg{display:block;width:18mm;height:18mm;}.qr-code-fallback{border:0.3mm solid #0b1f38;padding:2mm;font-size:2.2mm;}.barcode-code{font-family:Consolas,monospace;font-size:4.2mm;font-weight:700;letter-spacing:0.45mm;color:#0b1f38;}@media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact;}}</style>' +
       '</head><body><div class="barcode-card-print">' +
       '<div class="barcode-card-school">Gwynne Park Run Club</div>' +
       '<strong class="barcode-card-name">' + escapeHtml(student.name) + '</strong>' +
       '<div class="barcode-card-meta">' + escapeHtml(student.year) + ' / ' + escapeHtml(student.cls) + '</div>' +
-      barcodeBarsHtml(student.barcode || student.id) +
-      '<div class="barcode-code">' + escapeHtml(student.barcode || student.id) + '</div>' +
+      '<div class="barcode-qr-row">' + barcodeBarsHtml(code) + qrCodeHtml(code) + '</div>' +
+      '<div class="barcode-code">' + escapeHtml(code) + '</div>' +
       '</div></body></html>';
     win.document.write(html);
     win.document.close();
@@ -173,11 +185,13 @@
   // === SCANNER ===
   var scanInput=document.getElementById('scan-input');
   var scanBtn=document.getElementById('scan-btn');
+  var undoAdminScanBtn=document.getElementById('undo-admin-scan-btn');
   var scanResultEl=document.getElementById('scan-result');
   var sessionStateEl=document.getElementById('session-state');
   var sessionLogEl=document.getElementById('session-log');
   var currentSession=null;
   var sessionScans=[];
+  var lastAdminScan=null;
 
   document.getElementById('start-session-btn').addEventListener('click', function(){
     currentSession={id:'session-'+Date.now(),date:new Date().toISOString().slice(0,10),scans:[]};
@@ -204,16 +218,15 @@
   function handleScan(){
     var barcode=scanInput.value.trim().toUpperCase();
     if(!barcode)return;
-    var students=getStudents();
-    var student=students.find(function(s){return s.barcode===barcode||s.id===barcode;});
-    if(!student){
-      showResult(scanResultEl,{success:false,error:'Unknown barcode: '+barcode});
+    var result=window.RunClubScan.logLap(barcode,{source:'admin-dashboard',scanner_id:session.email||'DEMO',duplicateWindowMs:2500});
+    if(!result.success){
+      showResult(scanResultEl,{success:false,duplicate:result.duplicate===true,error:result.error||'Scan error'});
     } else {
-      student.laps+=1;
-      saveStudents(students);
-      var scan={barcode:barcode,name:student.name,laps:student.laps,time:new Date().toISOString()};
+      var scan={barcode:barcode,name:result.student.name,laps:result.student.laps,time:new Date().toISOString(),scanner_id:session.email||'DEMO'};
       sessionScans.push(scan);
-      showResult(scanResultEl,{success:true,message:'Lap logged ✓',student:{id:student.id,name:student.name,total_laps:student.laps,km:lapsTokm(student.laps).toFixed(2)}});
+      lastAdminScan={student_id:result.student.id,name:result.student.name,barcode:barcode};
+      undoAdminScanBtn.hidden=false;
+      showResult(scanResultEl,{success:true,message:'Lap logged ✓',student:{id:result.student.id,name:result.student.name,total_laps:result.student.laps,km:result.student.km.toFixed(2)}});
       renderSessionLog(sessionScans);
       renderStudentList();
       renderLeaderboard();
@@ -221,11 +234,34 @@
       renderMedals();
       renderCertificates();
       renderSchoolSummary();
+      renderAuditTrail();
     }
     scanInput.value=''; scanInput.focus();
   }
 
+  function undoLastAdminScan(){
+    if(!lastAdminScan){return;}
+    if(!confirm('Undo last scan for '+lastAdminScan.name+'?')){scanInput.focus();return;}
+    var students=getStudents();
+    var student=students.find(function(s){return s.id===lastAdminScan.student_id;});
+    if(student&&student.laps>0){
+      student.laps-=1;
+      saveStudents(students);
+      sessionScans=sessionScans.filter(function(scan,index){return index!==sessionScans.length-1;});
+      if(window.RunClubScan&&window.RunClubScan.auditScan){
+        window.RunClubScan.auditScan({barcode:lastAdminScan.barcode,scanner_id:session.email||'DEMO',source:'admin-dashboard',success:true,undo:true,student_id:student.id,student_name:student.name,laps_after:student.laps});
+      }
+      renderSessionLog(sessionScans);
+      renderStudentList(); renderLeaderboard(); renderAwards(); renderMedals(); renderCertificates(); renderSchoolSummary(); renderAuditTrail();
+      showResult(scanResultEl,{success:true,message:'Last scan undone.',student:{id:student.id,name:student.name,total_laps:student.laps}});
+    }
+    lastAdminScan=null;
+    undoAdminScanBtn.hidden=true;
+    scanInput.focus();
+  }
+
   scanBtn.addEventListener('click',handleScan);
+  undoAdminScanBtn.addEventListener('click',undoLastAdminScan);
   scanInput.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();handleScan();}});
   scanInput.addEventListener('input',function(){
     if(autoTimer)clearTimeout(autoTimer);
@@ -751,6 +787,17 @@
   // === REPORTS ===
   var reportsResultEl=document.getElementById('reports-result');
   var schoolSummaryEl=document.getElementById('school-summary');
+  var auditTrailListEl=document.getElementById('audit-trail-list');
+
+  function renderAuditTrail(){
+    var rows=(window.RunClubScan&&window.RunClubScan.scanAudit?window.RunClubScan.scanAudit():load(K.scanAudit,[])).slice().reverse().slice(0,12);
+    if(!rows.length){auditTrailListEl.innerHTML='<p style="color:#888;font-size:0.85rem;">No scan audit rows yet.</p>';return;}
+    auditTrailListEl.innerHTML='<table style="width:100%;border-collapse:collapse;font-size:0.82rem;"><thead><tr style="background:#f4f6fb;"><th style="text-align:left;padding:0.4rem;">Time</th><th>Student</th><th>Barcode</th><th>Scanner</th><th>Status</th></tr></thead><tbody>'+
+      rows.map(function(row){
+        return '<tr style="border-bottom:1px solid #f0f0f0;"><td style="padding:0.4rem;">'+new Date(row.time).toLocaleString()+'</td><td>'+escapeHtml(row.student_name||'')+'</td><td>'+escapeHtml(row.barcode||'')+'</td><td>'+escapeHtml(row.scanner_id||'')+'</td><td>'+(row.undo?'Undo':(row.success?'Logged':(row.duplicate?'Duplicate':'Error')))+'</td></tr>';
+      }).join('')+'</tbody></table>';
+  }
+  renderAuditTrail();
 
   function renderSchoolSummary(){
     var students=getStudents();
@@ -777,7 +824,8 @@
       events:load(K.events,[]),
       challenges:load(K.challenges,[]),
       timed_runs:load(K.timedRuns,[]),
-      sessions:load(K.sessions,[])
+      sessions:load(K.sessions,[]),
+      scan_audit:load(K.scanAudit,[])
     });
     showResult(reportsResultEl,{success:true,message:'Full JSON report exported.'});
   });
@@ -795,10 +843,55 @@
     showResult(reportsResultEl,{success:true,message:'Activity CSV exported.'});
   });
 
+  document.getElementById('export-audit-csv-btn').addEventListener('click',function(){
+    var rows=load(K.scanAudit,[]);
+    dlCsv('scan-audit-'+new Date().toISOString().slice(0,10)+'.csv',rows,['time','scanner_id','source','barcode','student_id','student_name','success','duplicate','error','laps_after']);
+    showResult(reportsResultEl,{success:true,message:'Scan audit CSV exported.'});
+  });
+
   document.getElementById('print-report-btn').addEventListener('click',function(){ window.print(); });
 
   // === IMPORT ===
   var importResultEl=document.getElementById('import-result');
+  var importSummaryEl=document.getElementById('import-summary');
+
+  function normalizeImportCell(value){
+    return String(value||'').trim().replace(/\s+/g,' ');
+  }
+
+  function parseCsvLine(line){
+    var cells=[];
+    var value='';
+    var inQuotes=false;
+    for(var i=0;i<line.length;i++){
+      var ch=line.charAt(i);
+      var next=line.charAt(i+1);
+      if(ch==='"'&&inQuotes&&next==='"'){value+='"';i+=1;}
+      else if(ch==='"'){inQuotes=!inQuotes;}
+      else if(ch===','&&!inQuotes){cells.push(value);value='';}
+      else{value+=ch;}
+    }
+    cells.push(value);
+    return cells.map(normalizeImportCell);
+  }
+
+  function rosterDuplicateKey(first,last,year,cls){
+    return [first,last,year,cls].map(function(part){return normalizeImportCell(part).toLowerCase();}).join('|');
+  }
+
+  function renderImportSummary(summary){
+    importSummaryEl.hidden=false;
+    importSummaryEl.innerHTML=
+      '<div class="import-summary-grid">'+
+        '<div><strong>'+summary.added+'</strong><span>Added</span></div>'+
+        '<div><strong>'+summary.duplicates+'</strong><span>Duplicates</span></div>'+
+        '<div><strong>'+summary.invalid+'</strong><span>Invalid</span></div>'+
+        '<div><strong>'+summary.total+'</strong><span>Total roster</span></div>'+
+      '</div>'+
+      (summary.skipped_details.length?'<details open><summary>Skipped rows</summary><ul>'+summary.skipped_details.map(function(item){
+        return '<li>Row '+item.row+': '+escapeHtml(item.name||'Unnamed row')+' - '+escapeHtml(item.reason)+'</li>';
+      }).join('')+'</ul></details>':'<p class="success-message">No duplicates or invalid rows found.</p>');
+  }
 
   document.getElementById('import-form').addEventListener('submit',function(e){
     e.preventDefault();
@@ -808,26 +901,48 @@
     reader.onload=function(ev){
       var lines=ev.target.result.split('\n').map(function(l){return l.trim();}).filter(Boolean);
       if(!lines.length){showResult(importResultEl,{success:false,error:'Empty file.'});return;}
-      var headers=lines[0].toLowerCase().split(',').map(function(h){return h.trim();});
+      var headers=parseCsvLine(lines[0]).map(function(h){return h.toLowerCase().replace(/\s+/g,'');});
       var fi=headers.indexOf('firstname'); var li=headers.indexOf('lastname');
       var yi=headers.indexOf('yeargroup'); var ci=headers.indexOf('classname');
       if(fi<0||li<0||yi<0||ci<0){showResult(importResultEl,{success:false,error:'Missing columns. Need: firstname,lastname,yeargroup,classname'});return;}
       var students=getStudents();
-      var added=0; var skipped=0;
-      lines.slice(1).forEach(function(line){
-        var cols=line.split(',').map(function(c){return c.trim();});
-        var first=cols[fi]; var last=cols[li]; var year=cols[yi]; var cls=cols[ci];
-        if(!first||!last)return;
+      var existingKeys={};
+      students.forEach(function(s){existingKeys[rosterDuplicateKey(s.first,s.last,s.year,s.cls)]=true;});
+      var fileKeys={};
+      var added=0; var duplicates=0; var invalid=0; var skippedDetails=[];
+      lines.slice(1).forEach(function(line,index){
+        var rowNumber=index+2;
+        var cols=parseCsvLine(line);
+        var first=normalizeImportCell(cols[fi]); var last=normalizeImportCell(cols[li]); var year=normalizeImportCell(cols[yi]); var cls=normalizeImportCell(cols[ci]).toUpperCase();
         var name=first+' '+last;
-        var exists=students.find(function(s){return s.name===name&&s.year===year;});
-        if(exists){skipped++;return;}
+        if(!first||!last||!year||!cls){
+          invalid++;
+          skippedDetails.push({row:rowNumber,name:name.trim(),reason:'Missing first name, last name, year group, or class'});
+          return;
+        }
+        var key=rosterDuplicateKey(first,last,year,cls);
+        if(existingKeys[key]){
+          duplicates++;
+          skippedDetails.push({row:rowNumber,name:name,reason:'Already exists in roster'});
+          return;
+        }
+        if(fileKeys[key]){
+          duplicates++;
+          skippedDetails.push({row:rowNumber,name:name,reason:'Duplicate row in this CSV'});
+          return;
+        }
         var id=generateBarcodeId(first,last,students);
         students.push({id:id,barcode:id,first:first,last:last,name:name,year:year,cls:cls,laps:0,minutes:0,events:[]});
+        existingKeys[key]=true;
+        fileKeys[key]=true;
         added++;
       });
       saveStudents(students);
       refreshStudentViews();
-      showResult(importResultEl,{success:true,added:added,skipped:skipped,total:students.length});
+      var summary={success:true,added:added,duplicates:duplicates,invalid:invalid,total:students.length,skipped_details:skippedDetails};
+      showResult(importResultEl,summary);
+      importResultEl.hidden=true;
+      renderImportSummary(summary);
     };
     reader.readAsText(file);
   });
@@ -846,10 +961,11 @@
     var students=getStudents();
     var win=window.open('','_blank');
     if(!win){return;}
-    var html='<html><head><title>Barcode ID Cards</title><style>@page{size:A4;margin:10mm;}*{box-sizing:border-box;}body{font-family:Arial,sans-serif;padding:0;margin:0;color:#102a43;}.cards{display:flex;flex-wrap:wrap;gap:6mm;align-items:flex-start;}.barcode-card-print{width:85.6mm;height:53.98mm;border:0.35mm solid #0c5aa8;padding:5mm;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:1.6mm;break-inside:avoid;page-break-inside:avoid;}.barcode-card-school{font-size:3.2mm;font-weight:700;color:#0c5aa8;text-transform:uppercase;}.barcode-card-name{font-size:5.3mm;line-height:1.1;}.barcode-card-meta{font-size:3.1mm;color:#52616b;}.barcode-bars{height:14mm;display:flex;align-items:stretch;justify-content:center;gap:0.55mm;width:68mm;margin-top:1mm;}.barcode-bars span{display:block;background:#0b1f38;height:100%;}.barcode-code{font-family:Consolas,monospace;font-size:5mm;font-weight:700;letter-spacing:0.8mm;color:#0b1f38;}@media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact;}}</style></head><body>';
+    var html='<html><head><title>Barcode / QR ID Cards</title><style>@page{size:A4;margin:10mm;}*{box-sizing:border-box;}body{font-family:Arial,sans-serif;padding:0;margin:0;color:#102a43;}.cards{display:flex;flex-wrap:wrap;gap:6mm;align-items:flex-start;}.barcode-card-print{width:85.6mm;height:53.98mm;border:0.35mm solid #0c5aa8;padding:4mm;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:1.2mm;break-inside:avoid;page-break-inside:avoid;}.barcode-card-school{font-size:3mm;font-weight:700;color:#0c5aa8;text-transform:uppercase;}.barcode-card-name{font-size:4.8mm;line-height:1.1;}.barcode-card-meta{font-size:2.9mm;color:#52616b;}.barcode-qr-row{display:flex;align-items:center;justify-content:center;gap:3mm;width:100%;}.barcode-bars{height:13mm;display:flex;align-items:stretch;justify-content:center;gap:0.45mm;width:54mm;margin-top:1mm;}.barcode-bars span{display:block;background:#0b1f38;height:100%;}.qr-code svg{display:block;width:18mm;height:18mm;}.qr-code-fallback{border:0.3mm solid #0b1f38;padding:2mm;font-size:2.2mm;}.barcode-code{font-family:Consolas,monospace;font-size:4.2mm;font-weight:700;letter-spacing:0.45mm;color:#0b1f38;}@media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact;}}</style></head><body>';
     html+='<div class="cards">';
     students.forEach(function(s){
-      html+='<div class="barcode-card-print"><div class="barcode-card-school">Gwynne Park Run Club</div><strong class="barcode-card-name">'+escapeHtml(s.name)+'</strong><div class="barcode-card-meta">'+escapeHtml(s.year)+' / '+escapeHtml(s.cls)+'</div>'+barcodeBarsHtml(s.barcode||s.id)+'<div class="barcode-code">'+escapeHtml(s.barcode||s.id)+'</div></div>';
+      var code=s.barcode||s.id;
+      html+='<div class="barcode-card-print"><div class="barcode-card-school">Gwynne Park Run Club</div><strong class="barcode-card-name">'+escapeHtml(s.name)+'</strong><div class="barcode-card-meta">'+escapeHtml(s.year)+' / '+escapeHtml(s.cls)+'</div><div class="barcode-qr-row">'+barcodeBarsHtml(code)+qrCodeHtml(code)+'</div><div class="barcode-code">'+escapeHtml(code)+'</div></div>';
     });
     html+='</div></body></html>';
     win.document.write(html); win.document.close(); win.focus(); win.print();
