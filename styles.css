@@ -37,11 +37,10 @@ a:hover { text-decoration: underline; }
 .brand-home-link { color: white; text-decoration: none; border-radius: 6px; }
 .brand-home-link:hover { text-decoration: none; }
 .brand-home-link:focus-visible { outline: 3px solid rgba(255,255,255,0.85); outline-offset: 4px; }
-.brand-icon { font-size: 1.6rem; }
 .brand-logo {
-  width: 44px;
-  height: 44px;
-  flex: 0 0 44px;
+  width: 86px;
+  height: auto;
+  flex: 0 0 86px;
   display: block;
   object-fit: contain;
   background: transparent;
@@ -526,13 +525,53 @@ pre {
   margin-bottom: 0;
 }
 
+.import-summary {
+  margin-top: 1rem;
+  padding: 0.9rem;
+  border: 1px solid #c2d4f5;
+  border-radius: 8px;
+  background: #f8faff;
+}
+
+.import-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.import-summary-grid div {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.65rem;
+}
+
+.import-summary-grid strong {
+  display: block;
+  font-size: 1.35rem;
+  color: #0c5aa8;
+}
+
+.import-summary-grid span {
+  color: #64748b;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+}
+
+.import-summary ul {
+  margin: 0.5rem 0 0;
+  padding-left: 1.25rem;
+  color: #555;
+}
+
 .barcode-card-preview {
   width: min(100%, 340px);
   aspect-ratio: 85.6 / 53.98;
   border: 2px solid #0c5aa8;
   border-radius: 8px;
   background: #fff;
-  padding: 1rem;
+  padding: 0.85rem;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -566,7 +605,7 @@ pre {
   align-items: stretch;
   justify-content: center;
   gap: 2px;
-  width: 82%;
+  width: 72%;
   margin-top: 0.2rem;
 }
 
@@ -574,6 +613,28 @@ pre {
   display: block;
   height: 100%;
   background: #0b1f38;
+}
+
+.barcode-qr-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+}
+
+.qr-code svg {
+  display: block;
+  width: 54px;
+  height: 54px;
+}
+
+.qr-code-fallback {
+  border: 1px solid #0b1f38;
+  padding: 0.25rem;
+  font-size: 0.7rem;
+  max-width: 64px;
+  overflow-wrap: anywhere;
 }
 
 .barcode-code {

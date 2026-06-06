@@ -1,62 +1,42 @@
-# Gwynne Park Run Club — Prioritized Features
+# Gwynne Park Run Club - Priority List
 
-Inspired by Marathon Kids Connect + StrideTrack. Status as of this build.
+Inspired by Marathon Kids Connect and StrideTrack. Privacy remains a release gate, so Priority 0 is held for the final live-readiness pass.
 
-## ✅ Completed (MVP v1)
+## Priority 0 - Live Privacy And Security Gate
 
-- [x] Static site in GitHub: home, admin, dashboard, student portals
-- [x] Local demo roster (students with laps, minutes, year, class, barcode)
-- [x] Barcode scanning (admin dashboard) — Bluetooth keyboard/HID input, auto-submit
-- [x] Sessions: open/close, session log, JSON/CSV export
-- [x] Timed runs: start/stop timer, per-student history
-- [x] Activity minutes: log minutes, convert 20 min = 1 km, store + export
-- [x] Events: create program types (Run Club, Jog-a-thon, PE, etc.)
-- [x] Leaderboard: rank by total distance with year/class filters
-- [x] Awards: milestones at 5/10/25/50/100/200/500 laps
-- [x] Certificates: printable per-student
-- [x] Challenges: club-wide goals
-- [x] Reports: full JSON export + leaderboard/activity CSV
-- [x] Roster import: CSV with first/last/year/class, auto ID, skip duplicates
-- [x] Barcode ID cards: printable
-- [x] Student portal: code login, profile, ranks, awards
-- [x] Student self-report form
-- [x] School summary: total laps, km, marathon equivalents, active runners
-- [x] **Tablet kiosk (`kiosk.html`)** — full-screen self-scan station with big
-      green/red feedback, auto-focus input, idle attract state, auto-reset,
-      undo-last-lap, PIN-gated exit *(added this build)*
-- [x] **Modular `src/` structure** — shared scanning + data-tracking modules
-      reused by admin and kiosk *(added this build)*
-- [x] **Automated build script** (`build.sh`) — assembles modules to root + push
+- [ ] Replace local demo storage with a real backend.
+- [ ] Add role-based permissions for admin, coach, parent, and student views.
+- [ ] Add school-level data isolation.
+- [ ] Remove public demo access before launch.
+- [ ] Add consent, retention, and export/delete controls for student data.
+- [ ] Use non-guessable student and parent access tokens.
+- [ ] Complete privacy policy, incident plan, and admin onboarding notes.
+- [ ] Add production monitoring and backup/export process.
+- [ ] Run security review on student identifiers, scan logs, and reports.
+- [ ] Final live deployment checklist.
 
-## 🔥 Now / Next (High priority)
+## Priority 1 - Operational MVP
 
-- [ ] Connect real backend (Supabase/Postgres) — replace localStorage
-      - Tables: schools, users, students, laps, sessions, events, activity, timed runs
-      - Wire admin + student portals to read/write Supabase
-- [ ] Multi-school + row-level security (add `school_id`, isolate per school)
-- [ ] Self-report approval queue (admin Activity tab: approve/reject home logs)
-- [ ] Parent portal (`parent.html`) — login tied to a student; view laps,
-      distance, milestones, certificates; submit home activity
-- [ ] Roles & permissions (Admin / Coach / Volunteer / Parent / Student)
-- [ ] Camera-based QR/barcode scanning (fallback for no hardware scanner)
+- [x] ~~1.1 Admin can manually add, edit, and delete students.~~
+- [x] ~~1.2 Admin can import roster CSVs with duplicate/invalid row feedback.~~
+- [x] ~~1.3 Student ID cards include printable barcodes and local QR codes.~~
+- [x] ~~1.4 Admin can start and finish run sessions.~~
+- [x] ~~1.5 Admin and kiosk can log laps quickly from barcode input.~~
+- [x] ~~1.6 Admin and kiosk can undo/review the last scan.~~
+- [x] ~~1.7 Rapid duplicate scan protection is in shared scan logging.~~
+- [x] ~~1.8 Whole-school leaderboard page is available.~~
+- [x] ~~1.9 Leaderboards include division, year, and class views.~~
+- [x] ~~1.10 Student profile shows laps, distance, awards, goals, and ID card.~~
+- [x] ~~1.11 Parent portal is read-only and can print child award certificates.~~
+- [x] ~~1.12 Admin reports export leaderboard, activity, JSON, and scan audit CSVs.~~
+- [x] ~~1.13 Award/certificate readiness is visible in admin.~~
+- [x] ~~1.14 Basic scan audit trail records scanner, student, time, and result.~~
 
-## 🟡 Later (Medium priority)
+## Priority 2 - Next Build
 
-- [ ] PWA / installable mobile scanning ("Add to home screen", offline cache)
-- [ ] Advanced reporting: grade/class summaries, per-runner history, award lists
-- [ ] Student progress PDFs (one-page per-term summary)
-- [ ] Onboarding wizard (track length, award thresholds, program types, roster)
-- [ ] Parent home-logging flow into approval queue
-- [ ] **Sports Carnival & Cross Country module with PB tracking**
-      - "Carnivals" tab for Athletics + Cross Country
-      - Event lists: 100m, 200m, 800m, long jump, high jump, shot put, discus, etc.
-      - Per-event result entry (times, distances, heights); field-event attempts;
-        lane-based track timing
-      - Auto PB badges when a student beats their previous best
-      - Show PBs on student profile; house points + age champion scoring + exports
-
-## ⚪ Backlog (Low priority)
-
-- [ ] Resources & lesson plans section
-- [ ] Granular privacy controls (pseudonyms, consent flags, regional settings)
-- [ ] UI/UX refinements for small screens
+- [ ] PWA/installable scanning for phones and iPads.
+- [ ] Offline scan queue sync once a backend exists.
+- [ ] Richer class, division, and medal reporting.
+- [ ] Per-term student progress PDFs.
+- [ ] Onboarding wizard for track length, year groups, and award thresholds.
+- [ ] Sports Carnival and Cross Country PB module.

@@ -31,8 +31,8 @@
   letter-spacing: 0.5px;
 }
 .kiosk-brand-logo {
-  width: 42px;
-  height: 42px;
+  width: 78px;
+  height: auto;
   object-fit: contain;
   background: transparent;
   border-radius: 0;

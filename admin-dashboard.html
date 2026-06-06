@@ -11,7 +11,7 @@
     <header class="site-header">
       <div class="header-inner">
         <a class="brand brand-home-link" href="index.html" aria-label="Back to Gwynne Park Run Club home page">
-          <img class="brand-logo" src="assets/gwynne-park-logo.svg" alt="Gwynne Park Schools" />
+          <img class="brand-logo" src="assets/gwynne-park-logo.png" alt="Gwynne Park Schools" />
           <h1>Gwynne Park Run Club</h1>
         </a>
         <nav class="main-nav">
@@ -55,6 +55,7 @@
             </label>
             <button id="scan-btn" type="button">Scan</button>
           </div>
+          <button id="undo-admin-scan-btn" type="button" class="secondary" hidden style="margin-top:0.75rem;">Undo last scan</button>
           <pre id="scan-result" hidden></pre>
           <div id="session-log" style="margin-top:1rem;"></div>
           <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:1rem;">
@@ -292,9 +293,16 @@
             <button id="export-report-json-btn" type="button">Export JSON report</button>
             <button id="export-report-csv-btn" type="button" class="secondary">Export CSV leaderboard</button>
             <button id="export-activity-csv-btn" type="button" class="secondary">Export activity CSV</button>
+            <button id="export-audit-csv-btn" type="button" class="secondary">Export scan audit</button>
             <button id="print-report-btn" type="button" class="secondary">Print report</button>
           </div>
           <pre id="reports-result" hidden></pre>
+        </div>
+
+        <div class="card">
+          <h2>&#128220; Recent Scan Audit</h2>
+          <p style="color:#555;font-size:0.9rem;">Basic trail of who scanned, which student, when, and whether the scan was accepted.</p>
+          <div id="audit-trail-list"></div>
         </div>
 
         <!-- SCHOOL SUMMARY -->
@@ -316,13 +324,14 @@
             <button type="submit">Import students</button>
           </form>
           <pre id="import-result" hidden></pre>
+          <div id="import-summary" class="import-summary" hidden></div>
           <a id="download-template" href="#" style="font-size:0.85rem;margin-top:0.5rem;display:inline-block;">&#11015; Download CSV template</a>
         </div>
 
         <!-- BARCODE CARD PRINT -->
         <div class="card">
-          <h2>&#128203; Print Barcode ID Cards</h2>
-          <p style="color:#555;font-size:0.9rem;">Auto-generated barcode cards for every student. Print on card stock and laminate. Available in 4 sizes.</p>
+          <h2>&#128203; Print Barcode / QR ID Cards</h2>
+          <p style="color:#555;font-size:0.9rem;">Auto-generated barcode and QR cards for every student. Print on card stock and laminate. Available in 4 sizes.</p>
           <label>Card size
             <select id="card-size">
               <option value="small">Small (label sticker)</option>
@@ -331,7 +340,7 @@
               <option value="full">Full page</option>
             </select>
           </label>
-          <button id="print-barcodes-btn" type="button">Generate &amp; print barcode cards</button>
+          <button id="print-barcodes-btn" type="button">Generate &amp; print barcode / QR cards</button>
           <div id="barcode-print-area" style="margin-top:1rem;"></div>
         </div>
       </div>
@@ -345,6 +354,7 @@
     <script src="scanning.js"></script>
     <script src="goals.js"></script>
     <script src="admin-goals.js"></script>
+    <script src="assets/qrcode-generator.js"></script>
     <script src="admin-dashboard.js"></script>
   </body>
 </html>

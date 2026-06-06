@@ -16,7 +16,8 @@
     sessions: 'rc_sessions',
     events: 'rc_events',
     challenges: 'rc_challenges',
-    timedRuns: 'rc_timed'
+    timedRuns: 'rc_timed',
+    scanAudit: 'rc_scan_audit'
   };
 
   function load(key, def) {
@@ -60,9 +61,42 @@
 
   // --- Core: log a lap from a scanned barcode ---
   // Returns a result object describing what happened (success/error + details).
-  function logLap(rawBarcode) {
+  function scanAudit() { return load(KEYS.scanAudit, []); }
+
+  function saveScanAudit(rows) { save(KEYS.scanAudit, rows); }
+
+  function auditScan(entry) {
+    var rows = scanAudit();
+    rows.push(Object.assign({
+      id: 'audit-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+      time: new Date().toISOString()
+    }, entry));
+    saveScanAudit(rows.slice(-1000));
+  }
+
+  function isRapidDuplicate(barcode, options) {
+    options = options || {};
+    var duplicateWindowMs = options.duplicateWindowMs == null ? 2500 : options.duplicateWindowMs;
+    if (!duplicateWindowMs) { return false; }
+    var rows = scanAudit();
+    var last = rows.slice().reverse().find(function (row) {
+      return row.barcode === barcode && row.success === true;
+    });
+    if (!last || !last.time) { return false; }
+    return (Date.now() - new Date(last.time).getTime()) < duplicateWindowMs;
+  }
+
+  function logLap(rawBarcode, options) {
+    options = options || {};
     var barcode = String(rawBarcode || '').trim().toUpperCase();
     if (!barcode) { return { success: false, error: 'Empty scan' }; }
+
+    var scannerId = options.scanner_id || options.scannerId || 'unknown-scanner';
+
+    if (isRapidDuplicate(barcode, options)) {
+      auditScan({ barcode: barcode, scanner_id: scannerId, source: options.source || 'scanner', success: false, duplicate: true, error: 'Duplicate scan ignored' });
+      return { success: false, duplicate: true, error: 'Duplicate scan ignored: wait a moment before scanning the same card again', barcode: barcode };
+    }
 
     var students = getStudents();
     var student = students.find(function (s) {
@@ -70,11 +104,13 @@
     });
 
     if (!student) {
+      auditScan({ barcode: barcode, scanner_id: scannerId, source: options.source || 'scanner', success: false, error: 'Code not recognised' });
       return { success: false, error: 'Code not recognised: ' + barcode, barcode: barcode };
     }
 
     student.laps += 1;
     saveStudents(students);
+    auditScan({ barcode: barcode, scanner_id: scannerId, source: options.source || 'scanner', success: true, duplicate: false, student_id: student.id, student_name: student.name, laps_after: student.laps });
 
     return {
       success: true,
@@ -133,6 +169,9 @@
     MILESTONES: MILESTONES,
     awardsFor: awardsFor,
     milestoneJustReached: milestoneJustReached,
+    scanAudit: scanAudit,
+    saveScanAudit: saveScanAudit,
+    auditScan: auditScan,
     logLap: logLap,
     bindScannerInput: bindScannerInput
   };
