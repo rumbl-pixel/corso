@@ -1,15 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
   <title id="title">Gwynne Park Schools logo</title>
   <desc id="desc">A sharp vector version of the Gwynne Park Schools triangular working together logo.</desc>
-  <rect width="256" height="256" fill="#ffffff"/>
-  <path d="M128 5 248 206H8L128 5Z" fill="#ffffff" stroke="#0a315d" stroke-width="6" stroke-linejoin="round"/>
-  <path d="M124 55 66 166h123L148 91l-32 57-20-36 28-57Z" fill="#073f78"/>
-  <path d="M46 185h164" stroke="#0a315d" stroke-width="2"/>
-  <g fill="#0a315d" font-family="Arial, Helvetica, sans-serif" font-weight="700" text-anchor="middle">
+  <path d="M128 5 248 206H8L128 5Z" fill="#ffffff" stroke="#003b73" stroke-width="6" stroke-linejoin="round"/>
+  <path d="M124 55 66 166h123L148 91l-32 57-20-36 28-57Z" fill="#003b73"/>
+  <path d="M46 185h164" stroke="#003b73" stroke-width="2"/>
+  <g fill="#003b73" font-family="Arial, Helvetica, sans-serif" font-weight="700" text-anchor="middle">
     <text x="128" y="203" font-size="20" letter-spacing="5">GWYNNE PARK</text>
     <text x="128" y="225" font-size="20" letter-spacing="4">SCHOOLS</text>
   </g>
-  <rect x="0" y="230" width="256" height="26" fill="#073f78"/>
+  <rect x="0" y="230" width="256" height="26" fill="#003b73"/>
   <text x="128" y="249" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="700" text-anchor="middle" letter-spacing="4">WORKING TOGETHER</text>
   <g fill="#ffffff" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round">
     <path d="M78 112c21-4 41 3 59 14 20 12 37 15 56 6l-4 13c-21 8-39 5-58-7-18-11-34-17-55-12l2-14Z"/>

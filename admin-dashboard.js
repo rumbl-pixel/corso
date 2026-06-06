@@ -15,7 +15,7 @@
   });
 
   // --- Storage keys ---
-  var K = { students:'rc_students', activity:'rc_activity', sessions:'rc_sessions', events:'rc_events', challenges:'rc_challenges', timedRuns:'rc_timed' };
+  var K = { students:'rc_students', activity:'rc_activity', sessions:'rc_sessions', events:'rc_events', challenges:'rc_challenges', timedRuns:'rc_timed', customAwards:'rc_custom_awards' };
 
   function load(key, def) { try { var r=localStorage.getItem(key); return r?JSON.parse(r):def; } catch{return def;} }
   function save(key,val) { localStorage.setItem(key,JSON.stringify(val)); }
@@ -348,6 +348,14 @@
   var studentSearchEl=document.getElementById('student-search');
   var addStudentFormEl=document.getElementById('add-student-form');
   var addStudentResultEl=document.getElementById('add-student-result');
+  var barcodeConfirmationEl=document.getElementById('barcode-confirmation');
+  var studentEditorModalEl=document.getElementById('student-editor-modal');
+  var editStudentFormEl=document.getElementById('edit-student-form');
+  var editStudentIdEl=document.getElementById('edit-student-id');
+  var editStudentFirstEl=document.getElementById('edit-student-first');
+  var editStudentLastEl=document.getElementById('edit-student-last');
+  var editStudentYearEl=document.getElementById('edit-student-year');
+  var editStudentClassEl=document.getElementById('edit-student-class');
 
   function refreshStudentViews(){
     renderStudentList();
@@ -358,6 +366,13 @@
     renderMedals();
     renderCertificates();
     renderSchoolSummary();
+  }
+
+  function renderBarcodeConfirmation(student){
+    barcodeConfirmationEl.hidden=false;
+    barcodeConfirmationEl.innerHTML=
+      '<div><strong>Barcode generated</strong><br><span>'+escapeHtml(student.name)+' • '+escapeHtml(student.barcode||student.id)+'</span></div>'+
+      barcodeCardHtml(student);
   }
 
   function renderStudentList(){
@@ -378,16 +393,85 @@
       barcodeBtn.textContent='Barcode';
       barcodeBtn.className='link-btn';
       barcodeBtn.addEventListener('click',function(){ printStudentBarcodeCard(s); });
+      var editBtn=document.createElement('button');
+      editBtn.textContent='Edit';
+      editBtn.className='link-btn';
+      editBtn.addEventListener('click',function(){ openStudentEditor(s.id); });
+      var removeBtn=document.createElement('button');
+      removeBtn.textContent='Remove';
+      removeBtn.className='link-btn danger-link';
+      removeBtn.addEventListener('click',function(){ deleteStudent(s.id); });
       var actions=document.createElement('span');
       actions.className='student-list-actions';
       actions.appendChild(barcodeBtn);
+      actions.appendChild(editBtn);
       actions.appendChild(goalsBtn);
+      actions.appendChild(removeBtn);
       li.appendChild(label); li.appendChild(actions);
       studentListEl.appendChild(li);
     });
   }
   renderStudentList();
   studentSearchEl.addEventListener('input',renderStudentList);
+
+  function openStudentEditor(studentId){
+    var student=getStudents().find(function(s){return s.id===studentId;});
+    if(!student){return;}
+    editStudentIdEl.value=student.id;
+    editStudentFirstEl.value=student.first||'';
+    editStudentLastEl.value=student.last||'';
+    editStudentYearEl.value=student.year||'Year 1';
+    editStudentClassEl.value=student.cls||'';
+    studentEditorModalEl.hidden=false;
+    editStudentFirstEl.focus();
+  }
+
+  function closeStudentEditor(){
+    studentEditorModalEl.hidden=true;
+    editStudentFormEl.reset();
+  }
+
+  function deleteStudent(studentId){
+    var students=getStudents();
+    var student=students.find(function(s){return s.id===studentId;});
+    if(!student){return;}
+    if(!confirm('Remove '+student.name+' from the roster? Their past exported reports will not be changed.')){return;}
+    saveStudents(students.filter(function(s){return s.id!==studentId;}));
+    try {
+      var allGoals=JSON.parse(localStorage.getItem('rc_goals')||'{}');
+      delete allGoals[studentId];
+      localStorage.setItem('rc_goals',JSON.stringify(allGoals));
+    } catch(e) {}
+    refreshStudentViews();
+    showResult(addStudentResultEl,{success:true,message:'Student removed.',student:{name:student.name,barcode:student.barcode}});
+  }
+
+  editStudentFormEl.addEventListener('submit',function(e){
+    e.preventDefault();
+    var studentId=editStudentIdEl.value;
+    var first=editStudentFirstEl.value.trim();
+    var last=editStudentLastEl.value.trim();
+    var year=editStudentYearEl.value;
+    var cls=editStudentClassEl.value.trim().toUpperCase();
+    if(!studentId||!first||!last||!year||!cls){return;}
+    var students=getStudents();
+    var updated=null;
+    students=students.map(function(s){
+      if(s.id!==studentId){return s;}
+      updated=Object.assign({},s,{first:first,last:last,name:first+' '+last,year:year,cls:cls});
+      return updated;
+    });
+    saveStudents(students);
+    closeStudentEditor();
+    refreshStudentViews();
+    if(updated){showResult(addStudentResultEl,{success:true,message:'Student updated.',student:{name:updated.name,year:updated.year,cls:updated.cls,barcode:updated.barcode}});}
+  });
+
+  document.getElementById('close-student-editor-btn').addEventListener('click',closeStudentEditor);
+  document.getElementById('cancel-student-edit-btn').addEventListener('click',closeStudentEditor);
+  studentEditorModalEl.addEventListener('click',function(e){
+    if(e.target===studentEditorModalEl){closeStudentEditor();}
+  });
 
   addStudentFormEl.addEventListener('submit',function(e){
     e.preventDefault();
@@ -403,7 +487,8 @@
     saveStudents(students);
     addStudentFormEl.reset();
     refreshStudentViews();
-    showResult(addStudentResultEl,{success:true,message:'Student added and barcode generated.',student:{name:student.name,year:student.year,cls:student.cls,barcode:student.barcode}});
+    addStudentResultEl.hidden=true;
+    renderBarcodeConfirmation(student);
     printStudentBarcodeCard(student);
   });
 
@@ -543,6 +628,7 @@
   var medalRulesEl=document.getElementById('medal-rules');
   var medalSummaryEl=document.getElementById('medal-summary');
   var certificatesListEl=document.getElementById('certificates-list');
+  var customAwardsListEl=document.getElementById('custom-awards-list');
   var MILESTONES=[5,10,25,50,100,200,500];
   var MILESTONE_LABELS={5:'First 5 Laps',10:'10 Lap Club',25:'Quarter Century',50:'Half Century',100:'Century Club',200:'Double Century',500:'Elite Runner'};
 
@@ -593,6 +679,29 @@
       '</tbody></table>';
   }
   renderCertificates();
+
+  function renderCustomAwards(){
+    var awards=load(K.customAwards,[]);
+    if(!awards.length){customAwardsListEl.innerHTML='<p style="color:#888;font-size:0.85rem;">No custom awards yet.</p>';return;}
+    customAwardsListEl.innerHTML='<ul style="padding:0;list-style:none;margin:0;">'+awards.map(function(a){
+      return '<li style="padding:0.5rem 0;border-bottom:1px solid #f0f0f0;font-size:0.88rem;"><strong>'+escapeHtml(a.name)+'</strong><br><span style="color:#555;">'+escapeHtml(a.criteria)+'</span></li>';
+    }).join('')+'</ul>';
+  }
+
+  function createCustomAward(){
+    var name=document.getElementById('custom-award-name').value.trim();
+    var criteria=document.getElementById('custom-award-criteria').value.trim();
+    if(!name){return;}
+    var awards=load(K.customAwards,[]);
+    awards.push({id:'award-'+Date.now(),name:name,criteria:criteria||'Coach selected',created:new Date().toISOString().slice(0,10)});
+    save(K.customAwards,awards);
+    document.getElementById('custom-award-name').value='';
+    document.getElementById('custom-award-criteria').value='';
+    renderCustomAwards();
+  }
+
+  renderCustomAwards();
+  document.getElementById('create-custom-award-btn').addEventListener('click',createCustomAward);
 
   document.getElementById('refresh-awards-btn').addEventListener('click',renderAwards);
   document.getElementById('print-certificates-btn').addEventListener('click',function(){

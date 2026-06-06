@@ -44,8 +44,8 @@ a:hover { text-decoration: underline; }
   flex: 0 0 44px;
   display: block;
   object-fit: contain;
-  background: #ffffff;
-  border-radius: 4px;
+  background: transparent;
+  border-radius: 0;
 }
 .tagline { margin: 0.5rem 0 0; font-size: 0.9rem; opacity: 0.88; }
 
@@ -473,6 +473,10 @@ pre {
   white-space: nowrap;
 }
 
+.danger-link {
+  color: #b42318;
+}
+
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -481,6 +485,45 @@ pre {
 
 .compact-form button {
   margin-top: 0.25rem;
+}
+
+.student-editor-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.48);
+  padding: 1rem;
+}
+
+.student-editor-modal {
+  width: min(100%, 560px);
+  max-height: 88vh;
+  overflow: auto;
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #d8e2ef;
+  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.24);
+  padding: 1.25rem;
+}
+
+.student-editor-overlay[hidden] {
+  display: none;
+}
+
+.barcode-confirmation {
+  margin-top: 1rem;
+  padding: 0.85rem;
+  border: 1px solid #c2d4f5;
+  border-radius: 8px;
+  background: #f8faff;
+}
+
+.barcode-confirmation .barcode-card-preview {
+  width: min(100%, 260px);
+  margin-bottom: 0;
 }
 
 .barcode-card-preview {
@@ -625,6 +668,7 @@ pre {
 
 /* --- Admin goals modal --- */
 .ag-overlay { position:fixed; inset:0; background:rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center; z-index:1000; padding:16px; }
+.ag-overlay[hidden] { display:none; }
 .ag-modal { background:#fff; border-radius:14px; max-width:560px; width:100%; max-height:85vh; overflow:auto; padding:20px; }
 .ag-head { display:flex; justify-content:space-between; align-items:center; }
 .ag-head h3 { margin:0; }
@@ -636,3 +680,22 @@ pre {
 .ag-add form { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
 .ag-add select, .ag-add input { padding:7px 9px; border:1px solid #ccd5e0; border-radius:8px; }
 .ag-add button { background:#0c5aa8; color:#fff; border:none; border-radius:8px; padding:8px 16px; cursor:pointer; }
+.ag-student-list {
+  max-height: 180px;
+  overflow: auto;
+  border: 1px solid #dce6f2;
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 10px;
+  background: #f8faff;
+}
+.ag-student-option {
+  display: block;
+  margin: 0;
+  padding: 0.3rem 0;
+  font-size: 0.88rem;
+}
+.ag-student-option span {
+  color: #64748b;
+  font-size: 0.78rem;
+}

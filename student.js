@@ -126,7 +126,7 @@
 
   function renderAthlete(s) {
     var km = Scan.lapsToKm(s.laps).toFixed(2);
-    document.getElementById('athlete-name').textContent = '🏃 ' + s.name;
+    document.getElementById('athlete-name').textContent = s.name;
 
     // Compute simple ranks from the roster.
     var roster = Scan.getStudents().slice().sort(function (a, b) { return b.laps - a.laps; });

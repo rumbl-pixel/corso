@@ -1,4 +1,4 @@
-// Parent portal: read-only progress view plus home-activity submission.
+// Parent portal: read-only progress view.
 (function () {
   'use strict';
 
@@ -33,6 +33,22 @@
     document.getElementById('parent-awards').innerHTML = earned.length
       ? earned.map(function (m) { return '<span class="award-badge">&#127942; ' + (MILESTONE_LABELS[m] || (m + ' laps')) + '</span>'; }).join('')
       : '<p style="color:#888;font-size:0.85rem;">No awards yet. The first milestone is 5 laps.</p>';
+  }
+
+  function printParentCertificate() {
+    if (!currentStudent) { return; }
+    var earned = Scan.MILESTONES.filter(function (m) { return currentStudent.laps >= m; });
+    var awardCopy = earned.length
+      ? earned.map(function (m) { return '<span class="badge">&#127942; ' + (MILESTONE_LABELS[m] || (m + ' laps')) + '</span>'; }).join('')
+      : '<p>Keep running toward the first 5 lap milestone.</p>';
+    var win = window.open('', '_blank');
+    if (!win) { return; }
+    var html = '<html><head><title>' + currentStudent.name + ' Award Certificate</title><style>body{font-family:Arial,sans-serif;padding:2rem;color:#102a43;}.cert{border:4px solid #f59e0b;padding:2.5rem;text-align:center;min-height:70vh;display:flex;flex-direction:column;align-items:center;justify-content:center;}h1{color:#0c5aa8;font-size:2.4rem;margin:0 0 0.5rem;}h2{font-size:2rem;margin:0.4rem 0;}.badge{display:inline-block;padding:0.35rem 0.8rem;border-radius:999px;background:#fff8e1;border:1px solid #f59e0b;margin:0.25rem;font-size:0.95rem;}@media print{@page{margin:1cm;}}</style></head><body>';
+    html += '<div class="cert"><h1>Gwynne Park Run Club</h1><p>Award Certificate</p><h2>' + currentStudent.name + '</h2><p>' + currentStudent.year + ' / Class ' + currentStudent.cls + '</p><p>Total laps: <strong>' + currentStudent.laps + '</strong> (' + Scan.lapsToKm(currentStudent.laps).toFixed(2) + ' km)</p><div>' + awardCopy + '</div><p style="margin-top:1.5rem;color:#64748b;">Keep building momentum.</p></div>';
+    html += '</body></html>';
+    win.document.write(html);
+    win.document.close();
+    win.print();
   }
 
   function goalRow(goal) {
@@ -75,5 +91,7 @@
     }
     render(student);
   });
+
+  document.getElementById('print-parent-certificate-btn').addEventListener('click', printParentCertificate);
 
 })();

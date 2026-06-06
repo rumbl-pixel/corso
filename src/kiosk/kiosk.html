@@ -10,7 +10,7 @@
 </head>
 <body class="page page-kiosk">
   <header class="kiosk-header">
-    <div class="kiosk-brand">Gwynne Park Run Club</div>
+    <div class="kiosk-brand"><img class="kiosk-brand-logo" src="assets/gwynne-park-logo.svg" alt="Gwynne Park Schools" />Gwynne Park Run Club</div>
     <div class="kiosk-status">
       <span id="kiosk-session">Session: Run Club</span>
       <span class="kiosk-dot">•</span>
@@ -24,6 +24,12 @@
       <h1 id="kiosk-banner-title">Ready to scan</h1>
       <p id="kiosk-banner-sub">Hold your barcode under the scanner</p>
     </section>
+
+    <button id="camera-scan-btn" class="camera-scan-btn" type="button">Tap to start camera scan</button>
+    <div id="camera-scan-panel" class="camera-scan-panel" hidden>
+      <video id="camera-preview" playsinline muted></video>
+      <p id="camera-scan-status">Point the camera at a student barcode.</p>
+    </div>
 
     <!-- Hidden input that always holds focus for Bluetooth (HID) scanners -->
     <input type="text" id="kiosk-scan-input" class="kiosk-hidden-input"
@@ -39,7 +45,7 @@
   </main>
 
   <footer class="kiosk-footer">
-    <button id="kiosk-exit" class="kiosk-exit">Exit kiosk</button>
+    <button id="kiosk-exit" class="kiosk-exit" type="button">Exit kiosk</button>
   </footer>
 
   <script src="scanning.js"></script>
