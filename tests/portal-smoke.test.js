@@ -87,6 +87,9 @@ const kioskJs = read('kiosk.js');
 assert(/runClubAdminSession/.test(kioskJs), 'kiosk should require an admin session');
 assert(/admin\.html/.test(kioskJs), 'kiosk should redirect unauthenticated users to admin login');
 assert(/PRAISE_MESSAGES/.test(kioskJs), 'kiosk should rotate playful praise messages after scans');
+assert(/index\.html/.test(kioskJs) && !/Enter teacher PIN/.test(kioskJs), 'kiosk exit should return to home without a PIN prompt');
+assert(/getUserMedia/.test(kioskJs) && /BarcodeDetector/.test(kioskJs), 'kiosk should support camera barcode scanning when available');
+assert(/camera-scan-btn/.test(read('kiosk.html')), 'kiosk should expose a tap-to-start camera scanning button');
 
 const adminDashboardHtml = read('admin-dashboard.html');
 assert(/assets\/gwynne-park-logo\.svg/.test(adminDashboardHtml), 'admin dashboard should use the sharp Gwynne Park logo asset');
@@ -101,6 +104,11 @@ assert(/sports-carnival-mode/.test(adminDashboardHtml), 'admin dashboard should 
 assert(/add-student-form/.test(adminDashboardHtml), 'admin students area should include a manual add-student form');
 assert(/generate-student-barcode-btn/.test(adminDashboardHtml), 'admin students area should include a generate barcode button');
 assert(/new-student-first/.test(adminDashboardHtml) && /new-student-last/.test(adminDashboardHtml), 'admin add-student form should collect student names');
+assert(/student-editor-modal/.test(adminDashboardHtml), 'admin students area should include an edit-student modal');
+assert(/edit-student-form/.test(adminDashboardHtml), 'admin students area should include an edit-student form');
+assert(/barcode-confirmation/.test(adminDashboardHtml), 'admin add-student flow should show an inline barcode confirmation area');
+assert(!/Student Self-Reported Activity|self-report-queue/.test(adminDashboardHtml), 'admin activity tab should not include student self-reported activity');
+assert(/custom-award-name/.test(adminDashboardHtml), 'admin awards area should include custom award creation');
 
 const adminDashboardJs = read('admin-dashboard.js');
 assert(/MEDAL_TIERS/.test(adminDashboardJs), 'admin dashboard should calculate medal tiers');
@@ -110,18 +118,32 @@ assert(/renderCertificates/.test(adminDashboardJs), 'admin dashboard should rend
 assert(/setSportsCarnivalMode/.test(adminDashboardJs), 'admin dashboard should persist Sports Carnival Mode setting');
 assert(/generateBarcodeId/.test(adminDashboardJs), 'admin dashboard should generate unique student barcode IDs');
 assert(/printStudentBarcodeCard/.test(adminDashboardJs), 'admin dashboard should print individual student barcode cards');
+assert(/openStudentEditor/.test(adminDashboardJs), 'admin dashboard should let admins edit student details');
+assert(/deleteStudent/.test(adminDashboardJs), 'admin dashboard should let admins remove students');
+assert(/Edit/.test(adminDashboardJs) && /Remove/.test(adminDashboardJs), 'student list should expose edit and remove actions');
+assert(/renderBarcodeConfirmation/.test(adminDashboardJs), 'admin add-student flow should render a compact barcode confirmation');
+assert(/createCustomAward/.test(adminDashboardJs), 'admin dashboard should create custom awards');
+
+const adminGoalsJs = read('admin-goals.js');
+assert(/assign-selected-students/.test(adminGoalsJs), 'admin goals modal should assign a goal to selected students');
+assert(/clearAllGoals/.test(adminGoalsJs), 'admin goals modal should clear goals from the main goal view');
+assert(/type="button" id="ag-close"/.test(adminGoalsJs), 'admin goals close button should not accidentally submit the form');
+assert(/\.ag-overlay\[hidden\]\s*\{\s*display\s*:\s*none/.test(read('styles.css')), 'admin goals modal hidden state should override flex display');
+assert(!/🏃|&#127939;/.test(adminDashboardHtml), 'admin dashboard should not show the running person symbol');
 
 const parentHtml = read('parent.html');
 assert(/id="parent-form"/.test(parentHtml), 'parent portal should expose a login form');
 assert(/DEMO/.test(parentHtml), 'parent portal should show a DEMO hint');
 assert(/parent\.js/.test(parentHtml), 'parent portal should load parent.js');
 assert(!/Log Home Activity|Home Activity|parent-activity-form/.test(parentHtml), 'parent portal should not include home activity logging');
+assert(/print-parent-certificate-btn/.test(parentHtml), 'parent portal should let parents print child award certificates');
 
 const parentJs = read('parent.js');
 assert(/DEMO/.test(parentJs), 'parent portal should handle DEMO bypass');
 assert(/RunClubScan/.test(parentJs), 'parent portal should use shared scanning roster data');
 assert(/RunClubGoals/.test(parentJs), 'parent portal should use shared goals data');
 assert(!/parent-activity-form|rc_selfreports/.test(parentJs), 'parent portal should not submit home activity logs');
+assert(/printParentCertificate/.test(parentJs), 'parent portal should print child award certificates');
 
 const leaderboardHtml = read('leaderboard.html');
 assert(/Total Leaderboard/.test(leaderboardHtml), 'leaderboard page should include a whole-school total leaderboard');

@@ -7,6 +7,7 @@
   'use strict';
 
   var Goals = global.RunClubGoals;
+  var Scan = global.RunClubScan;
   var modal, body, titleEl, current;
 
   function ensureModal() {
@@ -16,16 +17,18 @@
     modal.hidden = true;
     modal.innerHTML =
       '<div class="ag-modal">' +
-        '<div class="ag-head"><h3 id="ag-title">Goals</h3><button id="ag-close" class="ag-close">×</button></div>' +
+        '<div class="ag-head"><h3 id="ag-title">Goals</h3><button type="button" id="ag-close" class="ag-close">×</button></div>' +
         '<div id="ag-body"></div>' +
         '<div class="ag-add">' +
           '<h4>Assign a coach goal</h4>' +
+          '<div id="ag-student-list" class="ag-student-list"></div>' +
           '<form id="ag-form">' +
             '<select id="ag-metric"></select>' +
             '<input type="number" id="ag-target" step="any" min="0" placeholder="Target" required />' +
             '<input type="text" id="ag-title-in" placeholder="Name (optional)" />' +
             '<input type="date" id="ag-deadline" />' +
-            '<button type="submit">Assign goal</button>' +
+            '<button type="submit" id="assign-selected-students">Assign to selected</button>' +
+            '<button type="button" id="ag-clear-all" class="secondary">Clear this student goals</button>' +
           '</form>' +
         '</div>' +
       '</div>';
@@ -34,6 +37,7 @@
     body = modal.querySelector('#ag-body');
     modal.querySelector('#ag-close').addEventListener('click', close);
     modal.addEventListener('click', function (e) { if (e.target === modal) { close(); } });
+    modal.querySelector('#ag-clear-all').addEventListener('click', clearAllGoals);
 
     modal.querySelector('#ag-form').addEventListener('submit', function (e) {
       e.preventDefault();
@@ -42,16 +46,42 @@
       var title = modal.querySelector('#ag-title-in').value;
       var deadline = modal.querySelector('#ag-deadline').value;
       if (!target || isNaN(Number(target))) { return; }
-      Goals.addGoal(current.id, 'coach', { metric: metric, target: target, title: title, deadline: deadline });
+      selectedStudentIds().forEach(function (studentId) {
+        Goals.addGoal(studentId, 'coach', { metric: metric, target: target, title: title, deadline: deadline });
+      });
       e.target.reset();
       render();
     });
   }
 
+  function selectedStudentIds() {
+    var checked = modal.querySelectorAll('[name="ag-student-target"]:checked');
+    return Array.prototype.slice.call(checked).map(function (box) { return box.value; });
+  }
+
+  function renderStudentTargets() {
+    var students = Scan.getStudents();
+    var html = '<p style="margin:0 0 0.35rem;color:#555;font-size:0.82rem;">Assign to one or more students</p>';
+    html += students.map(function (student) {
+      var checked = current && student.id === current.id ? ' checked' : '';
+      return '<label class="ag-student-option"><input type="checkbox" name="ag-student-target" value="' + student.id + '"' + checked + ' /> ' + student.name + ' <span>' + student.year + ' / ' + student.cls + '</span></label>';
+    }).join('');
+    modal.querySelector('#ag-student-list').innerHTML = html;
+  }
+
+  function clearAllGoals() {
+    if (!current) { return; }
+    if (!confirm('Clear all goals for ' + current.name + '?')) { return; }
+    Goals.goalsFor(current.id).forEach(function (goal) {
+      Goals.deleteGoal(current.id, goal.id);
+    });
+    render();
+  }
+
   function row(g) {
     var p = Goals.progress(current.id, g);
     var info = Goals.metricInfo(g.metric);
-    var who = g.owner === 'coach' ? '👨‍🏫 Coach' : '🏃 Student';
+    var who = g.owner === 'coach' ? 'Coach' : 'Student';
     var nowTxt = p.current == null ? '—' : p.current + ' ' + g.unit;
     var progressLabel = info.kind === 'cumulative' ? 'since set' : 'best';
     var status = p.met ? ' ✓' : '';
@@ -68,6 +98,7 @@
   }
 
   function render() {
+    renderStudentTargets();
     modal.querySelector('#ag-metric').innerHTML = Goals.visibleMetrics().map(function (metric) {
       return '<option value="' + metric.key + '">' + metric.label + ' (' + metric.unit + ')</option>';
     }).join('');
@@ -97,5 +128,5 @@
   }
   function close() { if (modal) { modal.hidden = true; } }
 
-  global.AdminGoals = { open: open, close: close };
+  global.AdminGoals = { open: open, close: close, clearAllGoals: clearAllGoals };
 })(window);

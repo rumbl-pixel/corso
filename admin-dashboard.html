@@ -33,7 +33,7 @@
         <button class="tab-btn" data-tab="students">&#128101; Students</button>
         <button class="tab-btn" data-tab="leaderboard">&#127942; Leaderboard</button>
         <button class="tab-btn" data-tab="activity">&#9201; Activity</button>
-        <button class="tab-btn" data-tab="events">&#127939; Events</button>
+        <button class="tab-btn" data-tab="events">&#128197; Events</button>
         <button class="tab-btn" data-tab="awards">&#127885; Awards</button>
         <button class="tab-btn" data-tab="reports">&#128202; Reports</button>
         <button class="tab-btn" data-tab="import">&#128229; Import</button>
@@ -114,6 +114,7 @@
             <button id="generate-student-barcode-btn" type="submit">Generate barcode</button>
           </form>
           <pre id="add-student-result" hidden></pre>
+          <div id="barcode-confirmation" class="barcode-confirmation" hidden></div>
         </div>
 
         <div class="card">
@@ -130,6 +131,43 @@
             <span>Sports Carnival Mode</span>
           </label>
           <p style="color:#555;font-size:0.9rem;">When off, goal options stay focused on Laps, Lap Time, and Distance. Turn this on to show jump, throw, length, and sprint goal types.</p>
+        </div>
+      </div>
+
+      <div class="student-editor-overlay" id="student-editor-modal" hidden>
+        <div class="student-editor-modal" role="dialog" aria-modal="true" aria-labelledby="student-editor-title">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;">
+            <h2 id="student-editor-title" style="margin:0;">Edit Student</h2>
+            <button id="close-student-editor-btn" type="button" class="link-btn">Close</button>
+          </div>
+          <form id="edit-student-form" class="compact-form" style="margin-top:1rem;">
+            <input type="hidden" id="edit-student-id" />
+            <div class="form-grid">
+              <label>First name
+                <input type="text" id="edit-student-first" required autocomplete="off" />
+              </label>
+              <label>Last name
+                <input type="text" id="edit-student-last" required autocomplete="off" />
+              </label>
+              <label>Year group
+                <select id="edit-student-year" required>
+                  <option value="Year 1">Year 1</option>
+                  <option value="Year 2">Year 2</option>
+                  <option value="Year 3">Year 3</option>
+                  <option value="Year 4">Year 4</option>
+                  <option value="Year 5">Year 5</option>
+                  <option value="Year 6">Year 6</option>
+                </select>
+              </label>
+              <label>Class
+                <input type="text" id="edit-student-class" required autocomplete="off" />
+              </label>
+            </div>
+            <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-top:0.75rem;">
+              <button id="save-student-edit-btn" type="submit">Save changes</button>
+              <button id="cancel-student-edit-btn" type="button" class="secondary">Cancel</button>
+            </div>
+          </form>
         </div>
       </div>
 
@@ -168,20 +206,12 @@
           <div id="activity-log-list" style="margin-top:1rem;"></div>
         </div>
 
-        <!-- SELF-REPORTED ACTIVITY APPROVAL -->
-        <div class="card">
-          <h2>&#127968; Student Self-Reported Activity</h2>
-          <p style="color:#555;font-size:0.9rem;">Students can log home activity. Review and approve or reject submissions here.</p>
-          <div id="self-report-queue">
-            <p style="color:#888;font-size:0.85rem;">No pending self-reports. (Students submit via the Student portal.)</p>
-          </div>
-        </div>
       </div>
 
       <!-- EVENTS TAB -->
       <div class="tab-panel" id="tab-events">
         <div class="card">
-          <h2>&#127939; Program Events</h2>
+          <h2>&#128197; Program Events</h2>
           <p style="color:#555;font-size:0.9rem;">Create named events (Jog-a-thon, Run Club, PE class, Move-a-thon, etc.) to segment lap reports by event type.</p>
           <label>Event name <input type="text" id="event-name" placeholder="e.g. Term 2 Jog-a-thon" /></label>
           <label>Event type
@@ -226,6 +256,15 @@
           <h2>&#128196; Certificates</h2>
           <p style="color:#555;font-size:0.9rem;">Students appear here when they cross a printable distance milestone.</p>
           <div id="certificates-list"></div>
+        </div>
+
+        <div class="card">
+          <h2>&#127775; Custom Awards</h2>
+          <p style="color:#555;font-size:0.9rem;">Create one-off awards for effort, improvement, leadership, or special events.</p>
+          <label>Award name <input type="text" id="custom-award-name" placeholder="e.g. Most Improved Runner" /></label>
+          <label>Criteria <input type="text" id="custom-award-criteria" placeholder="e.g. Coach selected, 10 laps in a week" /></label>
+          <button id="create-custom-award-btn" type="button">Create custom award</button>
+          <div id="custom-awards-list" style="margin-top:1rem;"></div>
         </div>
 
         <!-- CHALLENGES -->

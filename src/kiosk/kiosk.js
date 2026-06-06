@@ -8,7 +8,7 @@
 //  - Big high-contrast green/red feedback with name + lap number.
 //  - Auto-reset to "Ready to scan" after a couple of seconds.
 //  - Idle attract state after inactivity.
-//  - PIN-gated exit so students can't wander off the kiosk.
+//  - Admin-gated entry so kiosk mode stays a staff/volunteer tool.
 (function () {
   'use strict';
 
@@ -31,8 +31,11 @@
   var lastScanLabel = document.getElementById('kiosk-last-scan');
   var lapCountLabel = document.getElementById('kiosk-lap-count');
   var undoBtn = document.getElementById('kiosk-undo');
+  var cameraBtn = document.getElementById('camera-scan-btn');
+  var cameraPanel = document.getElementById('camera-scan-panel');
+  var cameraPreview = document.getElementById('camera-preview');
+  var cameraStatus = document.getElementById('camera-scan-status');
 
-  var EXIT_PIN = '1234'; // teacher PIN to leave kiosk (change before go-live)
   var PRAISE_MESSAGES = [
     'Great pace',
     'Strong running',
@@ -45,6 +48,11 @@
   var lastResult = null;
   var resetTimer = null;
   var idleTimer = null;
+  var cameraStream = null;
+  var cameraTimer = null;
+  var barcodeDetector = null;
+  var lastCameraCode = '';
+  var lastCameraScanAt = 0;
 
   sessionLabel.textContent = 'Session: Run Club — ' + new Date().toISOString().slice(0, 10);
 
@@ -93,6 +101,65 @@
     scheduleIdle();
   }
 
+  function stopCameraScan() {
+    if (cameraTimer) {
+      clearInterval(cameraTimer);
+      cameraTimer = null;
+    }
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(function (track) { track.stop(); });
+      cameraStream = null;
+    }
+    cameraPreview.srcObject = null;
+    cameraPanel.hidden = true;
+    cameraBtn.textContent = 'Tap to start camera scan';
+    input.focus();
+  }
+
+  function handleCameraCodes(codes) {
+    if (!codes || !codes.length) { return; }
+    var code = String(codes[0].rawValue || '').trim();
+    var now = Date.now();
+    if (!code || (code === lastCameraCode && now - lastCameraScanAt < 1800)) { return; }
+    lastCameraCode = code;
+    lastCameraScanAt = now;
+    cameraStatus.textContent = 'Scanned ' + code;
+    handleScan(code);
+  }
+
+  async function startCameraScan() {
+    if (!('mediaDevices' in navigator) || !navigator.mediaDevices.getUserMedia) {
+      cameraStatus.textContent = 'Camera scanning is not available in this browser.';
+      cameraPanel.hidden = false;
+      return;
+    }
+    if (!('BarcodeDetector' in window)) {
+      cameraStatus.textContent = 'This browser does not support camera barcode scanning yet. Use a Bluetooth scanner or Chrome on Android.';
+      cameraPanel.hidden = false;
+      return;
+    }
+    try {
+      barcodeDetector = new BarcodeDetector({ formats: ['code_39', 'code_128', 'qr_code', 'ean_13', 'upc_a'] });
+      cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+      cameraPreview.srcObject = cameraStream;
+      await cameraPreview.play();
+      cameraPanel.hidden = false;
+      cameraBtn.textContent = 'Stop camera scan';
+      cameraStatus.textContent = 'Point the camera at a student barcode.';
+      cameraTimer = setInterval(async function () {
+        if (!barcodeDetector || cameraPreview.readyState < 2) { return; }
+        try {
+          handleCameraCodes(await barcodeDetector.detect(cameraPreview));
+        } catch (e) {
+          cameraStatus.textContent = 'Camera scan paused. Try again or use the Bluetooth scanner.';
+        }
+      }, 350);
+    } catch (e) {
+      cameraStatus.textContent = 'Camera permission was not granted or the camera could not start.';
+      cameraPanel.hidden = false;
+    }
+  }
+
   // Undo last lap (in case of a wrong card scan).
   undoBtn.addEventListener('click', function () {
     if (!lastResult || !lastResult.student) { return; }
@@ -111,11 +178,19 @@
     input.focus();
   });
 
-  // PIN-gated exit back to the home page.
+  // Exit back to the home page. Kiosk entry remains admin-gated.
   document.getElementById('kiosk-exit').addEventListener('click', function () {
-    var pin = prompt('Enter teacher PIN to exit kiosk:');
-    if (pin === EXIT_PIN) { window.location.href = 'index.html'; }
-    else if (pin !== null) { alert('Incorrect PIN.'); input.focus(); }
+    stopCameraScan();
+    window.location.href = 'index.html';
+  });
+
+  cameraBtn.addEventListener('click', function () {
+    if (cameraStream) { stopCameraScan(); }
+    else { startCameraScan(); }
+  });
+
+  banner.addEventListener('click', function () {
+    if (!cameraStream) { startCameraScan(); }
   });
 
   // Keep the hidden input focused so hardware scanners always land here.
