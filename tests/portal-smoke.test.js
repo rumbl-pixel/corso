@@ -21,6 +21,11 @@ assertFile('config.js');
 assertFile('parent.html');
 assertFile('parent.js');
 assertFile('leaderboard.html');
+assertFile('manifest.webmanifest');
+assertFile('service-worker.js');
+assertFile('pwa.js');
+assertFile('assets/app-icon-192.png');
+assertFile('assets/app-icon-512.png');
 
 const brandFiles = [
   'index.html',
@@ -42,6 +47,42 @@ for (const file of brandFiles) {
   assert(!/Run Club Connect/.test(contents), `${file} should not use the old Run Club Connect brand`);
   assert(!/runclubconnect/i.test(contents), `${file} should not use old runclubconnect contact details`);
 }
+
+const pwaPages = [
+  'index.html',
+  'admin.html',
+  'admin-dashboard.html',
+  'student.html',
+  'student-profile.html',
+  'leaderboard.html',
+  'parent.html',
+  'privacy-policy.html',
+  'kiosk.html'
+];
+for (const file of pwaPages) {
+  const contents = read(file);
+  assert(/rel="manifest" href="manifest\.webmanifest"/.test(contents), `${file} should link the web app manifest`);
+  assert(/name="theme-color" content="#0c5aa8"/.test(contents), `${file} should set the PWA theme color`);
+  assert(/rel="apple-touch-icon" href="assets\/app-icon-192\.png"/.test(contents), `${file} should include an Apple touch icon`);
+  assert(/<script src="pwa\.js"><\/script>/.test(contents), `${file} should register PWA behavior`);
+}
+
+const manifest = JSON.parse(read('manifest.webmanifest'));
+assert(manifest.name === 'Gwynne Park Run Club', 'manifest should use the app name');
+assert(manifest.short_name === 'GP Run Club', 'manifest should use a short install name');
+assert(manifest.display === 'standalone', 'manifest should be installable as a standalone app');
+assert(manifest.start_url === './index.html', 'manifest should start at the home page');
+assert(Array.isArray(manifest.icons) && manifest.icons.some((icon) => icon.sizes === '192x192'), 'manifest should include a 192px icon');
+assert(manifest.icons.some((icon) => icon.sizes === '512x512'), 'manifest should include a 512px icon');
+
+const pwaJs = read('pwa.js');
+assert(/serviceWorker/.test(pwaJs) && /service-worker\.js/.test(pwaJs), 'pwa.js should register the service worker');
+
+const serviceWorker = read('service-worker.js');
+assert(/CACHE_NAME/.test(serviceWorker), 'service worker should define a cache name');
+assert(/CORE_ASSETS/.test(serviceWorker), 'service worker should cache the core app shell');
+assert(/manifest\.webmanifest/.test(serviceWorker), 'service worker should cache the manifest');
+assert(/app-icon-192\.png/.test(serviceWorker) && /app-icon-512\.png/.test(serviceWorker), 'service worker should cache app icons');
 
 const config = read('config.js');
 assert(/demoMode:\s*true/.test(config), 'config.js should enable safe demo mode');
