@@ -146,6 +146,11 @@ assert(dashboardBrandLink && /href="index\.html"/.test(dashboardBrandLink[0]), '
 assert(/offline-queue-card/.test(adminDashboardHtml), 'admin dashboard should include an offline scan queue panel');
 assert(/scanner-settings-card/.test(adminDashboardHtml), 'admin dashboard should include scanner settings');
 assert(/duplicate-cooldown-seconds/.test(adminDashboardHtml), 'admin scanner settings should expose duplicate cooldown seconds');
+assert(/scanner-device-name/.test(adminDashboardHtml), 'admin scanner settings should register a device name');
+assert(/scanner-device-location/.test(adminDashboardHtml), 'admin scanner settings should register a device location');
+assert(/lap-distance-metres/.test(adminDashboardHtml), 'admin scanner settings should configure lap distance');
+assert(/default-session-type/.test(adminDashboardHtml), 'admin scanner settings should configure a default session type');
+assert(/session-type/.test(adminDashboardHtml) && /session-notes/.test(adminDashboardHtml), 'admin scanner should collect session type and notes');
 assert(/undo-admin-scan-btn/.test(adminDashboardHtml), 'admin scanner should include an undo last scan button');
 assert(/lb-medal-filter/.test(adminDashboardHtml), 'admin leaderboard should include a medal tier filter');
 assert(/print-leaderboard-btn/.test(adminDashboardHtml), 'admin leaderboard should include a print poster button');
@@ -165,11 +170,21 @@ assert(/custom-award-name/.test(adminDashboardHtml), 'admin awards area should i
 assert(/import-summary/.test(adminDashboardHtml), 'admin import area should show a readable CSV import summary');
 assert(/audit-trail-list/.test(adminDashboardHtml), 'admin reports area should include a scan audit trail preview');
 assert(/Export scan audit/.test(adminDashboardHtml), 'admin reports area should export scan audit rows');
+assert(/report-summary-panels/.test(adminDashboardHtml), 'admin reports should include summary panels');
+assert(/export-class-summary-csv-btn/.test(adminDashboardHtml), 'admin reports should export class summaries');
+assert(/export-medal-summary-csv-btn/.test(adminDashboardHtml), 'admin reports should export medal summaries');
+assert(/export-certificate-csv-btn/.test(adminDashboardHtml), 'admin reports should export certificate readiness');
 
 const adminDashboardJs = read('admin-dashboard.js');
 assert(/MEDAL_TIERS/.test(adminDashboardJs), 'admin dashboard should calculate medal tiers');
 assert(/renderOfflineQueue/.test(adminDashboardJs), 'admin dashboard should render offline queue batches');
 assert(/scannerSettings/.test(adminDashboardJs), 'admin dashboard should persist scanner settings');
+assert(/programSettings/.test(adminDashboardJs), 'admin dashboard should persist program settings');
+assert(/scannerId/.test(adminDashboardJs), 'admin dashboard should use registered device names in scan audit rows');
+assert(/deviceName/.test(adminDashboardJs) && /deviceLocation/.test(adminDashboardJs), 'admin scanner settings should store device metadata');
+assert(/lapDistanceKm/.test(adminDashboardJs), 'admin dashboard should use configurable lap distance');
+assert(/defaultSessionType/.test(adminDashboardJs), 'admin dashboard should store default session type');
+assert(/session_type/.test(adminDashboardJs), 'session scans should include session type metadata');
 assert(/duplicateWindowMs\(\)/.test(adminDashboardJs), 'admin scanner should use configured duplicate cooldown');
 assert(/offlineBatchStatus/.test(adminDashboardJs), 'offline queue should calculate batch sync status');
 assert(/retryOfflineBatch/.test(adminDashboardJs), 'offline queue should retry failed scans');
@@ -193,8 +208,15 @@ assert(/skipped_details/.test(adminDashboardJs), 'admin dashboard should report 
 assert(/RunClubScan\.logLap/.test(adminDashboardJs), 'admin scanner should use shared scan logging');
 assert(/duplicate/.test(adminDashboardJs), 'admin scanner should surface duplicate scan protection');
 assert(/renderAuditTrail/.test(adminDashboardJs), 'admin dashboard should render scan audit trail rows');
+assert(/groupedSummary/.test(adminDashboardJs), 'admin dashboard should build grouped report summaries');
+assert(/medalSummaryRows/.test(adminDashboardJs), 'admin dashboard should build medal summary rows');
+assert(/certificateRows/.test(adminDashboardJs), 'admin dashboard should build certificate readiness rows');
+assert(/renderReportSummaries/.test(adminDashboardJs), 'admin dashboard should render richer report summary panels');
 assert(/export-audit-csv-btn/.test(adminDashboardHtml), 'admin reports should include scan audit CSV export');
 assert(/undoLastAdminScan/.test(adminDashboardJs), 'admin scanner should undo the last scan when needed');
+
+assert(/programSettings/.test(scanningJs), 'shared scanning should expose program settings');
+assert(/lapDistanceKm/.test(scanningJs), 'shared scanning should use configurable lap distance');
 
 const adminGoalsJs = read('admin-goals.js');
 assert(/assign-selected-students/.test(adminGoalsJs), 'admin goals modal should assign a goal to selected students');
