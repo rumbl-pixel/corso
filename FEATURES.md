@@ -8,7 +8,7 @@ Workflow rules live in `docs/roadmap-workflow.md`.
 
 - Priority 0: 0 / 10 complete. Status: Go-Live Gate.
 - Priority 1: 14 / 14 complete. Status: Done.
-- Priority 2: 1 / 8 complete. Status: In Progress.
+- Priority 2: 3 / 8 complete. Status: In Progress.
 - Priority 3: 0 / 10 complete. Status: Planned.
 - Priority 4: 0 / 10 complete. Status: Planned.
 - Priority 5: 0 / 9 complete. Status: Planned.
@@ -19,7 +19,7 @@ Workflow rules live in `docs/roadmap-workflow.md`.
 ## Current Focus
 
 - Current lane: Priority 2 - Next Build.
-- Recommended next item: 2.2 Better offline scan queue interface and retry states.
+- Recommended next item: 2.4 Registered scanner/tablet device names for audit logs.
 - Privacy note: Priority 0 stays visible as the go-live gate and must be completed before real student data is entered.
 
 ## Priority 0 - Live Privacy And Security Gate
@@ -61,8 +61,8 @@ Status: Done. Keep stable unless a bug is found.
 Status: Ready Next. These can be built before the production backend where practical.
 
 - [x] ~~2.1 PWA/installable scanning shell for phones and iPads.~~
-- [ ] 2.2 Better offline scan queue interface and retry states.
-- [ ] 2.3 Configurable duplicate scan cooldown in admin settings.
+- [x] ~~2.2 Better offline scan queue interface and retry states.~~
+- [x] ~~2.3 Configurable duplicate scan cooldown in admin settings.~~
 - [ ] 2.4 Registered scanner/tablet device names for audit logs.
 - [ ] 2.5 Track/session setup options, including lap length and session type.
 - [ ] 2.6 Richer class, division, medal, and certificate reports.

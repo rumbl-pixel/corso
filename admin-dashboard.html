@@ -67,6 +67,16 @@
           </div>
         </div>
 
+        <div class="card" id="scanner-settings-card">
+          <h2>&#9881; Scanner Settings</h2>
+          <label>Duplicate scan cooldown
+            <input type="number" id="duplicate-cooldown-seconds" min="0" max="120" step="1" />
+          </label>
+          <p style="color:#555;font-size:0.85rem;">Seconds to wait before the same barcode can be accepted again. Use 0 only for testing.</p>
+          <button id="save-scanner-settings-btn" type="button" class="secondary">Save scanner settings</button>
+          <pre id="scanner-settings-result" hidden></pre>
+        </div>
+
         <div class="card" id="offline-queue-card">
           <h2>&#128260; Offline Scan Queue</h2>
           <p style="color:#555;font-size:0.9rem;">Review kiosk scan batches that were captured while offline, then merge them into the main records.</p>

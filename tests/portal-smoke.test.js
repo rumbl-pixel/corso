@@ -144,6 +144,8 @@ assert(/assets\/gwynne-park-logo\.png/.test(adminDashboardHtml), 'admin dashboar
 const dashboardBrandLink = adminDashboardHtml.match(/<a[^>]*brand-home-link[^>]*>/);
 assert(dashboardBrandLink && /href="index\.html"/.test(dashboardBrandLink[0]), 'admin dashboard logo/banner should link back to the home page');
 assert(/offline-queue-card/.test(adminDashboardHtml), 'admin dashboard should include an offline scan queue panel');
+assert(/scanner-settings-card/.test(adminDashboardHtml), 'admin dashboard should include scanner settings');
+assert(/duplicate-cooldown-seconds/.test(adminDashboardHtml), 'admin scanner settings should expose duplicate cooldown seconds');
 assert(/undo-admin-scan-btn/.test(adminDashboardHtml), 'admin scanner should include an undo last scan button');
 assert(/lb-medal-filter/.test(adminDashboardHtml), 'admin leaderboard should include a medal tier filter');
 assert(/print-leaderboard-btn/.test(adminDashboardHtml), 'admin leaderboard should include a print poster button');
@@ -167,6 +169,13 @@ assert(/Export scan audit/.test(adminDashboardHtml), 'admin reports area should 
 const adminDashboardJs = read('admin-dashboard.js');
 assert(/MEDAL_TIERS/.test(adminDashboardJs), 'admin dashboard should calculate medal tiers');
 assert(/renderOfflineQueue/.test(adminDashboardJs), 'admin dashboard should render offline queue batches');
+assert(/scannerSettings/.test(adminDashboardJs), 'admin dashboard should persist scanner settings');
+assert(/duplicateWindowMs\(\)/.test(adminDashboardJs), 'admin scanner should use configured duplicate cooldown');
+assert(/offlineBatchStatus/.test(adminDashboardJs), 'offline queue should calculate batch sync status');
+assert(/retryOfflineBatch/.test(adminDashboardJs), 'offline queue should retry failed scans');
+assert(/clearSyncedOfflineBatch/.test(adminDashboardJs), 'offline queue should clear synced batches');
+assert(/downloadOfflineBatch/.test(adminDashboardJs), 'offline queue should export batch CSVs');
+assert(/source:'offline-queue'/.test(adminDashboardJs), 'offline queue sync should use shared scan logging source');
 assert(/printLeaderboardPoster/.test(adminDashboardJs), 'admin dashboard should print leaderboard posters');
 assert(/renderCertificates/.test(adminDashboardJs), 'admin dashboard should render certificate readiness');
 assert(/setSportsCarnivalMode/.test(adminDashboardJs), 'admin dashboard should persist Sports Carnival Mode setting');

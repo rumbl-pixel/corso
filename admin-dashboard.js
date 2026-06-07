@@ -15,10 +15,12 @@
   });
 
   // --- Storage keys ---
-  var K = { students:'rc_students', activity:'rc_activity', sessions:'rc_sessions', events:'rc_events', challenges:'rc_challenges', timedRuns:'rc_timed', customAwards:'rc_custom_awards', scanAudit:'rc_scan_audit' };
+  var K = { students:'rc_students', activity:'rc_activity', sessions:'rc_sessions', events:'rc_events', challenges:'rc_challenges', timedRuns:'rc_timed', customAwards:'rc_custom_awards', scanAudit:'rc_scan_audit', scannerSettings:'rc_scanner_settings', offlineQueue:'rc_offline_queue' };
 
   function load(key, def) { try { var r=localStorage.getItem(key); return r?JSON.parse(r):def; } catch{return def;} }
   function save(key,val) { localStorage.setItem(key,JSON.stringify(val)); }
+  function scannerSettings(){ var settings=load(K.scannerSettings,{duplicateCooldownSeconds:3}); var seconds=Number(settings.duplicateCooldownSeconds); if(!isFinite(seconds)||seconds<0){seconds=3;} return {duplicateCooldownSeconds:Math.min(120,seconds)}; }
+  function duplicateWindowMs(){ return scannerSettings().duplicateCooldownSeconds*1000; }
 
   // --- Default demo students (StrideTrack-style, with more data) ---
   function defaultStudents() {
@@ -189,9 +191,25 @@
   var scanResultEl=document.getElementById('scan-result');
   var sessionStateEl=document.getElementById('session-state');
   var sessionLogEl=document.getElementById('session-log');
+  var duplicateCooldownInput=document.getElementById('duplicate-cooldown-seconds');
+  var scannerSettingsResultEl=document.getElementById('scanner-settings-result');
   var currentSession=null;
   var sessionScans=[];
   var lastAdminScan=null;
+
+  function renderScannerSettings(){
+    duplicateCooldownInput.value=scannerSettings().duplicateCooldownSeconds;
+  }
+
+  document.getElementById('save-scanner-settings-btn').addEventListener('click',function(){
+    var seconds=Number(duplicateCooldownInput.value);
+    if(!isFinite(seconds)||seconds<0){seconds=3;}
+    seconds=Math.min(120,Math.round(seconds));
+    save(K.scannerSettings,{duplicateCooldownSeconds:seconds});
+    duplicateCooldownInput.value=seconds;
+    showResult(scannerSettingsResultEl,{success:true,message:'Scanner settings saved.',duplicate_cooldown_seconds:seconds});
+  });
+  renderScannerSettings();
 
   document.getElementById('start-session-btn').addEventListener('click', function(){
     currentSession={id:'session-'+Date.now(),date:new Date().toISOString().slice(0,10),scans:[]};
@@ -218,7 +236,7 @@
   function handleScan(){
     var barcode=scanInput.value.trim().toUpperCase();
     if(!barcode)return;
-    var result=window.RunClubScan.logLap(barcode,{source:'admin-dashboard',scanner_id:session.email||'DEMO',duplicateWindowMs:2500});
+    var result=window.RunClubScan.logLap(barcode,{source:'admin-dashboard',scanner_id:session.email||'DEMO',duplicateWindowMs:duplicateWindowMs()});
     if(!result.success){
       showResult(scanResultEl,{success:false,duplicate:result.duplicate===true,error:result.error||'Scan error'});
     } else {
@@ -295,37 +313,113 @@
     }];
   }
 
+  function offlineBatchStatus(batch){
+    var scans=batch.scans||[];
+    if(!scans.length){return {label:'Needs review',className:'needs-review'};}
+    var synced=scans.filter(function(scan){return scan.status==='logged'||scan.status==='duplicate';}).length;
+    var failed=scans.filter(function(scan){return scan.status==='failed'||scan.status==='unknown'||scan.status==='error';}).length;
+    if(synced===scans.length){return {label:'Synced',className:'synced'};}
+    if(failed>0&&synced>0){return {label:'Partially synced',className:'partial'};}
+    if(failed>0){return {label:'Needs review',className:'needs-review'};}
+    return {label:'Waiting',className:'waiting'};
+  }
+
+  function offlineScanResultText(scan){
+    if(scan.status==='logged'){return 'Logged';}
+    if(scan.status==='duplicate'){return 'Duplicate ignored';}
+    if(scan.status==='unknown'){return 'Unknown barcode';}
+    if(scan.status==='error'||scan.status==='failed'){return 'Error';}
+    return 'Waiting';
+  }
+
+  function escapeAttr(value){ return escapeHtml(value).replace(/"/g,'&quot;'); }
+
   function renderOfflineQueue(){
-    var batches=load('rc_offline_queue', defaultOfflineQueue());
+    var batches=load(K.offlineQueue, defaultOfflineQueue());
     if(!batches.length){offlineQueueEl.innerHTML='<p style="color:#888;font-size:0.85rem;">No offline kiosk batches waiting to sync.</p>';return;}
     offlineQueueEl.innerHTML=batches.map(function(batch){
-      return '<div style="padding:0.75rem;border:1px solid #e2e8f0;border-radius:0.5rem;margin-bottom:0.75rem;background:#f8faff;">'+
-        '<strong>'+batch.device+'</strong><br>'+
-        '<span style="font-size:0.82rem;color:#555;">'+batch.scans.length+' scans • Last updated '+new Date(batch.lastUpdated).toLocaleTimeString()+'</span>'+
-        '<details style="margin-top:0.5rem;"><summary>Review batch</summary>'+
-        '<ul style="margin:0.5rem 0 0;padding-left:1.1rem;font-size:0.82rem;">'+batch.scans.map(function(scan){return '<li>'+scan.barcode+' • '+new Date(scan.time).toLocaleTimeString()+'</li>';}).join('')+'</ul>'+
+      var status=offlineBatchStatus(batch);
+      var scans=batch.scans||[];
+      var failedCount=scans.filter(function(scan){return scan.status==='failed'||scan.status==='unknown'||scan.status==='error';}).length;
+      return '<div class="offline-batch offline-batch--'+status.className+'">'+
+        '<div class="offline-batch-head"><div><strong>'+escapeHtml(batch.device||'Offline kiosk')+'</strong><br>'+
+        '<span>'+scans.length+' scans • Last updated '+new Date(batch.lastUpdated||Date.now()).toLocaleTimeString()+'</span></div>'+
+        '<span class="offline-status offline-status--'+status.className+'">'+status.label+'</span></div>'+
+        '<details style="margin-top:0.5rem;" open><summary>Review batch</summary>'+
+        '<table class="offline-scan-table"><thead><tr><th>Barcode</th><th>Time</th><th>Status</th><th>Message</th></tr></thead><tbody>'+
+        scans.map(function(scan){return '<tr><td>'+escapeHtml(scan.barcode||'')+'</td><td>'+new Date(scan.time||Date.now()).toLocaleTimeString()+'</td><td>'+offlineScanResultText(scan)+'</td><td>'+escapeHtml(scan.message||'')+'</td></tr>';}).join('')+
+        '</tbody></table>'+
         '</details>'+
-        '<button type="button" class="secondary sync-offline-batch" data-batch="'+batch.id+'" style="margin-top:0.75rem;">Sync to main data</button>'+
+        '<div class="offline-actions">'+
+          '<button type="button" class="secondary sync-offline-batch" data-batch="'+escapeAttr(batch.id)+'">Sync batch</button>'+
+          '<button type="button" class="secondary retry-offline-batch" data-batch="'+escapeAttr(batch.id)+'" '+(failedCount?'':'disabled')+'>Retry failed scans</button>'+
+          '<button type="button" class="secondary download-offline-batch" data-batch="'+escapeAttr(batch.id)+'">Download batch CSV</button>'+
+          '<button type="button" class="secondary clear-offline-batch" data-batch="'+escapeAttr(batch.id)+'" '+(status.label==='Synced'?'':'disabled')+'>Clear synced batch</button>'+
+        '</div>'+
       '</div>';
     }).join('');
     document.querySelectorAll('.sync-offline-batch').forEach(function(btn){
       btn.onclick=function(){ syncOfflineBatch(btn.dataset.batch); };
     });
+    document.querySelectorAll('.retry-offline-batch').forEach(function(btn){
+      btn.onclick=function(){ retryOfflineBatch(btn.dataset.batch); };
+    });
+    document.querySelectorAll('.download-offline-batch').forEach(function(btn){
+      btn.onclick=function(){ downloadOfflineBatch(btn.dataset.batch); };
+    });
+    document.querySelectorAll('.clear-offline-batch').forEach(function(btn){
+      btn.onclick=function(){ clearSyncedOfflineBatch(btn.dataset.batch); };
+    });
   }
 
-  function syncOfflineBatch(batchId){
-    var batches=load('rc_offline_queue', defaultOfflineQueue());
+  function syncOfflineBatch(batchId, retryOnly){
+    var batches=load(K.offlineQueue, defaultOfflineQueue());
     var batch=batches.find(function(b){return b.id===batchId;});
     if(!batch){return;}
-    var students=getStudents();
-    batch.scans.forEach(function(scan){
+    batch.scans=(batch.scans||[]).map(function(scan){
+      if(retryOnly&&!(scan.status==='failed'||scan.status==='unknown'||scan.status==='error')){return scan;}
       var barcode=String(scan.barcode||'').toUpperCase();
-      var student=students.find(function(s){return s.barcode===barcode||s.id===barcode;});
-      if(student){student.laps+=1;}
+      var result=window.RunClubScan.logLap(barcode,{source:'offline-queue',scanner_id:batch.device||'offline-kiosk',duplicateWindowMs:duplicateWindowMs()});
+      scan.synced_at=new Date().toISOString();
+      if(result.success){
+        scan.status='logged';
+        scan.student_id=result.student.id;
+        scan.student_name=result.student.name;
+        scan.laps_after=result.student.laps;
+        scan.message='Lap logged';
+      } else if(result.duplicate){
+        scan.status='duplicate';
+        scan.message=result.error||'Duplicate ignored';
+      } else if(/not recognised/i.test(result.error||'')){
+        scan.status='unknown';
+        scan.message=result.error;
+      } else {
+        scan.status='failed';
+        scan.message=result.error||'Scan error';
+      }
+      return scan;
     });
-    saveStudents(students);
-    save('rc_offline_queue', batches.filter(function(b){return b.id!==batchId;}));
-    renderOfflineQueue(); renderStudentList(); renderLeaderboard(); renderAwards(); renderMedals(); renderCertificates(); renderSchoolSummary();
+    batch.lastUpdated=new Date().toISOString();
+    save(K.offlineQueue,batches);
+    renderOfflineQueue(); renderStudentList(); renderLeaderboard(); renderAwards(); renderMedals(); renderCertificates(); renderSchoolSummary(); renderAuditTrail();
+  }
+
+  function retryOfflineBatch(batchId){ syncOfflineBatch(batchId,true); }
+
+  function clearSyncedOfflineBatch(batchId){
+    var batches=load(K.offlineQueue, defaultOfflineQueue());
+    var batch=batches.find(function(b){return b.id===batchId;});
+    if(!batch||offlineBatchStatus(batch).label!=='Synced'){return;}
+    save(K.offlineQueue,batches.filter(function(b){return b.id!==batchId;}));
+    renderOfflineQueue();
+  }
+
+  function downloadOfflineBatch(batchId){
+    var batches=load(K.offlineQueue, defaultOfflineQueue());
+    var batch=batches.find(function(b){return b.id===batchId;});
+    if(!batch){return;}
+    var rows=(batch.scans||[]).map(function(scan){return {batch_id:batch.id,device:batch.device,barcode:scan.barcode,time:scan.time,status:scan.status||'waiting',message:scan.message||'',student_id:scan.student_id||'',student_name:scan.student_name||'',synced_at:scan.synced_at||''};});
+    dlCsv('offline-batch-'+batch.id+'.csv',rows,['batch_id','device','barcode','time','status','message','student_id','student_name','synced_at']);
   }
   renderOfflineQueue();
 
