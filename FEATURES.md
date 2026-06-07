@@ -11,7 +11,7 @@ Workflow rules live in `docs/roadmap-workflow.md`.
 - Priority 2: 8 / 8 complete. Status: Done.
 - Priority 3: 0 / 10 complete. Status: Planned.
 - Priority 4: 0 / 10 complete. Status: Planned.
-- Priority 5: 0 / 9 complete. Status: Planned.
+- Priority 5: 0 / 10 complete. Status: Planned.
 - Priority 6: 0 / 8 complete. Status: Planned.
 - Priority 7: 0 / 10 complete. Status: Planned.
 - Priority 8: 0 / 8 complete. Status: Parked.
@@ -103,6 +103,8 @@ Status: Planned.
 
 Status: Planned.
 
+Training And At-Home Tasks now has a local-first skeleton in place. Before launch, this lane needs privacy-reviewed backend storage, clearer guardian visibility, and careful language so assigned at-home training remains teacher-directed rather than student self-reported activity.
+
 - [ ] 5.1 Parent account linking.
 - [ ] 5.2 Stronger guardian access controls.
 - [ ] 5.3 Parent view for child progress, awards, and goals.
@@ -112,6 +114,7 @@ Status: Planned.
 - [ ] 5.7 Student progress PDFs per term.
 - [ ] 5.8 Improved award and certificate display.
 - [ ] 5.9 Student-friendly goal reflection without self-reported activity logging.
+- [ ] 5.10 Complete assigned at-home training tasks with admin assignment, student viewing, and link click visibility.
 
 ## Priority 6 - Competitions And Challenges
 

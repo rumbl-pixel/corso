@@ -448,6 +448,13 @@ pre {
 .tab-panel { display: none; }
 .tab-panel.active { display: block; }
 
+.student-tab-panel { display: none; }
+.student-tab-panel.active { display: block; }
+
+.student-profile-tabs {
+  margin: 0 0 1rem;
+}
+
 /* ===========================
    Student / athlete display
 =========================== */
@@ -613,6 +620,70 @@ pre {
   margin-top: 0.75rem;
 }
 
+.training-student-picker {
+  margin: 0.75rem 0 1rem;
+}
+
+.training-assignment,
+.training-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-tint);
+  padding: 0.85rem;
+  margin-bottom: 0.85rem;
+}
+
+.training-assignment-head,
+.training-card-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.training-assignment-head strong,
+.training-card-head strong {
+  color: var(--school-blue);
+}
+
+.training-assignment-head span,
+.training-card p,
+.training-meta {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.training-status-table {
+  width: 100%;
+  min-width: 560px;
+  border-collapse: collapse;
+  margin-top: 0.65rem;
+  font-size: 0.82rem;
+}
+
+.training-status-table th {
+  text-align: left;
+  background: var(--uniform-gold-wash);
+  color: var(--ink);
+}
+
+.training-status-table th,
+.training-status-table td {
+  border-bottom: 1px solid var(--line);
+  padding: 0.4rem;
+}
+
+.training-status-pill {
+  display: inline-block;
+  border-radius: 999px;
+  background: var(--uniform-gold-wash);
+  border: 1px solid var(--uniform-gold-soft);
+  color: var(--uniform-gold-dark);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.2rem 0.55rem;
+}
+
 .report-summary-grid,
 #report-summary-panels {
   display: grid;
@@ -651,7 +722,8 @@ pre {
 #student-progress-history,
 #leaderboard-table,
 #certificates-list,
-#audit-trail-list {
+#audit-trail-list,
+#training-status-list {
   max-width: 100%;
   overflow-x: auto;
 }
@@ -659,7 +731,8 @@ pre {
 #student-progress-history table,
 #leaderboard-table table,
 #certificates-list table,
-#audit-trail-list table {
+#audit-trail-list table,
+#training-status-list table {
   min-width: 560px;
 }
 
