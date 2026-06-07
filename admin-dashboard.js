@@ -15,12 +15,14 @@
   });
 
   // --- Storage keys ---
-  var K = { students:'rc_students', activity:'rc_activity', sessions:'rc_sessions', events:'rc_events', challenges:'rc_challenges', timedRuns:'rc_timed', customAwards:'rc_custom_awards', scanAudit:'rc_scan_audit', scannerSettings:'rc_scanner_settings', offlineQueue:'rc_offline_queue' };
+  var K = { students:'rc_students', activity:'rc_activity', sessions:'rc_sessions', events:'rc_events', challenges:'rc_challenges', timedRuns:'rc_timed', customAwards:'rc_custom_awards', scanAudit:'rc_scan_audit', scannerSettings:'rc_scanner_settings', offlineQueue:'rc_offline_queue', programSettings:'rc_program_settings' };
 
   function load(key, def) { try { var r=localStorage.getItem(key); return r?JSON.parse(r):def; } catch{return def;} }
   function save(key,val) { localStorage.setItem(key,JSON.stringify(val)); }
-  function scannerSettings(){ var settings=load(K.scannerSettings,{duplicateCooldownSeconds:3}); var seconds=Number(settings.duplicateCooldownSeconds); if(!isFinite(seconds)||seconds<0){seconds=3;} return {duplicateCooldownSeconds:Math.min(120,seconds)}; }
+  function scannerSettings(){ var settings=load(K.scannerSettings,{duplicateCooldownSeconds:3,deviceName:'Admin dashboard',deviceLocation:'School'}); var seconds=Number(settings.duplicateCooldownSeconds); if(!isFinite(seconds)||seconds<0){seconds=3;} return {duplicateCooldownSeconds:Math.min(120,seconds),deviceName:String(settings.deviceName||'Admin dashboard'),deviceLocation:String(settings.deviceLocation||'School')}; }
+  function programSettings(){ var settings=window.RunClubScan&&window.RunClubScan.programSettings?window.RunClubScan.programSettings():load(K.programSettings,{lapDistanceKm:0.25,defaultSessionType:'Run Club'}); var lapDistanceKm=Number(settings.lapDistanceKm); if(!isFinite(lapDistanceKm)||lapDistanceKm<=0){lapDistanceKm=0.25;} return {lapDistanceKm:lapDistanceKm,defaultSessionType:String(settings.defaultSessionType||'Run Club')}; }
   function duplicateWindowMs(){ return scannerSettings().duplicateCooldownSeconds*1000; }
+  function scannerId(){ var settings=scannerSettings(); return settings.deviceName+(settings.deviceLocation?' - '+settings.deviceLocation:''); }
 
   // --- Default demo students (StrideTrack-style, with more data) ---
   function defaultStudents() {
@@ -38,7 +40,7 @@
 
   function getStudents() { return load(K.students, defaultStudents()); }
   function saveStudents(s) { save(K.students,s); }
-  function lapsTokm(l) { return l*0.25; }
+  function lapsTokm(l) { return l*programSettings().lapDistanceKm; }
   function minutesToKm(m) { return m/20; } // Marathon Kids: 20 min = 1 km
   function totalKm(s) { return lapsTokm(s.laps)+minutesToKm(s.minutes||0); }
 
@@ -191,31 +193,54 @@
   var scanResultEl=document.getElementById('scan-result');
   var sessionStateEl=document.getElementById('session-state');
   var sessionLogEl=document.getElementById('session-log');
+  var sessionTypeEl=document.getElementById('session-type');
+  var sessionNotesEl=document.getElementById('session-notes');
+  var scannerDeviceNameInput=document.getElementById('scanner-device-name');
+  var scannerDeviceLocationInput=document.getElementById('scanner-device-location');
   var duplicateCooldownInput=document.getElementById('duplicate-cooldown-seconds');
+  var lapDistanceInput=document.getElementById('lap-distance-metres');
+  var defaultSessionTypeInput=document.getElementById('default-session-type');
   var scannerSettingsResultEl=document.getElementById('scanner-settings-result');
   var currentSession=null;
   var sessionScans=[];
   var lastAdminScan=null;
 
   function renderScannerSettings(){
-    duplicateCooldownInput.value=scannerSettings().duplicateCooldownSeconds;
+    var scanner=scannerSettings();
+    var program=programSettings();
+    scannerDeviceNameInput.value=scanner.deviceName;
+    scannerDeviceLocationInput.value=scanner.deviceLocation;
+    duplicateCooldownInput.value=scanner.duplicateCooldownSeconds;
+    lapDistanceInput.value=Math.round(program.lapDistanceKm*1000);
+    defaultSessionTypeInput.value=program.defaultSessionType;
+    sessionTypeEl.value=program.defaultSessionType;
   }
 
   document.getElementById('save-scanner-settings-btn').addEventListener('click',function(){
     var seconds=Number(duplicateCooldownInput.value);
     if(!isFinite(seconds)||seconds<0){seconds=3;}
     seconds=Math.min(120,Math.round(seconds));
-    save(K.scannerSettings,{duplicateCooldownSeconds:seconds});
+    var metres=Number(lapDistanceInput.value);
+    if(!isFinite(metres)||metres<=0){metres=250;}
+    metres=Math.min(2000,Math.max(10,Math.round(metres)));
+    var deviceName=scannerDeviceNameInput.value.trim()||'Admin dashboard';
+    var deviceLocation=scannerDeviceLocationInput.value.trim()||'School';
+    var defaultSessionType=defaultSessionTypeInput.value||'Run Club';
+    save(K.scannerSettings,{duplicateCooldownSeconds:seconds,deviceName:deviceName,deviceLocation:deviceLocation});
+    save(K.programSettings,{lapDistanceKm:metres/1000,defaultSessionType:defaultSessionType});
     duplicateCooldownInput.value=seconds;
-    showResult(scannerSettingsResultEl,{success:true,message:'Scanner settings saved.',duplicate_cooldown_seconds:seconds});
+    lapDistanceInput.value=metres;
+    sessionTypeEl.value=defaultSessionType;
+    showResult(scannerSettingsResultEl,{success:true,message:'Scanner and track settings saved.',duplicate_cooldown_seconds:seconds,device_name:deviceName,device_location:deviceLocation,lap_distance_metres:metres,default_session_type:defaultSessionType});
+    renderLeaderboard(); renderMedals(); renderCertificates(); renderSchoolSummary(); renderReportSummaries();
   });
   renderScannerSettings();
 
   document.getElementById('start-session-btn').addEventListener('click', function(){
-    currentSession={id:'session-'+Date.now(),date:new Date().toISOString().slice(0,10),scans:[]};
+    currentSession={id:'session-'+Date.now(),date:new Date().toISOString().slice(0,10),type:sessionTypeEl.value||programSettings().defaultSessionType,notes:sessionNotesEl.value.trim(),device:scannerId(),lap_distance_km:programSettings().lapDistanceKm,scans:[]};
     sessionScans=[];
     sessionStateEl.style.background='#e6f0ff'; sessionStateEl.style.borderColor='#0c5aa8';
-    sessionStateEl.textContent='Session OPEN – '+currentSession.date;
+    sessionStateEl.textContent='Session OPEN - '+currentSession.type+' - '+currentSession.date+' - '+currentSession.device;
     scanInput.focus();
   });
 
@@ -236,11 +261,11 @@
   function handleScan(){
     var barcode=scanInput.value.trim().toUpperCase();
     if(!barcode)return;
-    var result=window.RunClubScan.logLap(barcode,{source:'admin-dashboard',scanner_id:session.email||'DEMO',duplicateWindowMs:duplicateWindowMs()});
+    var result=window.RunClubScan.logLap(barcode,{source:'admin-dashboard',scanner_id:scannerId(),duplicateWindowMs:duplicateWindowMs()});
     if(!result.success){
       showResult(scanResultEl,{success:false,duplicate:result.duplicate===true,error:result.error||'Scan error'});
     } else {
-      var scan={barcode:barcode,name:result.student.name,laps:result.student.laps,time:new Date().toISOString(),scanner_id:session.email||'DEMO'};
+      var scan={barcode:barcode,name:result.student.name,laps:result.student.laps,time:new Date().toISOString(),scanner_id:scannerId(),session_type:currentSession?currentSession.type:sessionTypeEl.value};
       sessionScans.push(scan);
       lastAdminScan={student_id:result.student.id,name:result.student.name,barcode:barcode};
       undoAdminScanBtn.hidden=false;
@@ -252,6 +277,7 @@
       renderMedals();
       renderCertificates();
       renderSchoolSummary();
+      renderReportSummaries();
       renderAuditTrail();
     }
     scanInput.value=''; scanInput.focus();
@@ -267,10 +293,10 @@
       saveStudents(students);
       sessionScans=sessionScans.filter(function(scan,index){return index!==sessionScans.length-1;});
       if(window.RunClubScan&&window.RunClubScan.auditScan){
-        window.RunClubScan.auditScan({barcode:lastAdminScan.barcode,scanner_id:session.email||'DEMO',source:'admin-dashboard',success:true,undo:true,student_id:student.id,student_name:student.name,laps_after:student.laps});
+        window.RunClubScan.auditScan({barcode:lastAdminScan.barcode,scanner_id:scannerId(),source:'admin-dashboard',success:true,undo:true,student_id:student.id,student_name:student.name,laps_after:student.laps});
       }
       renderSessionLog(sessionScans);
-      renderStudentList(); renderLeaderboard(); renderAwards(); renderMedals(); renderCertificates(); renderSchoolSummary(); renderAuditTrail();
+      renderStudentList(); renderLeaderboard(); renderAwards(); renderMedals(); renderCertificates(); renderSchoolSummary(); renderReportSummaries(); renderAuditTrail();
       showResult(scanResultEl,{success:true,message:'Last scan undone.',student:{id:student.id,name:student.name,total_laps:student.laps}});
     }
     lastAdminScan=null;
@@ -379,7 +405,7 @@
     batch.scans=(batch.scans||[]).map(function(scan){
       if(retryOnly&&!(scan.status==='failed'||scan.status==='unknown'||scan.status==='error')){return scan;}
       var barcode=String(scan.barcode||'').toUpperCase();
-      var result=window.RunClubScan.logLap(barcode,{source:'offline-queue',scanner_id:batch.device||'offline-kiosk',duplicateWindowMs:duplicateWindowMs()});
+      var result=window.RunClubScan.logLap(barcode,{source:'offline-queue',scanner_id:batch.device||scannerId(),duplicateWindowMs:duplicateWindowMs()});
       scan.synced_at=new Date().toISOString();
       if(result.success){
         scan.status='logged';
@@ -496,6 +522,7 @@
     renderMedals();
     renderCertificates();
     renderSchoolSummary();
+    renderReportSummaries();
   }
 
   function renderBarcodeConfirmation(student){
@@ -720,7 +747,7 @@
     var st=students.find(function(s){return s.id===studentId;});
     if(st){st.minutes=(st.minutes||0)+mins; saveStudents(students);}
     showResult(actResultEl,{success:true,message:'Activity logged.',student:student.name,minutes:mins,km_credit:minutesToKm(mins).toFixed(2)});
-    renderActivityLog(); renderLeaderboard(); renderMedals(); renderCertificates(); renderSchoolSummary();
+    renderActivityLog(); renderLeaderboard(); renderMedals(); renderCertificates(); renderSchoolSummary(); renderReportSummaries();
     actMinsEl.value='';
   });
 
@@ -882,6 +909,57 @@
   var reportsResultEl=document.getElementById('reports-result');
   var schoolSummaryEl=document.getElementById('school-summary');
   var auditTrailListEl=document.getElementById('audit-trail-list');
+  var reportSummaryPanelsEl=document.getElementById('report-summary-panels');
+
+  function groupedSummary(groupField){
+    var groups={};
+    getStudents().forEach(function(s){
+      var key=s[groupField]||'Unassigned';
+      if(!groups[key]){groups[key]={group:key,students:0,laps:0,km:0,certificates:0};}
+      groups[key].students+=1;
+      groups[key].laps+=s.laps||0;
+      groups[key].km+=totalKm(s);
+      groups[key].certificates+=certificatesFor(s).length;
+    });
+    return Object.keys(groups).sort().map(function(key){
+      var row=groups[key];
+      row.km=+row.km.toFixed(2);
+      return row;
+    });
+  }
+
+  function medalSummaryRows(){
+    var counts={};
+    MEDAL_TIERS.forEach(function(t){counts[t.name]={medal:t.name,students:0,minimum_km:t.km};});
+    getStudents().forEach(function(s){counts[medalFor(s).name].students+=1;});
+    return MEDAL_TIERS.map(function(t){return counts[t.name];});
+  }
+
+  function certificateRows(){
+    var rows=[];
+    getStudents().forEach(function(s){
+      certificatesFor(s).forEach(function(c){rows.push({student:s.name,year:s.year,class:s.cls,milestone:c.name,km:c.km,total_km:+totalKm(s).toFixed(2)});});
+    });
+    return rows;
+  }
+
+  function renderReportSummaries(){
+    var classRows=groupedSummary('cls');
+    var yearRows=groupedSummary('year');
+    var medalRows=medalSummaryRows();
+    var certRows=certificateRows();
+    function miniTable(title,rows,cols){
+      if(!rows.length){return '<div class="report-mini"><h3>'+title+'</h3><p style="color:#888;font-size:0.85rem;">No rows yet.</p></div>';}
+      return '<div class="report-mini"><h3>'+title+'</h3><table><thead><tr>'+cols.map(function(c){return '<th>'+c.label+'</th>';}).join('')+'</tr></thead><tbody>'+
+        rows.slice(0,8).map(function(row){return '<tr>'+cols.map(function(c){return '<td>'+escapeHtml(row[c.key])+'</td>';}).join('')+'</tr>';}).join('')+
+        '</tbody></table></div>';
+    }
+    reportSummaryPanelsEl.innerHTML=
+      miniTable('Class Summary',classRows,[{key:'group',label:'Class'},{key:'students',label:'Students'},{key:'laps',label:'Laps'},{key:'km',label:'Km'}])+
+      miniTable('Year Summary',yearRows,[{key:'group',label:'Year'},{key:'students',label:'Students'},{key:'laps',label:'Laps'},{key:'km',label:'Km'}])+
+      miniTable('Medal Summary',medalRows,[{key:'medal',label:'Medal'},{key:'students',label:'Students'},{key:'minimum_km',label:'Min km'}])+
+      miniTable('Certificate Readiness',certRows,[{key:'student',label:'Student'},{key:'class',label:'Class'},{key:'milestone',label:'Milestone'},{key:'total_km',label:'Total km'}]);
+  }
 
   function renderAuditTrail(){
     var rows=(window.RunClubScan&&window.RunClubScan.scanAudit?window.RunClubScan.scanAudit():load(K.scanAudit,[])).slice().reverse().slice(0,12);
@@ -909,6 +987,7 @@
       '</div>';
   }
   renderSchoolSummary();
+  renderReportSummaries();
 
   document.getElementById('export-report-json-btn').addEventListener('click',function(){
     dlJson('runclub-report-'+new Date().toISOString().slice(0,10)+'.json',{
@@ -919,7 +998,10 @@
       challenges:load(K.challenges,[]),
       timed_runs:load(K.timedRuns,[]),
       sessions:load(K.sessions,[]),
-      scan_audit:load(K.scanAudit,[])
+      scan_audit:load(K.scanAudit,[]),
+      scanner_settings:scannerSettings(),
+      program_settings:programSettings(),
+      summaries:{classes:groupedSummary('cls'),years:groupedSummary('year'),medals:medalSummaryRows(),certificates:certificateRows()}
     });
     showResult(reportsResultEl,{success:true,message:'Full JSON report exported.'});
   });
@@ -941,6 +1023,23 @@
     var rows=load(K.scanAudit,[]);
     dlCsv('scan-audit-'+new Date().toISOString().slice(0,10)+'.csv',rows,['time','scanner_id','source','barcode','student_id','student_name','success','duplicate','error','laps_after']);
     showResult(reportsResultEl,{success:true,message:'Scan audit CSV exported.'});
+  });
+
+  document.getElementById('export-class-summary-csv-btn').addEventListener('click',function(){
+    var classRows=groupedSummary('cls').map(function(row){return {type:'class',group:row.group,students:row.students,laps:row.laps,km:row.km,certificates:row.certificates};});
+    var yearRows=groupedSummary('year').map(function(row){return {type:'year',group:row.group,students:row.students,laps:row.laps,km:row.km,certificates:row.certificates};});
+    dlCsv('class-year-summary-'+new Date().toISOString().slice(0,10)+'.csv',classRows.concat(yearRows),['type','group','students','laps','km','certificates']);
+    showResult(reportsResultEl,{success:true,message:'Class and year summary CSV exported.'});
+  });
+
+  document.getElementById('export-medal-summary-csv-btn').addEventListener('click',function(){
+    dlCsv('medal-summary-'+new Date().toISOString().slice(0,10)+'.csv',medalSummaryRows(),['medal','students','minimum_km']);
+    showResult(reportsResultEl,{success:true,message:'Medal summary CSV exported.'});
+  });
+
+  document.getElementById('export-certificate-csv-btn').addEventListener('click',function(){
+    dlCsv('certificate-readiness-'+new Date().toISOString().slice(0,10)+'.csv',certificateRows(),['student','year','class','milestone','km','total_km']);
+    showResult(reportsResultEl,{success:true,message:'Certificate readiness CSV exported.'});
   });
 
   document.getElementById('print-report-btn').addEventListener('click',function(){ window.print(); });

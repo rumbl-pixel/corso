@@ -48,6 +48,21 @@
           <h2>&#128247; Run Session Scanner</h2>
           <p style="color:#555;font-size:0.9rem;">Scan a student barcode or type an ID and press Enter. Bluetooth scanners work as keyboard input and auto-submit.</p>
           <div id="session-state" style="margin-bottom:1rem;padding:0.5rem 0.75rem;border-radius:0.4rem;background:#f0fff4;border:1px solid #c6f0d4;font-size:0.85rem;">No session open</div>
+          <div class="form-grid">
+            <label>Session type
+              <select id="session-type">
+                <option>Run Club</option>
+                <option>PE Class</option>
+                <option>Jog-a-thon</option>
+                <option>Move-a-thon</option>
+                <option>Recess</option>
+                <option>Other</option>
+              </select>
+            </label>
+            <label>Session notes
+              <input type="text" id="session-notes" placeholder="e.g. Monday morning oval laps" />
+            </label>
+          </div>
           <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1rem;">
             <button id="start-session-btn" type="button">Start session</button>
             <button id="finish-session-btn" type="button" class="secondary">Finish session</button>
@@ -68,10 +83,31 @@
         </div>
 
         <div class="card" id="scanner-settings-card">
-          <h2>&#9881; Scanner Settings</h2>
-          <label>Duplicate scan cooldown
-            <input type="number" id="duplicate-cooldown-seconds" min="0" max="120" step="1" />
-          </label>
+          <h2>&#9881; Scanner &amp; Track Settings</h2>
+          <div class="form-grid">
+            <label>Registered device name
+              <input type="text" id="scanner-device-name" placeholder="e.g. Oval iPad 1" />
+            </label>
+            <label>Device location
+              <input type="text" id="scanner-device-location" placeholder="e.g. Front gate" />
+            </label>
+            <label>Duplicate scan cooldown
+              <input type="number" id="duplicate-cooldown-seconds" min="0" max="120" step="1" />
+            </label>
+            <label>Lap distance
+              <input type="number" id="lap-distance-metres" min="10" max="2000" step="1" />
+            </label>
+            <label>Default session type
+              <select id="default-session-type">
+                <option>Run Club</option>
+                <option>PE Class</option>
+                <option>Jog-a-thon</option>
+                <option>Move-a-thon</option>
+                <option>Recess</option>
+                <option>Other</option>
+              </select>
+            </label>
+          </div>
           <p style="color:#555;font-size:0.85rem;">Seconds to wait before the same barcode can be accepted again. Use 0 only for testing.</p>
           <button id="save-scanner-settings-btn" type="button" class="secondary">Save scanner settings</button>
           <pre id="scanner-settings-result" hidden></pre>
@@ -307,9 +343,17 @@
             <button id="export-report-csv-btn" type="button" class="secondary">Export CSV leaderboard</button>
             <button id="export-activity-csv-btn" type="button" class="secondary">Export activity CSV</button>
             <button id="export-audit-csv-btn" type="button" class="secondary">Export scan audit</button>
+            <button id="export-class-summary-csv-btn" type="button" class="secondary">Export class summary</button>
+            <button id="export-medal-summary-csv-btn" type="button" class="secondary">Export medal summary</button>
+            <button id="export-certificate-csv-btn" type="button" class="secondary">Export certificates</button>
             <button id="print-report-btn" type="button" class="secondary">Print report</button>
           </div>
           <pre id="reports-result" hidden></pre>
+        </div>
+
+        <div class="card">
+          <h2>&#128200; Report Summaries</h2>
+          <div id="report-summary-panels"></div>
         </div>
 
         <div class="card">

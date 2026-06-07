@@ -573,6 +573,40 @@ pre {
   margin-top: 0.75rem;
 }
 
+.report-summary-grid,
+#report-summary-panels {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.85rem;
+}
+
+.report-mini {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8faff;
+  padding: 0.85rem;
+  overflow-x: auto;
+}
+
+.report-mini h3 {
+  margin: 0 0 0.55rem;
+  color: #0c5aa8;
+  font-size: 0.98rem;
+}
+
+.report-mini table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.report-mini th,
+.report-mini td {
+  padding: 0.35rem;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  text-align: left;
+}
+
 .barcode-confirmation {
   margin-top: 1rem;
   padding: 0.85rem;

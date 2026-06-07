@@ -17,7 +17,8 @@
     events: 'rc_events',
     challenges: 'rc_challenges',
     timedRuns: 'rc_timed',
-    scanAudit: 'rc_scan_audit'
+    scanAudit: 'rc_scan_audit',
+    programSettings: 'rc_program_settings'
   };
 
   function load(key, def) {
@@ -44,7 +45,14 @@
   function saveStudents(s) { save(KEYS.students, s); }
 
   // --- Conversions ---
-  function lapsToKm(laps) { return laps * 0.25; }
+  function programSettings() {
+    var settings = load(KEYS.programSettings, { lapDistanceKm: 0.25, defaultSessionType: 'Run Club' });
+    var lapDistanceKm = Number(settings.lapDistanceKm);
+    if (!isFinite(lapDistanceKm) || lapDistanceKm <= 0) { lapDistanceKm = 0.25; }
+    return Object.assign({}, settings, { lapDistanceKm: lapDistanceKm });
+  }
+  function lapDistanceKm() { return programSettings().lapDistanceKm; }
+  function lapsToKm(laps) { return laps * lapDistanceKm(); }
   function minutesToKm(min) { return (min || 0) / 20; } // Marathon Kids: 20 min = 1 km
   function totalKm(s) { return lapsToKm(s.laps) + minutesToKm(s.minutes); }
 
@@ -166,6 +174,8 @@
     lapsToKm: lapsToKm,
     minutesToKm: minutesToKm,
     totalKm: totalKm,
+    programSettings: programSettings,
+    lapDistanceKm: lapDistanceKm,
     MILESTONES: MILESTONES,
     awardsFor: awardsFor,
     milestoneJustReached: milestoneJustReached,
