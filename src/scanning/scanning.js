@@ -45,11 +45,34 @@
   function saveStudents(s) { save(KEYS.students, s); }
 
   // --- Conversions ---
+  function defaultProgramSettings() {
+    return {
+      schoolName: 'Gwynne Park Schools',
+      lapDistanceKm: 0.25,
+      defaultSessionType: 'Run Club',
+      activeYears: ['Year 1', 'Year 2', 'Year 3', 'Year 4', 'Year 5', 'Year 6'],
+      classNames: ['1A', '2A', '3A', '4C', '5B', '6A'],
+      awardThresholds: MILESTONES
+    };
+  }
+
+  function cleanAwardThresholds(value) {
+    var thresholds = Array.isArray(value) ? value : String(value || '').split(',');
+    thresholds = thresholds.map(function (item) { return Number(item); })
+      .filter(function (item) { return isFinite(item) && item > 0; })
+      .map(function (item) { return Math.round(item); })
+      .sort(function (a, b) { return a - b; });
+    return thresholds.length ? Array.from(new Set(thresholds)) : MILESTONES;
+  }
+
   function programSettings() {
-    var settings = load(KEYS.programSettings, { lapDistanceKm: 0.25, defaultSessionType: 'Run Club' });
+    var settings = load(KEYS.programSettings, defaultProgramSettings());
     var lapDistanceKm = Number(settings.lapDistanceKm);
     if (!isFinite(lapDistanceKm) || lapDistanceKm <= 0) { lapDistanceKm = 0.25; }
-    return Object.assign({}, settings, { lapDistanceKm: lapDistanceKm });
+    return Object.assign(defaultProgramSettings(), settings, {
+      lapDistanceKm: lapDistanceKm,
+      awardThresholds: cleanAwardThresholds(settings.awardThresholds)
+    });
   }
   function lapDistanceKm() { return programSettings().lapDistanceKm; }
   function lapsToKm(laps) { return laps * lapDistanceKm(); }
@@ -58,13 +81,14 @@
 
   // --- Awards (milestone thresholds shared everywhere) ---
   var MILESTONES = [5, 10, 25, 50, 100, 200, 500];
+  function milestoneThresholds() { return programSettings().awardThresholds; }
   function awardsFor(laps) {
-    return MILESTONES.filter(function (m) { return laps >= m; })
+    return milestoneThresholds().filter(function (m) { return laps >= m; })
       .map(function (m) { return m + ' laps'; });
   }
   // Returns a milestone label if THIS lap just crossed a threshold, else null.
   function milestoneJustReached(laps) {
-    return MILESTONES.indexOf(laps) !== -1 ? (laps + ' laps') : null;
+    return milestoneThresholds().indexOf(laps) !== -1 ? (laps + ' laps') : null;
   }
 
   // --- Core: log a lap from a scanned barcode ---
@@ -176,6 +200,7 @@
     totalKm: totalKm,
     programSettings: programSettings,
     lapDistanceKm: lapDistanceKm,
+    milestoneThresholds: milestoneThresholds,
     MILESTONES: MILESTONES,
     awardsFor: awardsFor,
     milestoneJustReached: milestoneJustReached,

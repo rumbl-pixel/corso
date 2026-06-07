@@ -8,7 +8,7 @@ Workflow rules live in `docs/roadmap-workflow.md`.
 
 - Priority 0: 0 / 10 complete. Status: Go-Live Gate.
 - Priority 1: 14 / 14 complete. Status: Done.
-- Priority 2: 6 / 8 complete. Status: In Progress.
+- Priority 2: 8 / 8 complete. Status: Done.
 - Priority 3: 0 / 10 complete. Status: Planned.
 - Priority 4: 0 / 10 complete. Status: Planned.
 - Priority 5: 0 / 9 complete. Status: Planned.
@@ -18,8 +18,8 @@ Workflow rules live in `docs/roadmap-workflow.md`.
 
 ## Current Focus
 
-- Current lane: Priority 2 - Next Build.
-- Recommended next item: 2.7 Per-student progress history and term summary view.
+- Current lane: Priority 3 - Backend And Cross-Device Sync.
+- Recommended next item: 3.1 Choose backend stack and deployment target.
 - Privacy note: Priority 0 stays visible as the go-live gate and must be completed before real student data is entered.
 
 ## Priority 0 - Live Privacy And Security Gate
@@ -58,7 +58,7 @@ Status: Done. Keep stable unless a bug is found.
 
 ## Priority 2 - Next Build
 
-Status: Ready Next. These can be built before the production backend where practical.
+Status: Done. Keep stable unless a bug is found.
 
 - [x] ~~2.1 PWA/installable scanning shell for phones and iPads.~~
 - [x] ~~2.2 Better offline scan queue interface and retry states.~~
@@ -66,8 +66,8 @@ Status: Ready Next. These can be built before the production backend where pract
 - [x] ~~2.4 Registered scanner/tablet device names for audit logs.~~
 - [x] ~~2.5 Track/session setup options, including lap length and session type.~~
 - [x] ~~2.6 Richer class, division, medal, and certificate reports.~~
-- [ ] 2.7 Per-student progress history and term summary view.
-- [ ] 2.8 Onboarding wizard for school, track length, years, classes, and award thresholds.
+- [x] ~~2.7 Per-student progress history and term summary view.~~
+- [x] ~~2.8 Onboarding wizard for school, track length, years, classes, and award thresholds.~~
 
 ## Priority 3 - Backend And Cross-Device Sync
 

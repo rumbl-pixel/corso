@@ -162,6 +162,9 @@ assert(/generate-student-barcode-btn/.test(adminDashboardHtml), 'admin students 
 assert(/new-student-first/.test(adminDashboardHtml) && /new-student-last/.test(adminDashboardHtml), 'admin add-student form should collect student names');
 assert(/student-editor-modal/.test(adminDashboardHtml), 'admin students area should include an edit-student modal');
 assert(/edit-student-form/.test(adminDashboardHtml), 'admin students area should include an edit-student form');
+assert(/student-progress-card/.test(adminDashboardHtml), 'admin students area should include progress history');
+assert(/progress-student/.test(adminDashboardHtml) && /progress-term/.test(adminDashboardHtml), 'student progress history should include student and term filters');
+assert(/export-progress-csv-btn/.test(adminDashboardHtml), 'student progress history should export CSV');
 assert(/barcode-confirmation/.test(adminDashboardHtml), 'admin add-student flow should show an inline barcode confirmation area');
 assert(/Print Barcode \/ QR ID Cards/.test(adminDashboardHtml), 'admin dashboard should print barcode and QR ID cards');
 assert(/assets\/qrcode-generator\.js/.test(adminDashboardHtml), 'admin dashboard should load the local QR generator');
@@ -174,6 +177,11 @@ assert(/report-summary-panels/.test(adminDashboardHtml), 'admin reports should i
 assert(/export-class-summary-csv-btn/.test(adminDashboardHtml), 'admin reports should export class summaries');
 assert(/export-medal-summary-csv-btn/.test(adminDashboardHtml), 'admin reports should export medal summaries');
 assert(/export-certificate-csv-btn/.test(adminDashboardHtml), 'admin reports should export certificate readiness');
+assert(/onboarding-wizard-card/.test(adminDashboardHtml), 'admin reports should include onboarding wizard');
+assert(/onboarding-school-name/.test(adminDashboardHtml), 'onboarding wizard should collect school name');
+assert(/onboarding-year-groups/.test(adminDashboardHtml), 'onboarding wizard should collect year groups');
+assert(/onboarding-classes/.test(adminDashboardHtml), 'onboarding wizard should collect classes');
+assert(/onboarding-award-thresholds/.test(adminDashboardHtml), 'onboarding wizard should collect award thresholds');
 
 const adminDashboardJs = read('admin-dashboard.js');
 assert(/MEDAL_TIERS/.test(adminDashboardJs), 'admin dashboard should calculate medal tiers');
@@ -184,6 +192,11 @@ assert(/scannerId/.test(adminDashboardJs), 'admin dashboard should use registere
 assert(/deviceName/.test(adminDashboardJs) && /deviceLocation/.test(adminDashboardJs), 'admin scanner settings should store device metadata');
 assert(/lapDistanceKm/.test(adminDashboardJs), 'admin dashboard should use configurable lap distance');
 assert(/defaultSessionType/.test(adminDashboardJs), 'admin dashboard should store default session type');
+assert(/schoolName/.test(adminDashboardJs), 'admin dashboard should store school name');
+assert(/activeYears/.test(adminDashboardJs), 'admin dashboard should store active year groups');
+assert(/classNames/.test(adminDashboardJs), 'admin dashboard should store class names');
+assert(/awardThresholds/.test(adminDashboardJs), 'admin dashboard should store award thresholds');
+assert(/saveProgramSettings/.test(adminDashboardJs), 'admin dashboard should save shared program settings');
 assert(/session_type/.test(adminDashboardJs), 'session scans should include session type metadata');
 assert(/duplicateWindowMs\(\)/.test(adminDashboardJs), 'admin scanner should use configured duplicate cooldown');
 assert(/offlineBatchStatus/.test(adminDashboardJs), 'offline queue should calculate batch sync status');
@@ -212,11 +225,16 @@ assert(/groupedSummary/.test(adminDashboardJs), 'admin dashboard should build gr
 assert(/medalSummaryRows/.test(adminDashboardJs), 'admin dashboard should build medal summary rows');
 assert(/certificateRows/.test(adminDashboardJs), 'admin dashboard should build certificate readiness rows');
 assert(/renderReportSummaries/.test(adminDashboardJs), 'admin dashboard should render richer report summary panels');
+assert(/studentProgressRows/.test(adminDashboardJs), 'admin dashboard should build per-student progress rows');
+assert(/renderStudentProgress/.test(adminDashboardJs), 'admin dashboard should render per-student progress history');
+assert(/exportStudentProgressCsv/.test(adminDashboardJs), 'admin dashboard should export per-student progress CSV');
+assert(/renderOnboarding/.test(adminDashboardJs), 'admin dashboard should render onboarding setup summary');
 assert(/export-audit-csv-btn/.test(adminDashboardHtml), 'admin reports should include scan audit CSV export');
 assert(/undoLastAdminScan/.test(adminDashboardJs), 'admin scanner should undo the last scan when needed');
 
 assert(/programSettings/.test(scanningJs), 'shared scanning should expose program settings');
 assert(/lapDistanceKm/.test(scanningJs), 'shared scanning should use configurable lap distance');
+assert(/milestoneThresholds/.test(scanningJs), 'shared scanning should expose configurable milestone thresholds');
 
 const adminGoalsJs = read('admin-goals.js');
 assert(/assign-selected-students/.test(adminGoalsJs), 'admin goals modal should assign a goal to selected students');
