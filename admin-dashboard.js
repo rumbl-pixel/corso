@@ -20,7 +20,10 @@
   function load(key, def) { try { var r=localStorage.getItem(key); return r?JSON.parse(r):def; } catch{return def;} }
   function save(key,val) { localStorage.setItem(key,JSON.stringify(val)); }
   function scannerSettings(){ var settings=load(K.scannerSettings,{duplicateCooldownSeconds:3,deviceName:'Admin dashboard',deviceLocation:'School'}); var seconds=Number(settings.duplicateCooldownSeconds); if(!isFinite(seconds)||seconds<0){seconds=3;} return {duplicateCooldownSeconds:Math.min(120,seconds),deviceName:String(settings.deviceName||'Admin dashboard'),deviceLocation:String(settings.deviceLocation||'School')}; }
-  function programSettings(){ var settings=window.RunClubScan&&window.RunClubScan.programSettings?window.RunClubScan.programSettings():load(K.programSettings,{lapDistanceKm:0.25,defaultSessionType:'Run Club'}); var lapDistanceKm=Number(settings.lapDistanceKm); if(!isFinite(lapDistanceKm)||lapDistanceKm<=0){lapDistanceKm=0.25;} return {lapDistanceKm:lapDistanceKm,defaultSessionType:String(settings.defaultSessionType||'Run Club')}; }
+  function cleanList(value, fallback){ var list=Array.isArray(value)?value:String(value||'').split(','); list=list.map(function(item){return String(item).trim();}).filter(Boolean); return list.length?Array.from(new Set(list)):fallback; }
+  function cleanThresholds(value){ var list=Array.isArray(value)?value:String(value||'').split(','); list=list.map(function(item){return Number(item);}).filter(function(item){return isFinite(item)&&item>0;}).map(function(item){return Math.round(item);}).sort(function(a,b){return a-b;}); return list.length?Array.from(new Set(list)):[5,10,25,50,100,200,500]; }
+  function programSettings(){ var settings=window.RunClubScan&&window.RunClubScan.programSettings?window.RunClubScan.programSettings():load(K.programSettings,{schoolName:'Gwynne Park Schools',lapDistanceKm:0.25,defaultSessionType:'Run Club',activeYears:['Year 1','Year 2','Year 3','Year 4','Year 5','Year 6'],classNames:['1A','2A','3A','4C','5B','6A'],awardThresholds:[5,10,25,50,100,200,500]}); var lapDistanceKm=Number(settings.lapDistanceKm); if(!isFinite(lapDistanceKm)||lapDistanceKm<=0){lapDistanceKm=0.25;} return {schoolName:String(settings.schoolName||'Gwynne Park Schools'),lapDistanceKm:lapDistanceKm,defaultSessionType:String(settings.defaultSessionType||'Run Club'),activeYears:cleanList(settings.activeYears,['Year 1','Year 2','Year 3','Year 4','Year 5','Year 6']),classNames:cleanList(settings.classNames,['1A','2A','3A','4C','5B','6A']),awardThresholds:cleanThresholds(settings.awardThresholds)}; }
+  function saveProgramSettings(partial){ save(K.programSettings,Object.assign({},programSettings(),partial)); }
   function duplicateWindowMs(){ return scannerSettings().duplicateCooldownSeconds*1000; }
   function scannerId(){ var settings=scannerSettings(); return settings.deviceName+(settings.deviceLocation?' - '+settings.deviceLocation:''); }
 
@@ -227,12 +230,12 @@
     var deviceLocation=scannerDeviceLocationInput.value.trim()||'School';
     var defaultSessionType=defaultSessionTypeInput.value||'Run Club';
     save(K.scannerSettings,{duplicateCooldownSeconds:seconds,deviceName:deviceName,deviceLocation:deviceLocation});
-    save(K.programSettings,{lapDistanceKm:metres/1000,defaultSessionType:defaultSessionType});
+    saveProgramSettings({lapDistanceKm:metres/1000,defaultSessionType:defaultSessionType});
     duplicateCooldownInput.value=seconds;
     lapDistanceInput.value=metres;
     sessionTypeEl.value=defaultSessionType;
     showResult(scannerSettingsResultEl,{success:true,message:'Scanner and track settings saved.',duplicate_cooldown_seconds:seconds,device_name:deviceName,device_location:deviceLocation,lap_distance_metres:metres,default_session_type:defaultSessionType});
-    renderLeaderboard(); renderMedals(); renderCertificates(); renderSchoolSummary(); renderReportSummaries();
+    renderLeaderboard(); renderMedals(); renderCertificates(); renderSchoolSummary(); renderReportSummaries(); renderStudentProgress(); renderOnboarding();
   });
   renderScannerSettings();
 
@@ -512,9 +515,14 @@
   var editStudentLastEl=document.getElementById('edit-student-last');
   var editStudentYearEl=document.getElementById('edit-student-year');
   var editStudentClassEl=document.getElementById('edit-student-class');
+  var progressStudentEl=document.getElementById('progress-student');
+  var progressTermEl=document.getElementById('progress-term');
+  var studentProgressSummaryEl=document.getElementById('student-progress-summary');
+  var studentProgressHistoryEl=document.getElementById('student-progress-history');
 
   function refreshStudentViews(){
     renderStudentList();
+    populateProgressStudents();
     populateLbFilters();
     renderLeaderboard();
     populateActivityStudents();
@@ -523,6 +531,7 @@
     renderCertificates();
     renderSchoolSummary();
     renderReportSummaries();
+    renderStudentProgress();
   }
 
   function renderBarcodeConfirmation(student){
@@ -570,6 +579,95 @@
   }
   renderStudentList();
   studentSearchEl.addEventListener('input',renderStudentList);
+
+  function populateProgressStudents(){
+    var selected=progressStudentEl.value;
+    progressStudentEl.innerHTML='';
+    getStudents().forEach(function(s){
+      var o=document.createElement('option');o.value=s.id;o.textContent=s.name+' ('+s.year+', '+s.cls+')';progressStudentEl.appendChild(o);
+    });
+    if(selected&&getStudents().some(function(s){return s.id===selected;})){progressStudentEl.value=selected;}
+  }
+
+  function termRange(term){
+    var year=new Date().getFullYear();
+    var ranges={
+      term1:[new Date(year,1,1),new Date(year,3,30,23,59,59)],
+      term2:[new Date(year,3,1),new Date(year,6,15,23,59,59)],
+      term3:[new Date(year,6,1),new Date(year,8,30,23,59,59)],
+      term4:[new Date(year,9,1),new Date(year,11,31,23,59,59)]
+    };
+    return ranges[term]||null;
+  }
+
+  function inSelectedTerm(dateValue){
+    var range=termRange(progressTermEl.value);
+    if(!range){return true;}
+    var date=new Date(dateValue);
+    return date>=range[0]&&date<=range[1];
+  }
+
+  function studentProgressRows(studentId){
+    var student=getStudents().find(function(s){return s.id===studentId;});
+    if(!student){return [];}
+    var rows=[];
+    load(K.scanAudit,[]).forEach(function(row){
+      if(row.student_id===studentId&&row.success&&!row.undo&&inSelectedTerm(row.time)){
+        rows.push({date:row.time,type:'Lap scan',detail:row.source||'scanner',amount:'1 lap',km:+programSettings().lapDistanceKm.toFixed(2),status:'Logged'});
+      }
+      if(row.student_id===studentId&&row.undo&&inSelectedTerm(row.time)){
+        rows.push({date:row.time,type:'Undo',detail:row.source||'scanner',amount:'-1 lap',km:-programSettings().lapDistanceKm,status:'Adjusted'});
+      }
+    });
+    load(K.activity,[]).forEach(function(row){
+      if(row.student_id===studentId&&inSelectedTerm(row.date)){
+        rows.push({date:row.date,type:'Activity',detail:row.activity_type||'Activity',amount:(row.minutes||0)+' min',km:+minutesToKm(Number(row.minutes||0)).toFixed(2),status:'Logged'});
+      }
+    });
+    load(K.timedRuns,[]).forEach(function(row){
+      if(row.student_id===studentId&&inSelectedTerm(row.date||row.time||row.created)){
+        rows.push({date:row.date||row.time||row.created,type:'Timed run',detail:row.event||'Timed lap',amount:row.seconds?row.seconds+' sec':'Time saved',km:0,status:'Recorded'});
+      }
+    });
+    return rows.sort(function(a,b){return new Date(b.date)-new Date(a.date);});
+  }
+
+  function renderStudentProgress(){
+    var studentId=progressStudentEl.value || (getStudents()[0]&&getStudents()[0].id);
+    var student=getStudents().find(function(s){return s.id===studentId;});
+    if(!student){studentProgressSummaryEl.innerHTML='<p style="color:#888;font-size:0.85rem;">No student selected.</p>';studentProgressHistoryEl.innerHTML='';return;}
+    progressStudentEl.value=student.id;
+    var rows=studentProgressRows(student.id);
+    var scanLaps=rows.filter(function(r){return r.type==='Lap scan';}).length-rows.filter(function(r){return r.type==='Undo';}).length;
+    var periodKm=rows.reduce(function(total,row){return total+Number(row.km||0);},0);
+    var certificates=certificatesFor(student);
+    studentProgressSummaryEl.innerHTML='<div class="progress-summary-grid">'+
+      '<div class="stat-box"><div class="stat-value">'+student.laps+'</div><div class="stat-label">Lifetime laps</div></div>'+
+      '<div class="stat-box"><div class="stat-value">'+totalKm(student).toFixed(2)+'</div><div class="stat-label">Lifetime km</div></div>'+
+      '<div class="stat-box"><div class="stat-value">'+scanLaps+'</div><div class="stat-label">Selected period laps</div></div>'+
+      '<div class="stat-box"><div class="stat-value">'+periodKm.toFixed(2)+'</div><div class="stat-label">Selected period km</div></div>'+
+      '<div class="stat-box"><div class="stat-value">'+certificates.length+'</div><div class="stat-label">Certificates ready</div></div>'+
+      '</div>';
+    if(!rows.length){studentProgressHistoryEl.innerHTML='<p style="color:#888;font-size:0.85rem;">No progress records match this filter yet.</p>';return;}
+    studentProgressHistoryEl.innerHTML='<table class="progress-history-table"><thead><tr><th>Date</th><th>Type</th><th>Detail</th><th>Amount</th><th>Km</th><th>Status</th></tr></thead><tbody>'+
+      rows.slice(0,40).map(function(row){return '<tr><td>'+new Date(row.date).toLocaleDateString()+'</td><td>'+escapeHtml(row.type)+'</td><td>'+escapeHtml(row.detail)+'</td><td>'+escapeHtml(row.amount)+'</td><td>'+Number(row.km||0).toFixed(2)+'</td><td>'+escapeHtml(row.status)+'</td></tr>';}).join('')+
+      '</tbody></table>';
+  }
+
+  function exportStudentProgressCsv(){
+    var studentId=progressStudentEl.value;
+    var student=getStudents().find(function(s){return s.id===studentId;});
+    if(!student){return;}
+    var rows=studentProgressRows(student.id).map(function(row){return {student:student.name,year:student.year,class:student.cls,date:row.date,type:row.type,detail:row.detail,amount:row.amount,km:row.km,status:row.status};});
+    dlCsv('student-progress-'+student.id+'.csv',rows,['student','year','class','date','type','detail','amount','km','status']);
+  }
+
+  populateProgressStudents();
+  renderStudentProgress();
+  progressStudentEl.addEventListener('change',renderStudentProgress);
+  progressTermEl.addEventListener('change',renderStudentProgress);
+  document.getElementById('refresh-progress-btn').addEventListener('click',renderStudentProgress);
+  document.getElementById('export-progress-csv-btn').addEventListener('click',exportStudentProgressCsv);
 
   function openStudentEditor(studentId){
     var student=getStudents().find(function(s){return s.id===studentId;});
@@ -786,19 +884,20 @@
   var medalSummaryEl=document.getElementById('medal-summary');
   var certificatesListEl=document.getElementById('certificates-list');
   var customAwardsListEl=document.getElementById('custom-awards-list');
-  var MILESTONES=[5,10,25,50,100,200,500];
+  function milestoneThresholds(){ return programSettings().awardThresholds; }
   var MILESTONE_LABELS={5:'First 5 Laps',10:'10 Lap Club',25:'Quarter Century',50:'Half Century',100:'Century Club',200:'Double Century',500:'Elite Runner'};
+  function milestoneLabel(laps){ return MILESTONE_LABELS[laps]||laps+' Lap Club'; }
 
   function renderAwards(){
     var students=getStudents();
     var html='';
     students.forEach(function(s){
-      var earned=MILESTONES.filter(function(m){return s.laps>=m;});
+      var earned=milestoneThresholds().filter(function(m){return s.laps>=m;});
       if(earned.length){
         html+='<div style="margin-bottom:0.75rem;padding:0.75rem;border-radius:0.5rem;background:#fff8e1;border:1px solid #f59e0b;">';
         html+='<strong>'+s.name+'</strong> ('+s.year+', '+s.cls+')<br>';
         earned.forEach(function(m){
-          html+='<span class="award-badge">&#127942; '+MILESTONE_LABELS[m]+'</span>';
+          html+='<span class="award-badge">&#127942; '+milestoneLabel(m)+'</span>';
         });
         html+='</div>';
       }
@@ -866,10 +965,10 @@
     var win=window.open('','_blank');
     var html='<html><head><title>Award Certificates</title><style>body{font-family:sans-serif;padding:2rem;} .cert{border:3px solid gold;padding:2rem;margin:1rem 0;text-align:center;page-break-after:always;} h2{color:#0c5aa8;} .badge{display:inline-block;padding:0.3rem 0.8rem;border-radius:999px;background:#fff8e1;border:1px solid #f59e0b;margin:0.2rem;font-size:0.9rem;}</style></head><body>';
     students.forEach(function(s){
-      var earned=MILESTONES.filter(function(m){return s.laps>=m;});
+      var earned=milestoneThresholds().filter(function(m){return s.laps>=m;});
       if(earned.length){
         html+='<div class="cert"><h2>&#127942; Run Club Achievement Certificate</h2><h3>'+s.name+'</h3><p>'+s.year+' – Class '+s.cls+'</p><p>Total laps: <strong>'+s.laps+'</strong> ('+lapsTokm(s.laps).toFixed(2)+' km)</p>';
-        earned.forEach(function(m){html+='<span class="badge">&#127942; '+MILESTONE_LABELS[m]+'</span>';});
+        earned.forEach(function(m){html+='<span class="badge">&#127942; '+milestoneLabel(m)+'</span>';});
         html+='<p style="margin-top:1rem;color:#888;font-size:0.8rem;">Gwynne Park Run Club • 2026</p></div>';
       }
     });
@@ -910,6 +1009,54 @@
   var schoolSummaryEl=document.getElementById('school-summary');
   var auditTrailListEl=document.getElementById('audit-trail-list');
   var reportSummaryPanelsEl=document.getElementById('report-summary-panels');
+  var onboardingFormEl=document.getElementById('onboarding-form');
+  var onboardingSchoolNameEl=document.getElementById('onboarding-school-name');
+  var onboardingLapDistanceEl=document.getElementById('onboarding-lap-distance-metres');
+  var onboardingSessionTypeEl=document.getElementById('onboarding-session-type');
+  var onboardingYearGroupsEl=document.getElementById('onboarding-year-groups');
+  var onboardingClassesEl=document.getElementById('onboarding-classes');
+  var onboardingAwardThresholdsEl=document.getElementById('onboarding-award-thresholds');
+  var onboardingResultEl=document.getElementById('onboarding-result');
+  var onboardingSummaryEl=document.getElementById('onboarding-summary');
+
+  function renderOnboarding(){
+    var settings=programSettings();
+    onboardingSchoolNameEl.value=settings.schoolName;
+    onboardingLapDistanceEl.value=Math.round(settings.lapDistanceKm*1000);
+    onboardingSessionTypeEl.value=settings.defaultSessionType;
+    onboardingYearGroupsEl.value=settings.activeYears.join(', ');
+    onboardingClassesEl.value=settings.classNames.join(', ');
+    onboardingAwardThresholdsEl.value=settings.awardThresholds.join(', ');
+    onboardingSummaryEl.innerHTML='<div class="setup-summary-grid">'+
+      '<div><strong>'+escapeHtml(settings.schoolName)+'</strong><span>School</span></div>'+
+      '<div><strong>'+Math.round(settings.lapDistanceKm*1000)+'m</strong><span>Lap distance</span></div>'+
+      '<div><strong>'+escapeHtml(settings.defaultSessionType)+'</strong><span>Default session</span></div>'+
+      '<div><strong>'+settings.activeYears.length+'</strong><span>Year groups</span></div>'+
+      '<div><strong>'+settings.classNames.length+'</strong><span>Classes</span></div>'+
+      '<div><strong>'+settings.awardThresholds.join(', ')+'</strong><span>Award laps</span></div>'+
+      '</div>';
+  }
+
+  onboardingFormEl.addEventListener('submit',function(e){
+    e.preventDefault();
+    var metres=Number(onboardingLapDistanceEl.value);
+    if(!isFinite(metres)||metres<=0){metres=250;}
+    metres=Math.min(2000,Math.max(10,Math.round(metres)));
+    var settings={
+      schoolName:onboardingSchoolNameEl.value.trim()||'Gwynne Park Schools',
+      lapDistanceKm:metres/1000,
+      defaultSessionType:onboardingSessionTypeEl.value||'Run Club',
+      activeYears:cleanList(onboardingYearGroupsEl.value,['Year 1','Year 2','Year 3','Year 4','Year 5','Year 6']),
+      classNames:cleanList(onboardingClassesEl.value,['1A','2A','3A','4C','5B','6A']),
+      awardThresholds:cleanThresholds(onboardingAwardThresholdsEl.value)
+    };
+    saveProgramSettings(settings);
+    renderScannerSettings();
+    renderOnboarding();
+    refreshStudentViews();
+    renderAwards();
+    showResult(onboardingResultEl,{success:true,message:'Onboarding setup saved.',settings:settings});
+  });
 
   function groupedSummary(groupField){
     var groups={};
@@ -988,6 +1135,7 @@
   }
   renderSchoolSummary();
   renderReportSummaries();
+  renderOnboarding();
 
   document.getElementById('export-report-json-btn').addEventListener('click',function(){
     dlJson('runclub-report-'+new Date().toISOString().slice(0,10)+'.json',{
