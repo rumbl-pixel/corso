@@ -108,6 +108,9 @@ assert(/medal-progress/.test(studentProfileHtml), 'student profile page should s
 assert(/student-barcode-card/.test(studentProfileHtml), 'student profile page should show the student barcode card area');
 assert(/print-student-barcode-btn/.test(studentProfileHtml), 'student profile page should let students print a credit-card-sized barcode card');
 assert(/assets\/qrcode-generator\.js/.test(studentProfileHtml), 'student profile should load the local QR generator');
+assert(/student-profile-tabs/.test(studentProfileHtml), 'student profile should expose profile tabs');
+assert(/tab-student-training/.test(studentProfileHtml), 'student profile should include a Training tab');
+assert(/student-training-list/.test(studentProfileHtml), 'student profile should render assigned training tasks');
 
 const studentJs = read('student.js');
 assert(/DEMO/.test(studentJs), 'student login should handle DEMO bypass');
@@ -118,6 +121,10 @@ assert(/printStudentBarcodeCard/.test(studentJs), 'student portal should print i
 assert(/qrCodeHtml/.test(studentJs), 'student portal should render real QR codes on student cards');
 assert(/runClubStudentSession/.test(studentJs), 'student portal should persist student login sessions');
 assert(/student-profile\.html/.test(studentJs), 'student login should redirect to the separate profile page');
+assert(/rc_training/.test(studentJs), 'student portal should read assigned training tasks');
+assert(/rc_training_clicks/.test(studentJs), 'student portal should track training link clicks');
+assert(/recordTrainingClick/.test(studentJs), 'student portal should record when a student opens assigned training');
+assert(/student\.js\?v=6/.test(studentProfileHtml) && /student\.js\?v=6/.test(studentHtml), 'student pages should request the current training-aware student script');
 
 const homeHtml = read('index.html');
 assert(!/href="kiosk\.html"|Scanner kiosk/.test(homeHtml), 'public home page should not link directly to the admin-only kiosk');
@@ -182,6 +189,12 @@ assert(/onboarding-school-name/.test(adminDashboardHtml), 'onboarding wizard sho
 assert(/onboarding-year-groups/.test(adminDashboardHtml), 'onboarding wizard should collect year groups');
 assert(/onboarding-classes/.test(adminDashboardHtml), 'onboarding wizard should collect classes');
 assert(/onboarding-award-thresholds/.test(adminDashboardHtml), 'onboarding wizard should collect award thresholds');
+assert(/data-tab="training"/.test(adminDashboardHtml), 'admin dashboard should include a Training tab');
+assert(/training-title/.test(adminDashboardHtml), 'admin training form should collect a task title');
+assert(/training-url/.test(adminDashboardHtml), 'admin training form should collect a training link');
+assert(/training-student-list/.test(adminDashboardHtml), 'admin training form should assign tasks to selected students');
+assert(/training-status-list/.test(adminDashboardHtml), 'admin training tab should show assignment click status');
+assert(/admin-dashboard\.js\?v=6/.test(adminDashboardHtml), 'admin dashboard should request the current training-aware dashboard script');
 
 const adminDashboardJs = read('admin-dashboard.js');
 assert(/MEDAL_TIERS/.test(adminDashboardJs), 'admin dashboard should calculate medal tiers');
@@ -231,6 +244,10 @@ assert(/exportStudentProgressCsv/.test(adminDashboardJs), 'admin dashboard shoul
 assert(/renderOnboarding/.test(adminDashboardJs), 'admin dashboard should render onboarding setup summary');
 assert(/export-audit-csv-btn/.test(adminDashboardHtml), 'admin reports should include scan audit CSV export');
 assert(/undoLastAdminScan/.test(adminDashboardJs), 'admin scanner should undo the last scan when needed');
+assert(/rc_training/.test(adminDashboardJs), 'admin dashboard should store training assignments');
+assert(/rc_training_clicks/.test(adminDashboardJs), 'admin dashboard should read student training click status');
+assert(/createTrainingAssignment/.test(adminDashboardJs), 'admin dashboard should create training assignments');
+assert(/renderTrainingStatus/.test(adminDashboardJs), 'admin dashboard should render training status');
 
 assert(/programSettings/.test(scanningJs), 'shared scanning should expose program settings');
 assert(/lapDistanceKm/.test(scanningJs), 'shared scanning should use configurable lap distance');
@@ -279,7 +296,12 @@ assert(/leaderboard-table[\s\S]*min-width:\s*500px/.test(styles), 'leaderboard t
 assert(/#student-progress-history,[\s\S]*#leaderboard-table,[\s\S]*#certificates-list,[\s\S]*#audit-trail-list[\s\S]*overflow-x:\s*auto/.test(styles), 'admin table containers should prevent column clipping');
 assert(/offline-scan-table[\s\S]*min-width:\s*560px/.test(styles), 'offline scan tables should keep readable column widths');
 assert(/report-mini table[\s\S]*min-width:\s*420px/.test(styles), 'report summary tables should keep readable column widths');
-assert(/styles\.css\?v=5/.test(leaderboardHtml), 'leaderboard page should request the current themed stylesheet version');
-assert(/gwynne-park-run-club-v5/.test(serviceWorker), 'service worker cache should be bumped for the site-wide theme update');
+assert(/styles\.css\?v=6/.test(leaderboardHtml), 'leaderboard page should request the current themed stylesheet version');
+assert(/gwynne-park-run-club-v6/.test(serviceWorker), 'service worker cache should be bumped for the site-wide theme update');
+
+const features = read('FEATURES.md');
+assert(/Training And At-Home Tasks/.test(features), 'roadmap should include the training workflow lane');
+assert(/assigned at-home training/.test(features), 'roadmap should include assigned at-home training tasks');
+assert(/link click visibility/.test(features), 'roadmap should include training link click visibility');
 
 console.log('portal smoke checks passed');

@@ -15,7 +15,7 @@
   });
 
   // --- Storage keys ---
-  var K = { students:'rc_students', activity:'rc_activity', sessions:'rc_sessions', events:'rc_events', challenges:'rc_challenges', timedRuns:'rc_timed', customAwards:'rc_custom_awards', scanAudit:'rc_scan_audit', scannerSettings:'rc_scanner_settings', offlineQueue:'rc_offline_queue', programSettings:'rc_program_settings' };
+  var K = { students:'rc_students', activity:'rc_activity', sessions:'rc_sessions', events:'rc_events', challenges:'rc_challenges', timedRuns:'rc_timed', customAwards:'rc_custom_awards', scanAudit:'rc_scan_audit', scannerSettings:'rc_scanner_settings', offlineQueue:'rc_offline_queue', programSettings:'rc_program_settings', training:'rc_training', trainingClicks:'rc_training_clicks' };
 
   function load(key, def) { try { var r=localStorage.getItem(key); return r?JSON.parse(r):def; } catch{return def;} }
   function save(key,val) { localStorage.setItem(key,JSON.stringify(val)); }
@@ -523,6 +523,7 @@
   function refreshStudentViews(){
     renderStudentList();
     populateProgressStudents();
+    populateTrainingStudents();
     populateLbFilters();
     renderLeaderboard();
     populateActivityStudents();
@@ -532,6 +533,7 @@
     renderSchoolSummary();
     renderReportSummaries();
     renderStudentProgress();
+    renderTrainingStatus();
   }
 
   function renderBarcodeConfirmation(student){
@@ -668,6 +670,94 @@
   progressTermEl.addEventListener('change',renderStudentProgress);
   document.getElementById('refresh-progress-btn').addEventListener('click',renderStudentProgress);
   document.getElementById('export-progress-csv-btn').addEventListener('click',exportStudentProgressCsv);
+
+  // === TRAINING ===
+  var trainingFormEl=document.getElementById('training-form');
+  var trainingTitleEl=document.getElementById('training-title');
+  var trainingUrlEl=document.getElementById('training-url');
+  var trainingDueDateEl=document.getElementById('training-due-date');
+  var trainingNotesEl=document.getElementById('training-notes');
+  var trainingStudentListEl=document.getElementById('training-student-list');
+  var trainingResultEl=document.getElementById('training-result');
+  var trainingStatusListEl=document.getElementById('training-status-list');
+
+  function trainingAssignments(){ return load(K.training,[]); }
+  function trainingClicks(){ return load(K.trainingClicks,[]); }
+
+  function normalizeTrainingUrl(url){
+    var value=String(url||'').trim();
+    if(!value){return '';}
+    if(!/^https?:\/\//i.test(value)){value='https://'+value;}
+    return value;
+  }
+
+  function populateTrainingStudents(){
+    if(!trainingStudentListEl){return;}
+    trainingStudentListEl.innerHTML=getStudents().map(function(s){
+      return '<label class="ag-student-option"><input type="checkbox" class="training-student-check" value="'+escapeAttr(s.id)+'" /> '+escapeHtml(s.name)+' <span>'+escapeHtml(s.year)+' / '+escapeHtml(s.cls)+'</span></label>';
+    }).join('');
+  }
+
+  function selectedTrainingStudents(){
+    return Array.from(document.querySelectorAll('.training-student-check:checked')).map(function(input){return input.value;});
+  }
+
+  function createTrainingAssignment(e){
+    e.preventDefault();
+    var assigned=selectedTrainingStudents();
+    if(!assigned.length){showResult(trainingResultEl,{success:false,error:'Select at least one student.'});return;}
+    var url=normalizeTrainingUrl(trainingUrlEl.value);
+    if(!url){showResult(trainingResultEl,{success:false,error:'Add a training link.'});return;}
+    var assignment={
+      id:'training-'+Date.now(),
+      title:trainingTitleEl.value.trim(),
+      url:url,
+      due_date:trainingDueDateEl.value,
+      notes:trainingNotesEl.value.trim(),
+      assigned_student_ids:assigned,
+      created_at:new Date().toISOString(),
+      created_by:session.email
+    };
+    var assignments=trainingAssignments();
+    assignments.push(assignment);
+    save(K.training,assignments);
+    trainingFormEl.reset();
+    populateTrainingStudents();
+    showResult(trainingResultEl,{success:true,message:'Training assigned.',assigned_students:assigned.length,title:assignment.title});
+    renderTrainingStatus();
+  }
+
+  function trainingClickFor(assignmentId,studentId){
+    return trainingClicks().filter(function(click){return click.assignment_id===assignmentId&&click.student_id===studentId;}).sort(function(a,b){return String(b.opened_at).localeCompare(String(a.opened_at));})[0]||null;
+  }
+
+  function renderTrainingStatus(){
+    if(!trainingStatusListEl){return;}
+    var assignments=trainingAssignments();
+    var students=getStudents();
+    if(!assignments.length){trainingStatusListEl.innerHTML='<p style="color:#888;font-size:0.85rem;">No training assigned yet.</p>';return;}
+    trainingStatusListEl.innerHTML=assignments.slice().reverse().map(function(task){
+      var rows=(task.assigned_student_ids||[]).map(function(studentId){
+        var student=students.find(function(s){return s.id===studentId;});
+        var click=trainingClickFor(task.id,studentId);
+        return '<tr><td>'+escapeHtml(student?student.name:studentId)+'</td><td>'+escapeHtml(student?student.year:'')+'</td><td>'+escapeHtml(student?student.cls:'')+'</td><td>'+(click?'Opened':'Not opened')+'</td><td>'+escapeHtml(click?new Date(click.opened_at).toLocaleString():'')+'</td></tr>';
+      }).join('');
+      return '<div class="training-assignment">'+
+        '<div class="training-assignment-head"><div><strong>'+escapeHtml(task.title)+'</strong><br><span>'+escapeHtml(task.notes||'No notes')+'</span></div><a href="'+escapeAttr(task.url)+'" target="_blank" rel="noopener">Open task</a></div>'+
+        '<div class="training-meta">'+(task.due_date?'Due '+escapeHtml(task.due_date)+' • ':'')+(task.assigned_student_ids||[]).length+' student(s)</div>'+
+        '<table class="training-status-table"><thead><tr><th>Student</th><th>Year</th><th>Class</th><th>Status</th><th>Last opened</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+      '</div>';
+    }).join('');
+  }
+
+  if(trainingFormEl){
+    trainingFormEl.addEventListener('submit',createTrainingAssignment);
+    document.getElementById('select-all-training-students').addEventListener('click',function(){
+      document.querySelectorAll('.training-student-check').forEach(function(input){input.checked=true;});
+    });
+    populateTrainingStudents();
+    renderTrainingStatus();
+  }
 
   function openStudentEditor(studentId){
     var student=getStudents().find(function(s){return s.id===studentId;});

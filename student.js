@@ -8,6 +8,8 @@
   var Scan = window.RunClubScan;
   var Goals = window.RunClubGoals;
   var STUDENT_SESSION_KEY = 'runClubStudentSession';
+  var TRAINING_KEY = 'rc_training';
+  var TRAINING_CLICKS_KEY = 'rc_training_clicks';
 
   var MILESTONE_LABELS = { 5: 'First 5 Laps', 10: '10 Lap Club', 25: 'Quarter Century', 50: 'Half Century', 100: 'Century Club', 200: 'Double Century', 500: 'Elite Runner' };
   var MEDAL_TIERS = [
@@ -38,6 +40,19 @@
 
   function clearStudentSession() {
     localStorage.removeItem(STUDENT_SESSION_KEY);
+  }
+
+  function loadLocal(key, fallback) {
+    try {
+      var raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : fallback;
+    } catch (_) {
+      return fallback;
+    }
+  }
+
+  function saveLocal(key, value) {
+    localStorage.setItem(key, JSON.stringify(value));
   }
 
   function sessionStudent() {
@@ -162,6 +177,71 @@
     renderStudentBarcode(s);
     renderMedalProgress(s);
     renderGoals();
+    renderTraining();
+  }
+
+  function trainingAssignmentsFor(studentId) {
+    return loadLocal(TRAINING_KEY, []).filter(function (task) {
+      return Array.isArray(task.assigned_student_ids) && task.assigned_student_ids.indexOf(studentId) !== -1;
+    });
+  }
+
+  function recordTrainingClick(task) {
+    var clicks = loadLocal(TRAINING_CLICKS_KEY, []);
+    clicks.push({
+      assignment_id: task.id,
+      student_id: currentStudent.id,
+      student_name: currentStudent.name,
+      title: task.title,
+      opened_at: new Date().toISOString()
+    });
+    saveLocal(TRAINING_CLICKS_KEY, clicks);
+  }
+
+  function trainingOpened(taskId) {
+    return loadLocal(TRAINING_CLICKS_KEY, []).filter(function (click) {
+      return click.assignment_id === taskId && click.student_id === currentStudent.id;
+    }).sort(function (a, b) {
+      return String(b.opened_at).localeCompare(String(a.opened_at));
+    })[0] || null;
+  }
+
+  function renderTraining() {
+    var listEl = document.getElementById('student-training-list');
+    if (!listEl || !currentStudent) { return; }
+    var tasks = trainingAssignmentsFor(currentStudent.id);
+    if (!tasks.length) {
+      listEl.innerHTML = '<p style="color:#888;font-size:0.85rem;">No training has been assigned yet.</p>';
+      return;
+    }
+    listEl.innerHTML = tasks.slice().reverse().map(function (task) {
+      var opened = trainingOpened(task.id);
+      return '<div class="training-card">' +
+        '<div class="training-card-head"><strong>' + escapeHtml(task.title) + '</strong>' +
+        (opened ? '<span class="award-badge">Opened</span>' : '<span class="training-status-pill">New</span>') + '</div>' +
+        '<p>' + escapeHtml(task.notes || 'Review this training task before your next run club session.') + '</p>' +
+        '<div class="training-meta">' + (task.due_date ? 'Due ' + escapeHtml(task.due_date) : 'No due date') + (opened ? ' · Opened ' + new Date(opened.opened_at).toLocaleDateString() : '') + '</div>' +
+        '<a class="btn-primary training-open-link" href="' + escapeHtml(task.url) + '" target="_blank" rel="noopener" data-training-id="' + escapeHtml(task.id) + '">Open training</a>' +
+      '</div>';
+    }).join('');
+    document.querySelectorAll('.training-open-link').forEach(function (link) {
+      link.addEventListener('click', function () {
+        var task = tasks.find(function (item) { return item.id === link.dataset.trainingId; });
+        if (task) { recordTrainingClick(task); }
+      });
+    });
+  }
+
+  function wireStudentTabs() {
+    document.querySelectorAll('[data-student-tab]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        document.querySelectorAll('[data-student-tab]').forEach(function (tab) { tab.classList.remove('active'); });
+        document.querySelectorAll('.student-tab-panel').forEach(function (panel) { panel.classList.remove('active'); });
+        btn.classList.add('active');
+        var panel = document.getElementById('tab-student-' + btn.dataset.studentTab);
+        if (panel) { panel.classList.add('active'); }
+      });
+    });
   }
 
   function renderMedalProgress(student) {
@@ -293,6 +373,7 @@
       return;
     }
     currentStudent = student;
+    wireStudentTabs();
     renderAthlete(student);
     wireAddGoal();
 
