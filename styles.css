@@ -512,6 +512,67 @@ pre {
   display: none;
 }
 
+.offline-batch {
+  padding: 0.85rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  margin-bottom: 0.85rem;
+  background: #f8faff;
+}
+
+.offline-batch--synced { border-color: #86efac; background: #f0fdf4; }
+.offline-batch--partial { border-color: #fde68a; background: #fffbeb; }
+.offline-batch--needs-review { border-color: #fecaca; background: #fff5f5; }
+
+.offline-batch-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.offline-batch-head span {
+  font-size: 0.82rem;
+  color: #555;
+}
+
+.offline-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  border-radius: 999px;
+  padding: 0.18rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.offline-status--waiting { color: #0c5aa8; background: #dbeafe; }
+.offline-status--synced { color: #166534; background: #dcfce7; }
+.offline-status--partial { color: #92400e; background: #fef3c7; }
+.offline-status--needs-review { color: #991b1b; background: #fee2e2; }
+
+.offline-scan-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.55rem;
+  font-size: 0.82rem;
+}
+
+.offline-scan-table th,
+.offline-scan-table td {
+  padding: 0.4rem;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  text-align: left;
+}
+
+.offline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.75rem;
+}
+
 .barcode-confirmation {
   margin-top: 1rem;
   padding: 0.85rem;
