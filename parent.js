@@ -5,6 +5,9 @@
   var Scan = window.RunClubScan;
   var Goals = window.RunClubGoals;
   var GUARDIAN_LINKS_KEY = 'rc_guardian_links';
+  var GUARDIAN_ACCESS_LOG_KEY = 'rc_guardian_access_log';
+  var TRAINING_KEY = 'rc_training';
+  var TRAINING_CLICKS_KEY = 'rc_training_clicks';
   var currentStudent = null;
   var currentAccess = null;
   var MILESTONE_LABELS = { 5: 'First 5 Laps', 10: '10 Lap Club', 25: 'Quarter Century', 50: 'Half Century', 100: 'Century Club', 200: 'Double Century', 500: 'Elite Runner' };
@@ -22,12 +25,34 @@
     return load(GUARDIAN_LINKS_KEY, []);
   }
 
+  function save(key, value) {
+    localStorage.setItem(key, JSON.stringify(value));
+  }
+
+  function isGuardianLinkUsable(link) {
+    if (!link) { return { ok: false, reason: 'Missing link' }; }
+    if (link.status === 'revoked') { return { ok: false, reason: 'Guardian code has been revoked' }; }
+    if (link.expires_at && new Date(link.expires_at) < new Date()) { return { ok: false, reason: 'Guardian code has expired' }; }
+    return { ok: true, reason: 'Active guardian link' };
+  }
+
+  function recordGuardianAccess(entry) {
+    var rows = load(GUARDIAN_ACCESS_LOG_KEY, []);
+    rows.push(Object.assign({ time: new Date().toISOString() }, entry));
+    save(GUARDIAN_ACCESS_LOG_KEY, rows.slice(-500));
+  }
+
   function findLinkedStudent(code) {
     var c = String(code || '').trim().toUpperCase();
     var link = guardianLinks().find(function (row) {
       return String(row.code || '').toUpperCase() === c;
     });
     if (!link) { return null; }
+    var usable = isGuardianLinkUsable(link);
+    if (!usable.ok) {
+      recordGuardianAccess({ access_type: 'guardian', result: 'denied', reason: usable.reason, code_suffix: c.slice(-4), student_name: link.student_name || '' });
+      return { denied: true, reason: usable.reason };
+    }
     var student = Scan.getStudents().find(function (s) { return s.id === link.student_id; });
     if (!student) { return null; }
     return { student: student, link: link };
@@ -40,6 +65,9 @@
       return demo ? { student: demo, link: null, accessType: 'demo' } : null;
     }
     var linked = findLinkedStudent(c);
+    if (linked && linked.denied) {
+      return linked;
+    }
     if (linked) {
       linked.accessType = 'guardian';
       return linked;
@@ -70,6 +98,45 @@
       '<div class="stat-box"><div class="stat-value">' + km + '</div><div class="stat-label">Track km</div></div>' +
       '<div class="stat-box"><div class="stat-value">' + totalKm + '</div><div class="stat-label">Total km</div></div>' +
       '<div class="stat-box"><div class="stat-value">' + student.cls + '</div><div class="stat-label">Class</div></div>';
+  }
+
+  function nextMilestone(student) {
+    return Scan.MILESTONES.find(function (m) { return student.laps < m; }) || null;
+  }
+
+  function studentRank(student) {
+    var roster = Scan.getStudents().slice().sort(function (a, b) { return Scan.totalKm(b) - Scan.totalKm(a); });
+    return roster.findIndex(function (s) { return s.id === student.id; }) + 1;
+  }
+
+  function renderParentProgressSummary(student) {
+    var next = nextMilestone(student);
+    var toGo = next ? Math.max(0, next - student.laps) : 0;
+    var summary = [
+      '<div class="progress-summary-grid">',
+      '<div class="stat-box"><div class="stat-value">#' + studentRank(student) + '</div><div class="stat-label">School rank</div></div>',
+      '<div class="stat-box"><div class="stat-value">' + (next || 'Top') + '</div><div class="stat-label">Next milestone</div></div>',
+      '<div class="stat-box"><div class="stat-value">' + (next ? toGo : 0) + '</div><div class="stat-label">Laps to go</div></div>',
+      '<div class="stat-box"><div class="stat-value">' + Scan.totalKm(student).toFixed(2) + '</div><div class="stat-label">Total km</div></div>',
+      '</div>'
+    ].join('');
+    document.getElementById('parent-progress-summary').innerHTML = summary;
+  }
+
+  function renderParentRecentProgress(student) {
+    var rows = load(Scan.KEYS.scanAudit, []).filter(function (row) {
+      return row.student_id === student.id && (row.success || row.undo);
+    }).slice().reverse().slice(0, 8);
+    var el = document.getElementById('parent-recent-progress');
+    if (!rows.length) {
+      el.innerHTML = '<p style="color:#888;font-size:0.85rem;">No recent scan history is available yet.</p>';
+      return;
+    }
+    el.innerHTML = '<h3 style="margin-bottom:0.5rem;">Recent Progress</h3><table class="progress-history-table"><thead><tr><th>Date</th><th>Type</th><th>Detail</th></tr></thead><tbody>' +
+      rows.map(function (row) {
+        return '<tr><td>' + new Date(row.time).toLocaleDateString() + '</td><td>' + (row.undo ? 'Undo' : 'Lap scan') + '</td><td>' + (row.undo ? 'Adjusted by school' : 'Logged at run club') + '</td></tr>';
+      }).join('') +
+      '</tbody></table>';
   }
 
   function renderAwards(student) {
@@ -116,12 +183,44 @@
       : '<p style="color:#888;font-size:0.85rem;">No goals have been set yet.</p>';
   }
 
+  function trainingAssignmentsFor(student) {
+    return load(TRAINING_KEY, []).filter(function (task) {
+      return (task.assigned_student_ids || task.student_ids || []).indexOf(student.id) !== -1;
+    });
+  }
+
+  function trainingOpened(task, student) {
+    return load(TRAINING_CLICKS_KEY, []).filter(function (click) {
+      return click.assignment_id === task.id && click.student_id === student.id;
+    }).sort(function (a, b) { return String(b.opened_at || '').localeCompare(String(a.opened_at || '')); })[0] || null;
+  }
+
+  function renderParentTraining(student) {
+    var el = document.getElementById('parent-training-view');
+    var tasks = trainingAssignmentsFor(student);
+    if (!tasks.length) {
+      el.innerHTML = '<p style="color:#888;font-size:0.85rem;">No training has been assigned yet.</p>';
+      return;
+    }
+    el.innerHTML = tasks.slice().reverse().map(function (task) {
+      var opened = trainingOpened(task, student);
+      return '<div class="training-card">' +
+        '<div class="training-card-head"><strong>' + task.title + '</strong>' + (opened ? '<span class="award-badge">Opened</span>' : '<span class="training-status-pill">New</span>') + '</div>' +
+        '<p>' + (task.notes || 'Review this teacher-assigned training task.') + '</p>' +
+        '<div class="training-meta">' + (task.due_date ? 'Due ' + task.due_date : 'No due date') + (opened ? ' · Opened ' + new Date(opened.opened_at).toLocaleDateString() : '') + '</div>' +
+        '</div>';
+    }).join('');
+  }
+
   function render(student) {
     currentStudent = student;
     renderLinkSummary(currentAccess || { accessType: 'barcode' });
     renderStats(student);
+    renderParentProgressSummary(student);
+    renderParentRecentProgress(student);
     renderAwards(student);
     renderGoals(student);
+    renderParentTraining(student);
     document.getElementById('parent-result').hidden = false;
   }
 
@@ -130,11 +229,15 @@
     var errorEl = document.getElementById('parent-error');
     errorEl.textContent = '';
     var access = findStudent(document.getElementById('parent-code').value);
-    if (!access) {
-      errorEl.textContent = 'Code not recognised. Check the barcode card or ask the school.';
+    if (!access || access.denied) {
+      errorEl.textContent = access && access.reason ? access.reason + '. Ask the school for a new code.' : 'Code not recognised. Check the barcode card or ask the school.';
+      if (!access) {
+        recordGuardianAccess({ access_type: 'unknown', result: 'denied', reason: 'Code not recognised', code_suffix: document.getElementById('parent-code').value.slice(-4).toUpperCase() });
+      }
       return;
     }
     currentAccess = access;
+    recordGuardianAccess({ access_type: access.accessType, result: 'allowed', reason: 'Progress viewed', student_id: access.student.id, student_name: access.student.name });
     render(access.student);
   });
 
