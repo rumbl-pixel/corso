@@ -17,6 +17,7 @@
   // --- Storage keys ---
   var K = { students:'rc_students', activity:'rc_activity', sessions:'rc_sessions', events:'rc_events', challenges:'rc_challenges', timedRuns:'rc_timed', customAwards:'rc_custom_awards', scanAudit:'rc_scan_audit', scannerSettings:'rc_scanner_settings', offlineQueue:'rc_offline_queue', programSettings:'rc_program_settings', training:'rc_training', trainingClicks:'rc_training_clicks', adjustments:'rc_adjustments' };
   var GUARDIAN_LINKS_KEY = 'rc_guardian_links';
+  var GUARDIAN_ACCESS_LOG_KEY = 'rc_guardian_access_log';
 
   function load(key, def) { try { var r=localStorage.getItem(key); return r?JSON.parse(r):def; } catch{return def;} }
   function save(key,val) { localStorage.setItem(key,JSON.stringify(val)); }
@@ -521,11 +522,13 @@
   var studentProgressSummaryEl=document.getElementById('student-progress-summary');
   var studentProgressHistoryEl=document.getElementById('student-progress-history');
   var guardianLinkListEl=document.getElementById('guardian-link-list');
+  var guardianAccessLogEl=document.getElementById('guardian-access-log');
   var generateGuardianLinksBtn=document.getElementById('generate-guardian-links-btn');
 
   function refreshStudentViews(){
     renderStudentList();
     renderGuardianLinks();
+    renderGuardianAccessLog();
     populateProgressStudents();
     populateTrainingStudents();
     populateLbFilters();
@@ -596,6 +599,12 @@
 
   function guardianLinks(){ return load(GUARDIAN_LINKS_KEY,[]); }
   function saveGuardianLinks(rows){ save(GUARDIAN_LINKS_KEY,rows); }
+  function guardianAccessLogs(){ return load(GUARDIAN_ACCESS_LOG_KEY,[]); }
+  function guardianExpiryDate(){
+    var d=new Date();
+    d.setFullYear(d.getFullYear()+1);
+    return d.toISOString();
+  }
 
   function generateGuardianLinkCode(student){
     var seed=(student.id||student.barcode||student.name||'student').replace(/[^a-z0-9]/gi,'').slice(0,8).toUpperCase();
@@ -612,9 +621,11 @@
       existing.student_name=student.name;
       existing.year=student.year;
       existing.class_name=student.cls;
+      existing.status='active';
+      existing.expires_at=guardianExpiryDate();
       existing.updated_at=new Date().toISOString();
     } else {
-      rows.push({student_id:student.id,student_name:student.name,year:student.year,class_name:student.cls,code:code,created_at:new Date().toISOString(),updated_at:new Date().toISOString()});
+      rows.push({student_id:student.id,student_name:student.name,year:student.year,class_name:student.cls,code:code,status:'active',expires_at:guardianExpiryDate(),created_at:new Date().toISOString(),updated_at:new Date().toISOString()});
     }
     saveGuardianLinks(rows);
     renderGuardianLinks();
@@ -626,11 +637,29 @@
     rows.forEach(function(row){has[row.student_id]=true;});
     getStudents().forEach(function(student){
       if(!has[student.id]){
-        rows.push({student_id:student.id,student_name:student.name,year:student.year,class_name:student.cls,code:generateGuardianLinkCode(student),created_at:new Date().toISOString(),updated_at:new Date().toISOString()});
+        rows.push({student_id:student.id,student_name:student.name,year:student.year,class_name:student.cls,code:generateGuardianLinkCode(student),status:'active',expires_at:guardianExpiryDate(),created_at:new Date().toISOString(),updated_at:new Date().toISOString()});
       }
     });
     saveGuardianLinks(rows);
     renderGuardianLinks();
+  }
+
+  function setGuardianLinkStatus(studentId,status){
+    var rows=guardianLinks();
+    rows.forEach(function(row){
+      if(row.student_id===studentId){
+        row.status=status;
+        row.updated_at=new Date().toISOString();
+      }
+    });
+    saveGuardianLinks(rows);
+    renderGuardianLinks();
+  }
+
+  function guardianLinkStatus(row){
+    if(row.status==='revoked'){return 'Revoked';}
+    if(row.expires_at&&new Date(row.expires_at)<new Date()){return 'Expired';}
+    return 'Active';
   }
 
   function renderGuardianLinks(){
@@ -642,9 +671,11 @@
       guardianLinkListEl.innerHTML='<p style="color:#888;font-size:0.85rem;">No guardian links generated yet.</p>';
       return;
     }
-    guardianLinkListEl.innerHTML='<table class="progress-history-table"><thead><tr><th>Student</th><th>Year</th><th>Class</th><th>Guardian code</th><th>Action</th></tr></thead><tbody>'+
+    guardianLinkListEl.innerHTML='<table class="progress-history-table"><thead><tr><th>Student</th><th>Year</th><th>Class</th><th>Guardian code</th><th>Status</th><th>Expires</th><th>Action</th></tr></thead><tbody>'+
       rows.map(function(row){
-        return '<tr><td>'+escapeHtml(row.student_name)+'</td><td>'+escapeHtml(row.year)+'</td><td>'+escapeHtml(row.class_name)+'</td><td><code>'+escapeHtml(row.code)+'</code></td><td><button type="button" class="link-btn reissue-guardian-link" data-student="'+escapeAttr(row.student_id)+'">Reissue</button></td></tr>';
+        var status=guardianLinkStatus(row);
+        var statusAction=status==='Revoked'?'Restore':'Revoke';
+        return '<tr><td>'+escapeHtml(row.student_name)+'</td><td>'+escapeHtml(row.year)+'</td><td>'+escapeHtml(row.class_name)+'</td><td><code>'+escapeHtml(row.code)+'</code></td><td>'+escapeHtml(status)+'</td><td>'+(row.expires_at?new Date(row.expires_at).toLocaleDateString():'')+'</td><td><button type="button" class="link-btn reissue-guardian-link" data-student="'+escapeAttr(row.student_id)+'">Reissue</button> <button type="button" class="link-btn toggle-guardian-link" data-status="'+(status==='Revoked'?'active':'revoked')+'" data-student="'+escapeAttr(row.student_id)+'">'+statusAction+'</button></td></tr>';
       }).join('')+'</tbody></table>';
     document.querySelectorAll('.reissue-guardian-link').forEach(function(btn){
       btn.addEventListener('click',function(){
@@ -652,12 +683,28 @@
         if(student){upsertGuardianLink(student);}
       });
     });
+    document.querySelectorAll('.toggle-guardian-link').forEach(function(btn){
+      btn.addEventListener('click',function(){ setGuardianLinkStatus(btn.dataset.student,btn.dataset.status); });
+    });
+  }
+
+  function renderGuardianAccessLog(){
+    if(!guardianAccessLogEl){return;}
+    var rows=guardianAccessLogs().slice().reverse().slice(0,12);
+    if(!rows.length){
+      guardianAccessLogEl.innerHTML='<h3 style="margin-bottom:0.5rem;">Guardian Access Log</h3><p style="color:#888;font-size:0.85rem;">No parent portal access attempts yet.</p>';
+      return;
+    }
+    guardianAccessLogEl.innerHTML='<h3 style="margin-bottom:0.5rem;">Guardian Access Log</h3><table class="progress-history-table"><thead><tr><th>Time</th><th>Student</th><th>Code type</th><th>Result</th><th>Reason</th></tr></thead><tbody>'+
+      rows.map(function(row){return '<tr><td>'+new Date(row.time).toLocaleString()+'</td><td>'+escapeHtml(row.student_name||'')+'</td><td>'+escapeHtml(row.access_type||'')+'</td><td>'+escapeHtml(row.result||'')+'</td><td>'+escapeHtml(row.reason||'')+'</td></tr>';}).join('')+
+      '</tbody></table>';
   }
 
   if(generateGuardianLinksBtn){
     generateGuardianLinksBtn.addEventListener('click',generateMissingGuardianLinks);
   }
   renderGuardianLinks();
+  renderGuardianAccessLog();
 
   function populateProgressStudents(){
     var selected=progressStudentEl.value;

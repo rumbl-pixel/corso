@@ -188,6 +188,7 @@ assert(/student-editor-modal/.test(adminDashboardHtml), 'admin students area sho
 assert(/edit-student-form/.test(adminDashboardHtml), 'admin students area should include an edit-student form');
 assert(/guardian-link-list/.test(adminDashboardHtml), 'admin students area should include guardian link management');
 assert(/generate-guardian-links-btn/.test(adminDashboardHtml), 'admin students area should generate guardian link codes');
+assert(/guardian-access-log/.test(adminDashboardHtml), 'admin students area should include a guardian access log');
 assert(/student-progress-card/.test(adminDashboardHtml), 'admin students area should include progress history');
 assert(/progress-student/.test(adminDashboardHtml) && /progress-term/.test(adminDashboardHtml), 'student progress history should include student and term filters');
 assert(/export-progress-csv-btn/.test(adminDashboardHtml), 'student progress history should export CSV');
@@ -258,6 +259,9 @@ assert(/deleteStudent/.test(adminDashboardJs), 'admin dashboard should let admin
 assert(/GUARDIAN_LINKS_KEY/.test(adminDashboardJs), 'admin dashboard should store guardian link records');
 assert(/generateGuardianLinkCode/.test(adminDashboardJs), 'admin dashboard should generate guardian link codes');
 assert(/renderGuardianLinks/.test(adminDashboardJs), 'admin dashboard should render guardian link records');
+assert(/expires_at/.test(adminDashboardJs), 'guardian link records should include expiry');
+assert(/setGuardianLinkStatus/.test(adminDashboardJs), 'admin dashboard should revoke and restore guardian links');
+assert(/renderGuardianAccessLog/.test(adminDashboardJs), 'admin dashboard should render guardian access logs');
 assert(/Edit/.test(adminDashboardJs) && /Remove/.test(adminDashboardJs), 'student list should expose edit and remove actions');
 assert(/renderBarcodeConfirmation/.test(adminDashboardJs), 'admin add-student flow should render a compact barcode confirmation');
 assert(/createCustomAward/.test(adminDashboardJs), 'admin dashboard should create custom awards');
@@ -311,6 +315,9 @@ assert(!/Log Home Activity|Home Activity|parent-activity-form/.test(parentHtml),
 assert(/print-parent-certificate-btn/.test(parentHtml), 'parent portal should let parents print child award certificates');
 assert(/guardian-link-code/.test(parentHtml), 'parent portal should explain guardian link codes');
 assert(/parent-link-summary/.test(parentHtml), 'parent portal should show parent link status after access');
+assert(/parent-progress-summary/.test(parentHtml), 'parent portal should include a child progress summary');
+assert(/parent-recent-progress/.test(parentHtml), 'parent portal should include recent child progress rows');
+assert(/parent-training-view/.test(parentHtml), 'parent portal should include assigned training visibility');
 
 const parentJs = read('parent.js');
 assert(/DEMO/.test(parentJs), 'parent portal should handle DEMO bypass');
@@ -320,6 +327,12 @@ assert(!/parent-activity-form|rc_selfreports/.test(parentJs), 'parent portal sho
 assert(/printParentCertificate/.test(parentJs), 'parent portal should print child award certificates');
 assert(/GUARDIAN_LINKS_KEY/.test(parentJs), 'parent portal should read guardian link records');
 assert(/findLinkedStudent/.test(parentJs), 'parent portal should resolve guardian link codes');
+assert(/GUARDIAN_ACCESS_LOG_KEY/.test(parentJs), 'parent portal should write guardian access logs');
+assert(/isGuardianLinkUsable/.test(parentJs), 'parent portal should reject inactive or expired guardian links');
+assert(/recordGuardianAccess/.test(parentJs), 'parent portal should record guardian access attempts');
+assert(/renderParentProgressSummary/.test(parentJs), 'parent portal should render richer progress summary');
+assert(/renderParentRecentProgress/.test(parentJs), 'parent portal should render recent progress rows');
+assert(/renderParentTraining/.test(parentJs), 'parent portal should render assigned training visibility');
 
 const leaderboardHtml = read('leaderboard.html');
 assert(/Total Leaderboard/.test(leaderboardHtml), 'leaderboard page should include a whole-school total leaderboard');
@@ -355,12 +368,14 @@ assert(/link click visibility/.test(features), 'roadmap should include training 
 assert(/docs\/roadmap-progress\.md/.test(features), 'roadmap should link to the quick progress checklist');
 assert(/Priority 3: 10 \/ 10 complete\. Status: Done/.test(features), 'roadmap should show backend integration completed');
 assert(/Priority 4: 10 \/ 10 complete\. Status: Done/.test(features), 'roadmap should show Priority 4 completed');
-assert(/Priority 5: 1 \/ 10 complete\. Status: In Progress/.test(features), 'roadmap should show Priority 5 started');
+assert(/Priority 5: 3 \/ 10 complete\. Status: In Progress/.test(features), 'roadmap should show Priority 5 progress');
 assert(/~~3\.1 Choose backend stack and deployment target\.~~/.test(features), 'roadmap should mark backend stack decision complete');
 assert(/~~3\.2 Create database schema/.test(features), 'roadmap should mark initial backend schema complete');
 assert(/~~3\.10 Add migration path/.test(features), 'roadmap should mark demo data migration complete');
 assert(/~~4\.10 Admin analytics/.test(features), 'roadmap should mark Priority 4 analytics complete');
 assert(/~~5\.1 Parent account linking/.test(features), 'roadmap should mark parent account linking complete');
+assert(/~~5\.2 Stronger guardian access controls/.test(features), 'roadmap should mark guardian access controls complete');
+assert(/~~5\.3 Parent view for child progress/.test(features), 'roadmap should mark parent progress view complete');
 
 const backendDecision = read('docs/backend-stack-decision.md');
 assert(/Use Supabase as the production backend/.test(backendDecision), 'backend decision should choose Supabase');
@@ -371,6 +386,7 @@ assertFile('docs/roadmap-progress.md');
 const roadmapProgress = read('docs/roadmap-progress.md');
 assert(/Priority 3 - Backend And Cross-Device Sync: 10 \/ 10 complete\. Done/.test(roadmapProgress), 'quick roadmap should show Priority 3 done');
 assert(/Priority 4 - Reporting And Admin Power Tools: 10 \/ 10 complete\. Done/.test(roadmapProgress), 'quick roadmap should show Priority 4 done');
+assert(/Priority 5 - Parent And Student Experience: 3 \/ 10 complete\. In Progress/.test(roadmapProgress), 'quick roadmap should show Priority 5 progress');
 assert(/Training skeleton/.test(roadmapProgress), 'quick roadmap should mention the completed Training skeleton');
 
 assertFile('supabase/migrations/202606080001_initial_schema.sql');
