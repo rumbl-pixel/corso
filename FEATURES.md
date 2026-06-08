@@ -3,6 +3,7 @@
 Inspired by Marathon Kids Connect and StrideTrack. This file is the source of truth for feature progress.
 
 Workflow rules live in `docs/roadmap-workflow.md`.
+Quick progress view lives in `docs/roadmap-progress.md`.
 
 ## Progress Snapshot
 

@@ -1,0 +1,78 @@
+# Gwynne Park Run Club - Progress Checklist
+
+Last updated: 2026-06-08
+
+This is the quick-read roadmap. `FEATURES.md` remains the full source of truth.
+
+## Overall Progress
+
+- [ ] Priority 0 - Live Privacy And Security Gate: 0 / 10 complete. Go-Live Gate.
+- [x] Priority 1 - Operational MVP: 14 / 14 complete. Done.
+- [x] Priority 2 - Next Build: 8 / 8 complete. Done.
+- [ ] Priority 3 - Backend And Cross-Device Sync: 2 / 10 complete. In Progress.
+- [ ] Priority 4 - Reporting And Admin Power Tools: 0 / 10 complete. Planned.
+- [ ] Priority 5 - Parent And Student Experience: 0 / 10 complete. Planned.
+- [ ] Priority 6 - Competitions And Challenges: 0 / 8 complete. Planned.
+- [ ] Priority 7 - Sports Carnival And Cross Country: 0 / 10 complete. Planned.
+- [ ] Priority 8 - Polish, Help, And Long-Term Enhancements: 0 / 8 complete. Parked.
+
+## Current Focus
+
+- [x] 3.1 Backend stack decision completed: Supabase Postgres/Auth/RLS/Edge Functions.
+- [x] 3.2 Initial production schema completed with RLS enabled on student/school data tables.
+- [ ] 3.3 Next: replace `localStorage` roster reads/writes with backend data access.
+
+## Go-Live Gate
+
+Do not enter real student data until Priority 0 is complete.
+
+- [ ] 0.1 Replace local demo storage with a real backend.
+- [ ] 0.2 Add real staff/admin authentication.
+- [ ] 0.3 Add role-based permissions for admin, coach, parent, and student views.
+- [ ] 0.4 Add school-scoped data isolation.
+- [ ] 0.5 Remove universal public `DEMO` access before launch.
+- [ ] 0.6 Use non-guessable student and parent access tokens.
+- [ ] 0.7 Add consent, retention, export, and deletion controls for student data.
+- [ ] 0.8 Add audit logs for imports, scans, edits, exports, deletions, and manual adjustments.
+- [ ] 0.9 Complete privacy policy, incident plan, admin onboarding notes, and backup/export process.
+- [ ] 0.10 Run final security review and live deployment checklist.
+
+## Completed Foundation
+
+- [x] Manual student add, edit, delete.
+- [x] CSV roster import with duplicate and invalid row feedback.
+- [x] Student barcode and local QR ID cards.
+- [x] Admin run sessions.
+- [x] Admin and kiosk lap scanning.
+- [x] Undo/review last scan.
+- [x] Duplicate scan protection.
+- [x] Whole-school, division, year, and class leaderboards.
+- [x] Student profile with laps, distance, awards, goals, and ID card.
+- [x] Parent read-only portal and printable certificates.
+- [x] Admin exports and scan audit previews.
+- [x] PWA installable shell for phones and iPads.
+- [x] Offline scan queue and retry states.
+- [x] Scanner device names, lap length, session type, and duplicate cooldown settings.
+- [x] Richer reports, progress history, onboarding wizard, and school theme.
+- [x] Training skeleton: admin assignment, student Training tab, and link-open visibility.
+
+## Priority 3 Checklist
+
+- [x] ~~3.1 Choose backend stack and deployment target.~~
+- [x] ~~3.2 Create database schema for schools, users, school users, groups, students, laps, sessions, awards, challenges, devices, and audit logs.~~
+- [ ] 3.3 Replace `localStorage` roster reads/writes with backend data access.
+- [ ] 3.4 Replace lap/session storage with backend writes and server timestamps.
+- [ ] 3.5 Add idempotency keys for scan requests.
+- [ ] 3.6 Add sync for offline scan queue.
+- [ ] 3.7 Add conflict handling for duplicate or delayed offline scans.
+- [ ] 3.8 Add backend-powered leaderboards and reports.
+- [ ] 3.9 Add backup/export jobs.
+- [ ] 3.10 Add migration path from current demo data to real school setup.
+
+## Planned Later
+
+- [ ] Priority 4: reporting dashboards, printed reports, adjustment ledger, admin analytics.
+- [ ] Priority 5: parent/student accounts, notifications, progress timeline, completed Training workflow.
+- [ ] Priority 6: house/class/year competitions and challenge progress.
+- [ ] Priority 7: Sports Carnival and Cross Country modules.
+- [ ] Priority 8: mobile polish, help notes, privacy controls, branding settings, accessibility audit.
