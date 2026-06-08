@@ -15,7 +15,7 @@
   });
 
   // --- Storage keys ---
-  var K = { students:'rc_students', activity:'rc_activity', sessions:'rc_sessions', events:'rc_events', challenges:'rc_challenges', timedRuns:'rc_timed', customAwards:'rc_custom_awards', scanAudit:'rc_scan_audit', scannerSettings:'rc_scanner_settings', offlineQueue:'rc_offline_queue', programSettings:'rc_program_settings', training:'rc_training', trainingClicks:'rc_training_clicks' };
+  var K = { students:'rc_students', activity:'rc_activity', sessions:'rc_sessions', events:'rc_events', challenges:'rc_challenges', timedRuns:'rc_timed', customAwards:'rc_custom_awards', scanAudit:'rc_scan_audit', scannerSettings:'rc_scanner_settings', offlineQueue:'rc_offline_queue', programSettings:'rc_program_settings', training:'rc_training', trainingClicks:'rc_training_clicks', adjustments:'rc_adjustments' };
 
   function load(key, def) { try { var r=localStorage.getItem(key); return r?JSON.parse(r):def; } catch{return def;} }
   function save(key,val) { localStorage.setItem(key,JSON.stringify(val)); }
@@ -532,6 +532,14 @@
     renderCertificates();
     renderSchoolSummary();
     renderReportSummaries();
+    renderSummaryDashboards();
+    renderAdminAnalytics();
+    populateFullHistoryStudents();
+    populateClassReportSelect();
+    populateAdjustmentStudents();
+    renderFullStudentHistory();
+    renderAttendanceSummary();
+    renderAdjustmentLedger();
     renderStudentProgress();
     renderTrainingStatus();
   }
@@ -1099,6 +1107,17 @@
   var schoolSummaryEl=document.getElementById('school-summary');
   var auditTrailListEl=document.getElementById('audit-trail-list');
   var reportSummaryPanelsEl=document.getElementById('report-summary-panels');
+  var summaryDashboardPanelsEl=document.getElementById('summary-dashboard-panels');
+  var adminAnalyticsPanelsEl=document.getElementById('admin-analytics-panels');
+  var fullHistoryStudentEl=document.getElementById('full-history-student');
+  var fullHistoryListEl=document.getElementById('full-history-list');
+  var termReportTermEl=document.getElementById('term-report-term');
+  var classReportSelectEl=document.getElementById('class-report-select');
+  var attendanceSummaryListEl=document.getElementById('attendance-summary-list');
+  var adjustmentFormEl=document.getElementById('adjustment-form');
+  var adjustmentStudentEl=document.getElementById('adjustment-student');
+  var adjustmentResultEl=document.getElementById('adjustment-result');
+  var adjustmentLedgerListEl=document.getElementById('adjustment-ledger-list');
   var onboardingFormEl=document.getElementById('onboarding-form');
   var onboardingSchoolNameEl=document.getElementById('onboarding-school-name');
   var onboardingLapDistanceEl=document.getElementById('onboarding-lap-distance-metres');
@@ -1198,6 +1217,277 @@
       miniTable('Certificate Readiness',certRows,[{key:'student',label:'Student'},{key:'class',label:'Class'},{key:'milestone',label:'Milestone'},{key:'total_km',label:'Total km'}]);
   }
 
+  function divisionForYear(year){
+    var n=Number(String(year||'').replace(/\D/g,''));
+    if(n>=5){return 'Senior';}
+    if(n>=3){return 'Intermediate';}
+    if(n>=1){return 'Junior';}
+    return 'Unassigned';
+  }
+
+  function miniReportTable(title,rows,cols){
+    if(!rows.length){return '<div class="report-mini"><h3>'+escapeHtml(title)+'</h3><p style="color:#888;font-size:0.85rem;">No rows yet.</p></div>';}
+    return '<div class="report-mini"><h3>'+escapeHtml(title)+'</h3><table><thead><tr>'+cols.map(function(c){return '<th>'+escapeHtml(c.label)+'</th>';}).join('')+'</tr></thead><tbody>'+
+      rows.map(function(row){return '<tr>'+cols.map(function(c){return '<td>'+escapeHtml(row[c.key])+'</td>';}).join('')+'</tr>';}).join('')+
+      '</tbody></table></div>';
+  }
+
+  function summaryRowsFor(kind){
+    if(kind==='school'){
+      var students=getStudents();
+      return [{
+        group:'Whole school',
+        students:students.length,
+        active:students.filter(function(s){return (s.laps||0)>0;}).length,
+        laps:students.reduce(function(total,s){return total+(s.laps||0);},0),
+        km:+students.reduce(function(total,s){return total+totalKm(s);},0).toFixed(2)
+      }];
+    }
+    if(kind==='division'){
+      var divisions={};
+      getStudents().forEach(function(s){
+        var key=divisionForYear(s.year);
+        if(!divisions[key]){divisions[key]={group:key,students:0,active:0,laps:0,km:0};}
+        divisions[key].students+=1;
+        if((s.laps||0)>0){divisions[key].active+=1;}
+        divisions[key].laps+=s.laps||0;
+        divisions[key].km+=totalKm(s);
+      });
+      return ['Junior','Intermediate','Senior','Unassigned'].filter(function(key){return divisions[key];}).map(function(key){
+        divisions[key].km=+divisions[key].km.toFixed(2);
+        return divisions[key];
+      });
+    }
+    var source=kind==='class'?groupedSummary('cls'):groupedSummary('year');
+    return source.map(function(row){return {group:row.group,students:row.students,active:getStudents().filter(function(s){return (kind==='class'?s.cls:s.year)===row.group&&(s.laps||0)>0;}).length,laps:row.laps,km:row.km};});
+  }
+
+  function renderSummaryDashboards(){
+    summaryDashboardPanelsEl.innerHTML=
+      miniReportTable('School Dashboard',summaryRowsFor('school'),[{key:'group',label:'Scope'},{key:'students',label:'Students'},{key:'active',label:'Active'},{key:'laps',label:'Laps'},{key:'km',label:'Km'}])+
+      miniReportTable('Division Dashboard',summaryRowsFor('division'),[{key:'group',label:'Division'},{key:'students',label:'Students'},{key:'active',label:'Active'},{key:'laps',label:'Laps'},{key:'km',label:'Km'}])+
+      miniReportTable('Year Dashboard',summaryRowsFor('year'),[{key:'group',label:'Year'},{key:'students',label:'Students'},{key:'active',label:'Active'},{key:'laps',label:'Laps'},{key:'km',label:'Km'}])+
+      miniReportTable('Class Dashboard',summaryRowsFor('class'),[{key:'group',label:'Class'},{key:'students',label:'Students'},{key:'active',label:'Active'},{key:'laps',label:'Laps'},{key:'km',label:'Km'}]);
+  }
+
+  function inTermValue(dateValue,term){
+    var range=termRange(term);
+    if(!range){return true;}
+    var date=new Date(dateValue);
+    return date>=range[0]&&date<=range[1];
+  }
+
+  function termLabel(term){
+    return ({term1:'Term 1',term2:'Term 2',term3:'Term 3',term4:'Term 4'}[term])||'All dates';
+  }
+
+  function termProgressRows(term){
+    return getStudents().map(function(s){
+      var scans=load(K.scanAudit,[]).filter(function(row){return row.student_id===s.id&&row.success&&!row.undo&&inTermValue(row.time,term);}).length;
+      var undos=load(K.scanAudit,[]).filter(function(row){return row.student_id===s.id&&row.undo&&inTermValue(row.time,term);}).length;
+      var activities=load(K.activity,[]).filter(function(row){return row.student_id===s.id&&inTermValue(row.date,term);});
+      var activityKm=activities.reduce(function(total,row){return total+minutesToKm(Number(row.minutes||0));},0);
+      var periodLaps=scans-undos;
+      return {student:s.name,year:s.year,class:s.cls,division:divisionForYear(s.year),period_laps:periodLaps,period_km:+(periodLaps*programSettings().lapDistanceKm+activityKm).toFixed(2),lifetime_laps:s.laps||0,lifetime_km:+totalKm(s).toFixed(2),certificates:certificatesFor(s).length};
+    }).sort(function(a,b){return b.period_km-a.period_km || b.lifetime_km-a.lifetime_km || a.student.localeCompare(b.student);});
+  }
+
+  function fullStudentHistoryRows(studentId){
+    var student=getStudents().find(function(s){return s.id===studentId;});
+    if(!student){return [];}
+    var rows=studentProgressRows(studentId).map(function(row){return {date:row.date,type:row.type,detail:row.detail,amount:row.amount,status:row.status};});
+    certificatesFor(student).forEach(function(c){rows.push({date:new Date().toISOString(),type:'Certificate ready',detail:c.name,amount:c.km+' km',status:'Ready'});});
+    if(window.RunClubGoals){
+      window.RunClubGoals.goalsFor(studentId).forEach(function(g){rows.push({date:g.created_at||g.created||new Date().toISOString(),type:'Goal',detail:g.title||g.metric,amount:g.target+' '+(g.unit||''),status:g.owner||'goal'});});
+    }
+    load(K.training,[]).forEach(function(task){
+      if((task.student_ids||[]).indexOf(studentId)>=0){rows.push({date:task.created_at||task.created||task.due_date||new Date().toISOString(),type:'Training assigned',detail:task.title,amount:task.due_date||'',status:'Assigned'});}
+    });
+    load(K.trainingClicks,[]).forEach(function(click){
+      if(click.student_id===studentId){rows.push({date:click.time||click.clicked_at||new Date().toISOString(),type:'Training link opened',detail:click.title||click.url||'Training link',amount:'',status:'Opened'});}
+    });
+    load(K.adjustments,[]).forEach(function(adj){
+      if(adj.student_id===studentId){rows.push({date:adj.time,type:'Manual adjustment',detail:adj.reason,amount:(adj.delta_laps>0?'+':'')+adj.delta_laps+' laps',status:adj.staff||'Admin'});}
+    });
+    return rows.sort(function(a,b){return new Date(b.date)-new Date(a.date);});
+  }
+
+  function populateFullHistoryStudents(){
+    var selected=fullHistoryStudentEl.value;
+    fullHistoryStudentEl.innerHTML='';
+    getStudents().forEach(function(s){
+      var o=document.createElement('option');o.value=s.id;o.textContent=s.name+' ('+s.year+', '+s.cls+')';fullHistoryStudentEl.appendChild(o);
+    });
+    if(selected&&getStudents().some(function(s){return s.id===selected;})){fullHistoryStudentEl.value=selected;}
+  }
+
+  function renderFullStudentHistory(){
+    var studentId=fullHistoryStudentEl.value || (getStudents()[0]&&getStudents()[0].id);
+    if(!studentId){fullHistoryListEl.innerHTML='<p style="color:#888;font-size:0.85rem;">No students yet.</p>';return;}
+    fullHistoryStudentEl.value=studentId;
+    var rows=fullStudentHistoryRows(studentId);
+    if(!rows.length){fullHistoryListEl.innerHTML='<p style="color:#888;font-size:0.85rem;">No history rows yet.</p>';return;}
+    fullHistoryListEl.innerHTML='<table class="progress-history-table"><thead><tr><th>Date</th><th>Type</th><th>Detail</th><th>Amount</th><th>Status</th></tr></thead><tbody>'+
+      rows.slice(0,80).map(function(row){return '<tr><td>'+new Date(row.date).toLocaleDateString()+'</td><td>'+escapeHtml(row.type)+'</td><td>'+escapeHtml(row.detail)+'</td><td>'+escapeHtml(row.amount)+'</td><td>'+escapeHtml(row.status)+'</td></tr>';}).join('')+
+      '</tbody></table>';
+  }
+
+  function exportFullStudentHistoryCsv(){
+    var student=getStudents().find(function(s){return s.id===fullHistoryStudentEl.value;});
+    if(!student){return;}
+    var rows=fullStudentHistoryRows(student.id).map(function(row){return {student:student.name,year:student.year,class:student.cls,date:row.date,type:row.type,detail:row.detail,amount:row.amount,status:row.status};});
+    dlCsv('student-full-history-'+student.id+'.csv',rows,['student','year','class','date','type','detail','amount','status']);
+    showResult(reportsResultEl,{success:true,message:'Student full history CSV exported.'});
+  }
+
+  function populateClassReportSelect(){
+    var selected=classReportSelectEl.value;
+    classReportSelectEl.innerHTML='';
+    cleanList(getStudents().map(function(s){return s.cls;}),[]).sort().forEach(function(cls){
+      var o=document.createElement('option');o.value=cls;o.textContent=cls;classReportSelectEl.appendChild(o);
+    });
+    if(selected&&Array.prototype.some.call(classReportSelectEl.options,function(o){return o.value===selected;})){classReportSelectEl.value=selected;}
+  }
+
+  function printWindow(title,body){
+    var win=window.open('','_blank');
+    if(!win){return;}
+    win.document.write('<html><head><title>'+escapeHtml(title)+'</title><style>body{font-family:Arial,sans-serif;color:#102a43;padding:20px;}h1{color:#003880;}table{width:100%;border-collapse:collapse;font-size:12px;}th,td{border-bottom:1px solid #d9e2ec;text-align:left;padding:7px;}th{background:#f4f7fb;}@media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact;}}</style></head><body>'+body+'</body></html>');
+    win.document.close(); win.focus(); win.print();
+  }
+
+  function reportRowsTable(rows,cols){
+    return '<table><thead><tr>'+cols.map(function(c){return '<th>'+escapeHtml(c.label)+'</th>';}).join('')+'</tr></thead><tbody>'+
+      rows.map(function(row){return '<tr>'+cols.map(function(c){return '<td>'+escapeHtml(row[c.key])+'</td>';}).join('')+'</tr>';}).join('')+
+      '</tbody></table>';
+  }
+
+  function exportTermProgressCsv(){
+    var rows=termProgressRows(termReportTermEl.value);
+    dlCsv('term-progress-'+termReportTermEl.value+'.csv',rows,['student','year','class','division','period_laps','period_km','lifetime_laps','lifetime_km','certificates']);
+    showResult(reportsResultEl,{success:true,message:'Term progress CSV exported.'});
+  }
+
+  function printTermProgress(){
+    var rows=termProgressRows(termReportTermEl.value);
+    printWindow('Term Progress Report','<h1>Gwynne Park Run Club - '+escapeHtml(termLabel(termReportTermEl.value))+'</h1>'+reportRowsTable(rows,[{key:'student',label:'Student'},{key:'year',label:'Year'},{key:'class',label:'Class'},{key:'period_laps',label:'Term laps'},{key:'period_km',label:'Term km'},{key:'lifetime_km',label:'Total km'}]));
+  }
+
+  function printClassReport(){
+    var cls=classReportSelectEl.value;
+    var rows=termProgressRows(termReportTermEl.value).filter(function(row){return row.class===cls;});
+    printWindow('Class Report '+cls,'<h1>Gwynne Park Run Club - '+escapeHtml(cls)+' '+escapeHtml(termLabel(termReportTermEl.value))+'</h1>'+reportRowsTable(rows,[{key:'student',label:'Student'},{key:'year',label:'Year'},{key:'period_laps',label:'Term laps'},{key:'period_km',label:'Term km'},{key:'lifetime_laps',label:'Total laps'},{key:'lifetime_km',label:'Total km'},{key:'certificates',label:'Certificates'}]));
+  }
+
+  function certificateBatchRows(){
+    return certificateRows().map(function(row,index){return Object.assign({batch_rank:index+1,printed:'No'},row);});
+  }
+
+  function printAwardPack(){
+    var rows=certificateBatchRows();
+    printWindow('Award Pack','<h1>Gwynne Park Run Club - Award Pack</h1>'+reportRowsTable(rows,[{key:'batch_rank',label:'#'},{key:'student',label:'Student'},{key:'year',label:'Year'},{key:'class',label:'Class'},{key:'milestone',label:'Award'},{key:'total_km',label:'Total km'}]));
+  }
+
+  function sessionAttendanceRows(){
+    var students=getStudents();
+    var audit=load(K.scanAudit,[]).filter(function(row){return row.success&&!row.undo;});
+    var sessions=load(K.sessions,[]);
+    var rows=sessions.map(function(session){
+      var started=session.start||session.started_at||session.date||session.created||new Date().toISOString();
+      var ended=session.end||session.ended_at||started;
+      var scans=audit.filter(function(row){var t=new Date(row.time);return t>=new Date(started)&&t<=new Date(ended);});
+      var unique={};
+      scans.forEach(function(row){unique[row.student_id]=true;});
+      return {date:new Date(started).toLocaleDateString(),session:session.type||session.name||programSettings().defaultSessionType,students:Object.keys(unique).length,scans:scans.length,participation:students.length?Math.round(Object.keys(unique).length/students.length*100)+'%':'0%'};
+    });
+    if(!rows.length&&audit.length){
+      var uniqueAll={};
+      audit.forEach(function(row){uniqueAll[row.student_id]=true;});
+      rows.push({date:'All scan history',session:'All sessions',students:Object.keys(uniqueAll).length,scans:audit.length,participation:students.length?Math.round(Object.keys(uniqueAll).length/students.length*100)+'%':'0%'});
+    }
+    return rows;
+  }
+
+  function renderAttendanceSummary(){
+    attendanceSummaryListEl.innerHTML=miniReportTable('Session Attendance',sessionAttendanceRows(),[{key:'date',label:'Date'},{key:'session',label:'Session'},{key:'students',label:'Students'},{key:'scans',label:'Scans'},{key:'participation',label:'Participation'}]);
+  }
+
+  function populateAdjustmentStudents(){
+    var selected=adjustmentStudentEl.value;
+    adjustmentStudentEl.innerHTML='';
+    getStudents().forEach(function(s){
+      var o=document.createElement('option');o.value=s.id;o.textContent=s.name+' ('+s.year+', '+s.cls+')';adjustmentStudentEl.appendChild(o);
+    });
+    if(selected&&getStudents().some(function(s){return s.id===selected;})){adjustmentStudentEl.value=selected;}
+  }
+
+  function createManualAdjustment(e){
+    e.preventDefault();
+    var studentId=adjustmentStudentEl.value;
+    var reason=document.getElementById('adjustment-reason').value.trim();
+    var amount=Math.max(1,Math.round(Number(document.getElementById('adjustment-laps').value)||1));
+    var type=document.getElementById('adjustment-type').value;
+    if(!reason){showResult(adjustmentResultEl,{success:false,error:'Reason note is required.'});return;}
+    var students=getStudents();
+    var student=students.find(function(s){return s.id===studentId;});
+    if(!student){showResult(adjustmentResultEl,{success:false,error:'Student not found.'});return;}
+    var delta=type==='remove'?-amount:amount;
+    student.laps=Math.max(0,(student.laps||0)+delta);
+    saveStudents(students);
+    var rows=load(K.adjustments,[]);
+    var record={id:'adj-'+Date.now(),time:new Date().toISOString(),student_id:student.id,student_name:student.name,delta_laps:delta,reason:reason,staff:session.email||'admin',laps_after:student.laps};
+    rows.push(record);
+    save(K.adjustments,rows);
+    document.getElementById('adjustment-reason').value='';
+    showResult(adjustmentResultEl,{success:true,message:'Manual adjustment saved.',record:record});
+    refreshStudentViews();
+  }
+
+  function renderAdjustmentLedger(){
+    var rows=load(K.adjustments,[]).slice().reverse();
+    if(!rows.length){adjustmentLedgerListEl.innerHTML='<p style="color:#888;font-size:0.85rem;">No manual adjustments yet.</p>';return;}
+    adjustmentLedgerListEl.innerHTML=miniReportTable('Recent Adjustments',rows.slice(0,20).map(function(row){return {time:new Date(row.time).toLocaleString(),student:row.student_name,delta:(row.delta_laps>0?'+':'')+row.delta_laps,reason:row.reason,staff:row.staff,laps_after:row.laps_after};}),[{key:'time',label:'Time'},{key:'student',label:'Student'},{key:'delta',label:'Laps'},{key:'reason',label:'Reason'},{key:'staff',label:'Staff'},{key:'laps_after',label:'After'}]);
+  }
+
+  function downloadAdminTemplates(){
+    var text=[
+      'ROSTER IMPORT',
+      'firstname,lastname,yeargroup,classname',
+      'James,Smith,Year 5,5B',
+      '',
+      'MANUAL ADJUSTMENTS',
+      'student_id,student_name,delta_laps,reason',
+      'STUDENT1,James Smith,1,Missed successful scan',
+      '',
+      'TRAINING ASSIGNMENTS',
+      'title,url,due_date,notes,student_ids',
+      'Easy running drills,https://example.com,2026-07-01,Teacher assigned practice,STUDENT1|STUDENT2',
+      '',
+      'EVENT LOGS',
+      'date,event_name,student_id,laps,notes',
+      '2026-07-01,Friday Run Club,STUDENT1,4,'
+    ].join('\n');
+    var b=new Blob([text],{type:'text/plain'});
+    var u=URL.createObjectURL(b); var a=document.createElement('a');
+    a.href=u; a.download='runclub-admin-workflow-templates.txt'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(u);
+    showResult(reportsResultEl,{success:true,message:'Admin workflow templates downloaded.'});
+  }
+
+  function renderAdminAnalytics(){
+    var students=getStudents();
+    var active=students.filter(function(s){return (s.laps||0)>0;});
+    var inactive=students.filter(function(s){return !(s.laps||0);});
+    var classRows=groupedSummary('cls').sort(function(a,b){return b.km-a.km;});
+    var certificates=certificateRows();
+    adminAnalyticsPanelsEl.innerHTML='<div class="setup-summary-grid">'+
+      '<div><strong>'+Math.round((active.length/(students.length||1))*100)+'%</strong><span>Participation</span></div>'+
+      '<div><strong>'+inactive.length+'</strong><span>Inactive students</span></div>'+
+      '<div><strong>'+((students.reduce(function(t,s){return t+(s.laps||0);},0)/(students.length||1)).toFixed(1))+'</strong><span>Avg laps/student</span></div>'+
+      '<div><strong>'+escapeHtml(classRows[0]?classRows[0].group:'None')+'</strong><span>Top class</span></div>'+
+      '<div><strong>'+certificates.length+'</strong><span>Certificates ready</span></div>'+
+      '</div>';
+  }
+
   function renderAuditTrail(){
     var rows=(window.RunClubScan&&window.RunClubScan.scanAudit?window.RunClubScan.scanAudit():load(K.scanAudit,[])).slice().reverse().slice(0,12);
     if(!rows.length){auditTrailListEl.innerHTML='<p style="color:#888;font-size:0.85rem;">No scan audit rows yet.</p>';return;}
@@ -1225,6 +1515,14 @@
   }
   renderSchoolSummary();
   renderReportSummaries();
+  renderSummaryDashboards();
+  renderAdminAnalytics();
+  populateFullHistoryStudents();
+  populateClassReportSelect();
+  populateAdjustmentStudents();
+  renderFullStudentHistory();
+  renderAttendanceSummary();
+  renderAdjustmentLedger();
   renderOnboarding();
 
   document.getElementById('export-report-json-btn').addEventListener('click',function(){
@@ -1279,6 +1577,24 @@
     dlCsv('certificate-readiness-'+new Date().toISOString().slice(0,10)+'.csv',certificateRows(),['student','year','class','milestone','km','total_km']);
     showResult(reportsResultEl,{success:true,message:'Certificate readiness CSV exported.'});
   });
+
+  fullHistoryStudentEl.addEventListener('change',renderFullStudentHistory);
+  document.getElementById('refresh-full-history-btn').addEventListener('click',renderFullStudentHistory);
+  document.getElementById('export-full-history-csv-btn').addEventListener('click',exportFullStudentHistoryCsv);
+  document.getElementById('export-term-progress-csv-btn').addEventListener('click',exportTermProgressCsv);
+  document.getElementById('print-term-progress-btn').addEventListener('click',printTermProgress);
+  document.getElementById('print-class-report-btn').addEventListener('click',printClassReport);
+  document.getElementById('print-award-pack-btn').addEventListener('click',printAwardPack);
+  document.getElementById('export-certificate-batch-csv-btn').addEventListener('click',function(){
+    dlCsv('certificate-batch-'+new Date().toISOString().slice(0,10)+'.csv',certificateBatchRows(),['batch_rank','student','year','class','milestone','km','total_km','printed']);
+    showResult(reportsResultEl,{success:true,message:'Certificate batch CSV exported.'});
+  });
+  document.getElementById('export-attendance-csv-btn').addEventListener('click',function(){
+    dlCsv('session-attendance-'+new Date().toISOString().slice(0,10)+'.csv',sessionAttendanceRows(),['date','session','students','scans','participation']);
+    showResult(reportsResultEl,{success:true,message:'Attendance CSV exported.'});
+  });
+  adjustmentFormEl.addEventListener('submit',createManualAdjustment);
+  document.getElementById('download-admin-templates-btn').addEventListener('click',downloadAdminTemplates);
 
   document.getElementById('print-report-btn').addEventListener('click',function(){ window.print(); });
 

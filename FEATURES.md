@@ -10,8 +10,8 @@ Quick progress view lives in `docs/roadmap-progress.md`.
 - Priority 0: 0 / 10 complete. Status: Go-Live Gate.
 - Priority 1: 14 / 14 complete. Status: Done.
 - Priority 2: 8 / 8 complete. Status: Done.
-- Priority 3: 2 / 10 complete. Status: In Progress.
-- Priority 4: 0 / 10 complete. Status: Planned.
+- Priority 3: 2 / 10 complete. Status: Paused.
+- Priority 4: 10 / 10 complete. Status: Done.
 - Priority 5: 0 / 10 complete. Status: Planned.
 - Priority 6: 0 / 8 complete. Status: Planned.
 - Priority 7: 0 / 10 complete. Status: Planned.
@@ -19,8 +19,8 @@ Quick progress view lives in `docs/roadmap-progress.md`.
 
 ## Current Focus
 
-- Current lane: Priority 3 - Backend And Cross-Device Sync.
-- Recommended next item: 3.3 Replace `localStorage` roster reads/writes with backend data access.
+- Current lane: Priority 4 - Reporting And Admin Power Tools completed.
+- Recommended next item: Review Priority 4 in the app, then choose whether to resume Priority 3 or move to Priority 5.
 - Privacy note: Priority 0 stays visible as the go-live gate and must be completed before real student data is entered.
 
 ## Priority 0 - Live Privacy And Security Gate
@@ -72,7 +72,7 @@ Status: Done. Keep stable unless a bug is found.
 
 ## Priority 3 - Backend And Cross-Device Sync
 
-Status: Planned. This is the bridge from demo/local use to real multi-device operation.
+Status: Paused after 3.2. This is the bridge from demo/local use to real multi-device operation.
 
 - [x] ~~3.1 Choose backend stack and deployment target.~~
 - [x] ~~3.2 Create database schema for schools, users, school users, groups, students, laps, sessions, awards, challenges, devices, and audit logs.~~
@@ -87,18 +87,18 @@ Status: Planned. This is the bridge from demo/local use to real multi-device ope
 
 ## Priority 4 - Reporting And Admin Power Tools
 
-Status: Planned.
+Status: Done. Keep stable unless a bug is found.
 
-- [ ] 4.1 Class, year, division, and school summary dashboards.
-- [ ] 4.2 Per-student full history view.
-- [ ] 4.3 Term progress reports.
-- [ ] 4.4 Printable class reports.
-- [ ] 4.5 Printable award packs.
-- [ ] 4.6 Certificate batch export.
-- [ ] 4.7 Session attendance and participation summaries.
-- [ ] 4.8 Manual adjustment ledger with reason notes.
-- [ ] 4.9 Import/export templates for common school admin workflows.
-- [ ] 4.10 Admin analytics for participation, progress, and inactive students.
+- [x] ~~4.1 Class, year, division, and school summary dashboards.~~
+- [x] ~~4.2 Per-student full history view.~~
+- [x] ~~4.3 Term progress reports.~~
+- [x] ~~4.4 Printable class reports.~~
+- [x] ~~4.5 Printable award packs.~~
+- [x] ~~4.6 Certificate batch export.~~
+- [x] ~~4.7 Session attendance and participation summaries.~~
+- [x] ~~4.8 Manual adjustment ledger with reason notes.~~
+- [x] ~~4.9 Import/export templates for common school admin workflows.~~
+- [x] ~~4.10 Admin analytics for participation, progress, and inactive students.~~
 
 ## Priority 5 - Parent And Student Experience
 
