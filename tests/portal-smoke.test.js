@@ -184,6 +184,16 @@ assert(/report-summary-panels/.test(adminDashboardHtml), 'admin reports should i
 assert(/export-class-summary-csv-btn/.test(adminDashboardHtml), 'admin reports should export class summaries');
 assert(/export-medal-summary-csv-btn/.test(adminDashboardHtml), 'admin reports should export medal summaries');
 assert(/export-certificate-csv-btn/.test(adminDashboardHtml), 'admin reports should export certificate readiness');
+assert(/summary-dashboard-panels/.test(adminDashboardHtml), 'admin reports should include class, year, division, and school dashboards');
+assert(/full-history-student/.test(adminDashboardHtml) && /full-history-list/.test(adminDashboardHtml), 'admin reports should include a per-student full history view');
+assert(/export-term-progress-csv-btn/.test(adminDashboardHtml) && /print-term-progress-btn/.test(adminDashboardHtml), 'admin reports should include term progress export and print actions');
+assert(/class-report-select/.test(adminDashboardHtml) && /print-class-report-btn/.test(adminDashboardHtml), 'admin reports should include printable class reports');
+assert(/print-award-pack-btn/.test(adminDashboardHtml), 'admin reports should print award packs');
+assert(/export-certificate-batch-csv-btn/.test(adminDashboardHtml), 'admin reports should export certificate batches');
+assert(/attendance-summary-list/.test(adminDashboardHtml), 'admin reports should include session attendance summaries');
+assert(/adjustment-form/.test(adminDashboardHtml) && /adjustment-reason/.test(adminDashboardHtml), 'admin reports should include a manual adjustment ledger');
+assert(/download-admin-templates-btn/.test(adminDashboardHtml), 'admin reports should export common workflow templates');
+assert(/admin-analytics-panels/.test(adminDashboardHtml), 'admin reports should include participation and inactive student analytics');
 assert(/onboarding-wizard-card/.test(adminDashboardHtml), 'admin reports should include onboarding wizard');
 assert(/onboarding-school-name/.test(adminDashboardHtml), 'onboarding wizard should collect school name');
 assert(/onboarding-year-groups/.test(adminDashboardHtml), 'onboarding wizard should collect year groups');
@@ -194,7 +204,7 @@ assert(/training-title/.test(adminDashboardHtml), 'admin training form should co
 assert(/training-url/.test(adminDashboardHtml), 'admin training form should collect a training link');
 assert(/training-student-list/.test(adminDashboardHtml), 'admin training form should assign tasks to selected students');
 assert(/training-status-list/.test(adminDashboardHtml), 'admin training tab should show assignment click status');
-assert(/admin-dashboard\.js\?v=6/.test(adminDashboardHtml), 'admin dashboard should request the current training-aware dashboard script');
+assert(/admin-dashboard\.js\?v=7/.test(adminDashboardHtml), 'admin dashboard should request the current reporting-aware dashboard script');
 
 const adminDashboardJs = read('admin-dashboard.js');
 assert(/MEDAL_TIERS/.test(adminDashboardJs), 'admin dashboard should calculate medal tiers');
@@ -241,6 +251,16 @@ assert(/renderReportSummaries/.test(adminDashboardJs), 'admin dashboard should r
 assert(/studentProgressRows/.test(adminDashboardJs), 'admin dashboard should build per-student progress rows');
 assert(/renderStudentProgress/.test(adminDashboardJs), 'admin dashboard should render per-student progress history');
 assert(/exportStudentProgressCsv/.test(adminDashboardJs), 'admin dashboard should export per-student progress CSV');
+assert(/renderSummaryDashboards/.test(adminDashboardJs), 'admin dashboard should render Priority 4 summary dashboards');
+assert(/fullStudentHistoryRows/.test(adminDashboardJs), 'admin dashboard should build full student history rows');
+assert(/exportTermProgressCsv/.test(adminDashboardJs), 'admin dashboard should export term progress reports');
+assert(/printClassReport/.test(adminDashboardJs), 'admin dashboard should print class reports');
+assert(/printAwardPack/.test(adminDashboardJs), 'admin dashboard should print award packs');
+assert(/certificateBatchRows/.test(adminDashboardJs), 'admin dashboard should build certificate batch rows');
+assert(/sessionAttendanceRows/.test(adminDashboardJs), 'admin dashboard should build session attendance summaries');
+assert(/createManualAdjustment/.test(adminDashboardJs), 'admin dashboard should create reasoned manual adjustments');
+assert(/downloadAdminTemplates/.test(adminDashboardJs), 'admin dashboard should download admin workflow templates');
+assert(/renderAdminAnalytics/.test(adminDashboardJs), 'admin dashboard should render participation and inactive student analytics');
 assert(/renderOnboarding/.test(adminDashboardJs), 'admin dashboard should render onboarding setup summary');
 assert(/export-audit-csv-btn/.test(adminDashboardHtml), 'admin reports should include scan audit CSV export');
 assert(/undoLastAdminScan/.test(adminDashboardJs), 'admin scanner should undo the last scan when needed');
@@ -297,16 +317,18 @@ assert(/#student-progress-history,[\s\S]*#leaderboard-table,[\s\S]*#certificates
 assert(/offline-scan-table[\s\S]*min-width:\s*560px/.test(styles), 'offline scan tables should keep readable column widths');
 assert(/report-mini table[\s\S]*min-width:\s*420px/.test(styles), 'report summary tables should keep readable column widths');
 assert(/styles\.css\?v=6/.test(leaderboardHtml), 'leaderboard page should request the current themed stylesheet version');
-assert(/gwynne-park-run-club-v6/.test(serviceWorker), 'service worker cache should be bumped for the site-wide theme update');
+assert(/gwynne-park-run-club-v7/.test(serviceWorker), 'service worker cache should be bumped for the reporting update');
 
 const features = read('FEATURES.md');
 assert(/Training And At-Home Tasks/.test(features), 'roadmap should include the training workflow lane');
 assert(/assigned at-home training/.test(features), 'roadmap should include assigned at-home training tasks');
 assert(/link click visibility/.test(features), 'roadmap should include training link click visibility');
 assert(/docs\/roadmap-progress\.md/.test(features), 'roadmap should link to the quick progress checklist');
-assert(/Priority 3: 2 \/ 10 complete/.test(features), 'roadmap should show backend stack and schema completed');
+assert(/Priority 3: 2 \/ 10 complete\. Status: Paused/.test(features), 'roadmap should show backend stack and schema paused');
+assert(/Priority 4: 10 \/ 10 complete\. Status: Done/.test(features), 'roadmap should show Priority 4 completed');
 assert(/~~3\.1 Choose backend stack and deployment target\.~~/.test(features), 'roadmap should mark backend stack decision complete');
 assert(/~~3\.2 Create database schema/.test(features), 'roadmap should mark initial backend schema complete');
+assert(/~~4\.10 Admin analytics/.test(features), 'roadmap should mark Priority 4 analytics complete');
 
 const backendDecision = read('docs/backend-stack-decision.md');
 assert(/Use Supabase as the production backend/.test(backendDecision), 'backend decision should choose Supabase');
@@ -315,8 +337,8 @@ assert(/training_assignments/.test(backendDecision), 'backend decision should in
 
 assertFile('docs/roadmap-progress.md');
 const roadmapProgress = read('docs/roadmap-progress.md');
-assert(/Priority 3 - Backend And Cross-Device Sync: 2 \/ 10 complete/.test(roadmapProgress), 'quick roadmap should show Priority 3 progress');
-assert(/3\.3 Next: replace `localStorage` roster reads\/writes/.test(roadmapProgress), 'quick roadmap should show the next Priority 3 task');
+assert(/Priority 3 - Backend And Cross-Device Sync: 2 \/ 10 complete\. Paused/.test(roadmapProgress), 'quick roadmap should show Priority 3 paused');
+assert(/Priority 4 - Reporting And Admin Power Tools: 10 \/ 10 complete\. Done/.test(roadmapProgress), 'quick roadmap should show Priority 4 done');
 assert(/Training skeleton/.test(roadmapProgress), 'quick roadmap should mention the completed Training skeleton');
 
 assertFile('supabase/migrations/202606080001_initial_schema.sql');

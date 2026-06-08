@@ -458,6 +458,97 @@
         </div>
 
         <div class="card">
+          <h2>Admin Dashboards</h2>
+          <p style="color:#555;font-size:0.9rem;">Quick summary panels for school, division, year group, and class progress.</p>
+          <div id="summary-dashboard-panels"></div>
+          <div id="admin-analytics-panels" style="margin-top:1rem;"></div>
+        </div>
+
+        <div class="card">
+          <h2>Student Full History</h2>
+          <div style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:end;">
+            <label style="margin:0;">Student
+              <select id="full-history-student"></select>
+            </label>
+            <button id="refresh-full-history-btn" type="button" class="secondary">Refresh history</button>
+            <button id="export-full-history-csv-btn" type="button" class="secondary">Export full history CSV</button>
+          </div>
+          <div id="full-history-list" style="margin-top:1rem;"></div>
+        </div>
+
+        <div class="card">
+          <h2>Term And Class Reports</h2>
+          <div style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:end;">
+            <label style="margin:0;">Term
+              <select id="term-report-term">
+                <option value="all">All dates</option>
+                <option value="term1">Term 1</option>
+                <option value="term2">Term 2</option>
+                <option value="term3">Term 3</option>
+                <option value="term4">Term 4</option>
+              </select>
+            </label>
+            <label style="margin:0;">Class
+              <select id="class-report-select"></select>
+            </label>
+          </div>
+          <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.75rem;">
+            <button id="export-term-progress-csv-btn" type="button" class="secondary">Export term progress</button>
+            <button id="print-term-progress-btn" type="button" class="secondary">Print term report</button>
+            <button id="print-class-report-btn" type="button" class="secondary">Print class report</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Award Packs And Certificates</h2>
+          <p style="color:#555;font-size:0.9rem;">Prepare printable award sheets and export certificate batches for admin records.</p>
+          <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+            <button id="print-award-pack-btn" type="button" class="secondary">Print award pack</button>
+            <button id="export-certificate-batch-csv-btn" type="button" class="secondary">Export certificate batch</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Attendance And Participation</h2>
+          <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.75rem;">
+            <button id="export-attendance-csv-btn" type="button" class="secondary">Export attendance CSV</button>
+          </div>
+          <div id="attendance-summary-list"></div>
+        </div>
+
+        <div class="card">
+          <h2>Manual Adjustment Ledger</h2>
+          <form id="adjustment-form">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:0.75rem;">
+              <label>Student
+                <select id="adjustment-student"></select>
+              </label>
+              <label>Adjustment
+                <select id="adjustment-type">
+                  <option value="add">Add laps</option>
+                  <option value="remove">Remove laps</option>
+                </select>
+              </label>
+              <label>Laps
+                <input id="adjustment-laps" type="number" min="1" step="1" value="1" />
+              </label>
+              <label>Reason
+                <input id="adjustment-reason" type="text" placeholder="Reason note required" />
+              </label>
+            </div>
+            <button type="submit">Save adjustment</button>
+          </form>
+          <pre id="adjustment-result" hidden></pre>
+          <div id="adjustment-ledger-list" style="margin-top:1rem;"></div>
+        </div>
+
+        <div class="card">
+          <h2>Workflow Templates</h2>
+          <p style="color:#555;font-size:0.9rem;">Download starter templates for roster imports, manual adjustments, training assignments, and event logs.</p>
+          <button id="download-admin-templates-btn" type="button" class="secondary">Download admin workflow templates</button>
+        </div>
+
+        <div class="card">
           <h2>&#128220; Recent Scan Audit</h2>
           <p style="color:#555;font-size:0.9rem;">Basic trail of who scanned, which student, when, and whether the scan was accepted.</p>
           <div id="audit-trail-list"></div>
@@ -513,7 +604,7 @@
     <script src="goals.js"></script>
     <script src="admin-goals.js"></script>
     <script src="assets/qrcode-generator.js"></script>
-    <script src="admin-dashboard.js?v=6"></script>
+    <script src="admin-dashboard.js?v=7"></script>
     <script src="pwa.js"></script>
   </body>
 </html>

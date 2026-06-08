@@ -9,8 +9,8 @@ This is the quick-read roadmap. `FEATURES.md` remains the full source of truth.
 - [ ] Priority 0 - Live Privacy And Security Gate: 0 / 10 complete. Go-Live Gate.
 - [x] Priority 1 - Operational MVP: 14 / 14 complete. Done.
 - [x] Priority 2 - Next Build: 8 / 8 complete. Done.
-- [ ] Priority 3 - Backend And Cross-Device Sync: 2 / 10 complete. In Progress.
-- [ ] Priority 4 - Reporting And Admin Power Tools: 0 / 10 complete. Planned.
+- [ ] Priority 3 - Backend And Cross-Device Sync: 2 / 10 complete. Paused.
+- [x] Priority 4 - Reporting And Admin Power Tools: 10 / 10 complete. Done.
 - [ ] Priority 5 - Parent And Student Experience: 0 / 10 complete. Planned.
 - [ ] Priority 6 - Competitions And Challenges: 0 / 8 complete. Planned.
 - [ ] Priority 7 - Sports Carnival And Cross Country: 0 / 10 complete. Planned.
@@ -20,7 +20,7 @@ This is the quick-read roadmap. `FEATURES.md` remains the full source of truth.
 
 - [x] 3.1 Backend stack decision completed: Supabase Postgres/Auth/RLS/Edge Functions.
 - [x] 3.2 Initial production schema completed with RLS enabled on student/school data tables.
-- [ ] 3.3 Next: replace `localStorage` roster reads/writes with backend data access.
+- [ ] Priority 3 paused at 3.2 while Priority 4 reporting/admin tools are completed.
 
 ## Go-Live Gate
 
@@ -69,9 +69,21 @@ Do not enter real student data until Priority 0 is complete.
 - [ ] 3.9 Add backup/export jobs.
 - [ ] 3.10 Add migration path from current demo data to real school setup.
 
+## Priority 4 Checklist
+
+- [x] ~~4.1 Class, year, division, and school summary dashboards.~~
+- [x] ~~4.2 Per-student full history view.~~
+- [x] ~~4.3 Term progress reports.~~
+- [x] ~~4.4 Printable class reports.~~
+- [x] ~~4.5 Printable award packs.~~
+- [x] ~~4.6 Certificate batch export.~~
+- [x] ~~4.7 Session attendance and participation summaries.~~
+- [x] ~~4.8 Manual adjustment ledger with reason notes.~~
+- [x] ~~4.9 Import/export templates for common school admin workflows.~~
+- [x] ~~4.10 Admin analytics for participation, progress, and inactive students.~~
+
 ## Planned Later
 
-- [ ] Priority 4: reporting dashboards, printed reports, adjustment ledger, admin analytics.
 - [ ] Priority 5: parent/student accounts, notifications, progress timeline, completed Training workflow.
 - [ ] Priority 6: house/class/year competitions and challenge progress.
 - [ ] Priority 7: Sports Carnival and Cross Country modules.
