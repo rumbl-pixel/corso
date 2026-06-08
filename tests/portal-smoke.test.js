@@ -303,6 +303,7 @@ const features = read('FEATURES.md');
 assert(/Training And At-Home Tasks/.test(features), 'roadmap should include the training workflow lane');
 assert(/assigned at-home training/.test(features), 'roadmap should include assigned at-home training tasks');
 assert(/link click visibility/.test(features), 'roadmap should include training link click visibility');
+assert(/docs\/roadmap-progress\.md/.test(features), 'roadmap should link to the quick progress checklist');
 assert(/Priority 3: 2 \/ 10 complete/.test(features), 'roadmap should show backend stack and schema completed');
 assert(/~~3\.1 Choose backend stack and deployment target\.~~/.test(features), 'roadmap should mark backend stack decision complete');
 assert(/~~3\.2 Create database schema/.test(features), 'roadmap should mark initial backend schema complete');
@@ -311,6 +312,12 @@ const backendDecision = read('docs/backend-stack-decision.md');
 assert(/Use Supabase as the production backend/.test(backendDecision), 'backend decision should choose Supabase');
 assert(/Postgres Row Level Security/.test(backendDecision), 'backend decision should require RLS');
 assert(/training_assignments/.test(backendDecision), 'backend decision should include training tables in the next schema step');
+
+assertFile('docs/roadmap-progress.md');
+const roadmapProgress = read('docs/roadmap-progress.md');
+assert(/Priority 3 - Backend And Cross-Device Sync: 2 \/ 10 complete/.test(roadmapProgress), 'quick roadmap should show Priority 3 progress');
+assert(/3\.3 Next: replace `localStorage` roster reads\/writes/.test(roadmapProgress), 'quick roadmap should show the next Priority 3 task');
+assert(/Training skeleton/.test(roadmapProgress), 'quick roadmap should mention the completed Training skeleton');
 
 assertFile('supabase/migrations/202606080001_initial_schema.sql');
 const initialSchema = read('supabase/migrations/202606080001_initial_schema.sql');
