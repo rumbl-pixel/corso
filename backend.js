@@ -40,7 +40,8 @@
       syncEnabled: CONFIG.syncEnabled === true,
       schoolId: CONFIG.schoolId || '',
       supabaseUrl: String(CONFIG.supabaseUrl || '').replace(/\/+$/, ''),
-      supabaseAnonKey: CONFIG.supabaseAnonKey || ''
+      supabaseAnonKey: CONFIG.supabaseAnonKey || '',
+      endpoints: CONFIG.endpoints || {}
     };
   }
 
@@ -52,6 +53,21 @@
   function tableUrl(table, query) {
     var c = config();
     return c.supabaseUrl + '/rest/v1/' + table + (query ? '?' + query : '');
+  }
+
+  function edgeAlias(name) {
+    return String(name || '').replace(/_([a-z])/g, function (_, letter) { return letter.toUpperCase(); });
+  }
+
+  function edgeFunctionUrl(name) {
+    var c = config();
+    var endpoints = c.endpoints || {};
+    var alias = edgeAlias(name);
+    var configured = endpoints[name] || endpoints[alias];
+    if (configured) {
+      return String(configured).replace(/\/+$/, '');
+    }
+    return c.supabaseUrl + '/functions/v1/' + name;
   }
 
   function headers(extra) {
@@ -85,6 +101,30 @@
       method: method,
       headers: headers(),
       body: body == null ? undefined : JSON.stringify(body)
+    }).then(function (response) {
+      return response.text().then(function (text) {
+        var data = text ? JSON.parse(text) : null;
+        if (!response.ok) {
+          return { ok: false, status: response.status, kind: classifySyncError(response.status, text), error: text || response.statusText };
+        }
+        return { ok: true, status: response.status, data: data };
+      });
+    }).catch(function (error) {
+      return { ok: false, kind: 'network', error: error && error.message ? error.message : String(error) };
+    });
+  }
+
+  function callEdgeFunction(name, payload, options) {
+    options = options || {};
+    if (!isConfigured()) {
+      return Promise.resolve({ ok: false, skipped: true, reason: 'backend-not-configured' });
+    }
+    var c = config();
+    var body = Object.assign({ school_id: c.schoolId }, payload || {});
+    return global.fetch(edgeFunctionUrl(name), {
+      method: options.method || 'POST',
+      headers: headers(Object.assign({ 'X-School-Id': c.schoolId }, options.headers || {})),
+      body: JSON.stringify(body)
     }).then(function (response) {
       return response.text().then(function (text) {
         var data = text ? JSON.parse(text) : null;
@@ -246,11 +286,41 @@
     });
   }
 
+  function liveStyleSupabaseCheck(options) {
+    options = options || {};
+    if (!isConfigured()) {
+      return Promise.resolve({ ok: false, skipped: true, reason: 'backend-not-configured' });
+    }
+    var restCheck = request('GET', TABLES.students, null, 'school_id=eq.' + encodeURIComponent(config().schoolId) + '&active=eq.true&limit=1')
+      .then(function (result) {
+        return {
+          ok: result.ok,
+          status: result.status,
+          count: Array.isArray(result.data) ? result.data.length : 0,
+          error: result.error
+        };
+      });
+    var edgeCheck = callEdgeFunction(options.edgeFunction || 'student_auth', {
+      code: options.studentCode || options.code || 'DEMO-CHECK',
+      dry_run: true
+    });
+    return Promise.all([restCheck, edgeCheck]).then(function (results) {
+      return {
+        ok: !!(results[0].ok && results[1].ok),
+        rest: results[0],
+        edge: results[1]
+      };
+    });
+  }
+
   global.RunClubBackend = {
     TABLES: TABLES,
     config: config,
     isConfigured: isConfigured,
     backendDataAccess: backendDataAccess,
+    edgeFunctionUrl: edgeFunctionUrl,
+    callEdgeFunction: callEdgeFunction,
+    liveStyleSupabaseCheck: liveStyleSupabaseCheck,
     makeIdempotencyKey: makeIdempotencyKey,
     enqueueMutation: enqueueMutation,
     syncOfflineQueue: syncOfflineQueue,

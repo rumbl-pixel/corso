@@ -101,6 +101,8 @@ assert(/idempotency_key/.test(backendJs), 'backend adapter should include idempo
 assert(/conflict/.test(backendJs), 'backend adapter should classify sync conflicts');
 assert(/migrationPayloadFromLocalStorage/.test(backendJs), 'backend adapter should export demo data migration payloads');
 assert(/backupExportPayload/.test(backendJs), 'backend adapter should build backup/export payloads');
+assert(/callEdgeFunction/.test(backendJs), 'backend adapter should call Supabase Edge Functions with anon auth');
+assert(/liveStyleSupabaseCheck/.test(backendJs), 'backend adapter should expose a live-style Supabase check');
 assert(!/service_role|SUPABASE_SERVICE/i.test(backendJs), 'backend adapter should not include private service secrets');
 
 const adminHtml = read('admin.html');
@@ -231,7 +233,7 @@ assert(/training-url/.test(adminDashboardHtml), 'admin training form should coll
 assert(/training-student-list/.test(adminDashboardHtml), 'admin training form should assign tasks to selected students');
 assert(/training-status-list/.test(adminDashboardHtml), 'admin training tab should show assignment click status');
 assert(/admin-dashboard\.js\?v=7/.test(adminDashboardHtml), 'admin dashboard should request the current reporting-aware dashboard script');
-assert(/backend\.js\?v=8/.test(adminDashboardHtml), 'admin dashboard should load the backend adapter before app scripts');
+assert(/backend\.js\?v=9/.test(adminDashboardHtml), 'admin dashboard should load the backend adapter before app scripts');
 
 const adminDashboardJs = read('admin-dashboard.js');
 assert(/MEDAL_TIERS/.test(adminDashboardJs), 'admin dashboard should calculate medal tiers');
@@ -364,8 +366,10 @@ assert(/offline-scan-table[\s\S]*min-width:\s*560px/.test(styles), 'offline scan
 assert(/@media \(max-width: 480px\)[\s\S]*offline-scan-table[\s\S]*min-width:\s*0/.test(styles), 'offline scan tables should compact on narrow mobile screens');
 assert(/report-mini table[\s\S]*min-width:\s*420px/.test(styles), 'report summary tables should keep readable column widths');
 assert(/styles\.css\?v=10/.test(leaderboardHtml), 'leaderboard page should request the current unclipped stylesheet version');
-assert(/gwynne-park-run-club-v10/.test(serviceWorker), 'service worker cache should be bumped for the backend sync update');
+assert(/gwynne-park-run-club-v11/.test(serviceWorker), 'service worker cache should be bumped for the backend sync update');
 assert(/backend\.js/.test(serviceWorker), 'service worker should cache the backend adapter');
+assertFile('tests/backend-live-style.test.js');
+assertFile('scripts/supabase-live-style-check.js');
 
 const features = read('FEATURES.md');
 assert(/Training And At-Home Tasks/.test(features), 'roadmap should include the training workflow lane');
