@@ -39,6 +39,37 @@ The second migration adds report-ready views:
 
 These mirror current local reports and give the app a backend-powered path for leaderboards, student progress, inactive-student review, and admin insights.
 
+## Live-Style Supabase Checks
+
+The repo now has two backend checks:
+
+- `npm test` runs a fake Supabase contract test so Edge Function and REST request shapes stay stable without needing a real project.
+- `npm run check:supabase-live-style` runs the same adapter against a staging Supabase project when local environment values are present.
+
+Required local environment values for staging:
+
+```bash
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your-public-anon-key
+RUN_CLUB_SCHOOL_ID=your-school-uuid
+```
+
+Optional values:
+
+```bash
+SUPABASE_STUDENT_AUTH_URL=https://your-project.supabase.co/functions/v1/student_auth
+RUN_CLUB_STUDENT_CHECK_CODE=DEMO-CHECK
+RUN_CLUB_EDGE_FUNCTION=student_auth
+```
+
+The live-style check verifies:
+
+- public anon-auth REST access to the school-scoped `students` table
+- anon-auth Edge Function access through `student_auth` or another configured function
+- browser-safe headers only, with no service-role credentials
+
+Keep staging data fake until Priority 0 is complete. Do not paste service-role keys into `config.js`, environment variables used by this browser check, or any static asset.
+
 ## Backup/Export Jobs
 
 The `backup_exports` table tracks manual or scheduled backup/export jobs.
