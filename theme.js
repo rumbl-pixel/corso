@@ -19,7 +19,7 @@
     var isDark = activeTheme === 'dark';
     toggle.setAttribute('aria-pressed', String(isDark));
     toggle.setAttribute('aria-label', isDark ? 'Switch to light mode' : 'Switch to dark mode');
-    toggle.querySelector('[data-theme-toggle-thumb]').textContent = isDark ? 'Dark' : 'Light';
+    toggle.querySelector('[data-theme-toggle-thumb]').textContent = isDark ? '☾' : '☀';
   }
 
   root.setAttribute('data-theme', activeTheme);
@@ -36,7 +36,7 @@
       toggle.type = 'button';
       toggle.className = 'theme-toggle';
       toggle.setAttribute('data-theme-toggle', '');
-      toggle.innerHTML = '<span class="theme-toggle-track"><span data-theme-toggle-thumb class="theme-toggle-thumb">Light</span></span>';
+      toggle.innerHTML = '<span class="theme-toggle-track"><span data-theme-toggle-thumb class="theme-toggle-thumb">☀</span></span>';
       toggle.addEventListener('click', function () {
         applyTheme(activeTheme === 'dark' ? 'light' : 'dark');
       });
@@ -73,7 +73,17 @@
       }
     }
 
-    window.addEventListener('scroll', updateCompactHeader, { passive: true });
+    var scrollQueued = false;
+    function requestCompactHeaderUpdate() {
+      if (scrollQueued) { return; }
+      scrollQueued = true;
+      window.requestAnimationFrame(function () {
+        scrollQueued = false;
+        updateCompactHeader();
+      });
+    }
+
+    window.addEventListener('scroll', requestCompactHeaderUpdate, { passive: true });
     window.addEventListener('resize', updateCompactHeader);
     updateCompactHeader();
     updateToggle();
