@@ -73,6 +73,9 @@ function assert(condition, message) {
     if (url.includes('/functions/v1/student_auth')) {
       return Promise.resolve(response(200, { ok: true, student_id: 'student-1', dry_run: true }));
     }
+    if (url.includes('/functions/v1/guardian_access')) {
+      return Promise.resolve(response(200, { ok: true, access_type: 'guardian', student: { id: 'student-1', name: 'Staging Student', year: 'Year 5', cls: '5A', laps: 8, minutes: 0 } }));
+    }
     if (url.includes('/rest/v1/rpc/record_manual_adjustment')) {
       return Promise.resolve(response(200, [{ adjustment_id: 'adj-live-1', entries_created: 2 }]));
     }
@@ -122,6 +125,13 @@ function assert(condition, message) {
   assert(check.edge.ok === true, 'live-style check should verify Supabase Edge Function access');
   assert(calls.some((call) => call.url.includes('/rest/v1/students')), 'live-style check should call Supabase REST');
   assert(calls.some((call) => call.url.includes('/functions/v1/student_auth')), 'live-style check should call a Supabase Edge Function');
+
+  const guardianAccess = await backend.backendDataAccess.verifyGuardianAccess('GP-STAGING1-A1B2C3D4E5');
+  assert(guardianAccess.ok === true, 'guardian access should resolve through the backend adapter');
+  assert(guardianAccess.data.student.id === 'student-1', 'guardian access should return the linked student');
+  const guardianAccessCall = calls.find((call) => call.url.includes('/functions/v1/guardian_access'));
+  assert(guardianAccessCall, 'guardian access should call the guardian_access Edge Function');
+  assert(JSON.parse(guardianAccessCall.options.body).code === 'GP-STAGING1-A1B2C3D4E5', 'guardian access should submit the guardian code');
 
   await backend.backendDataAccess.upsertStudent({
     id: 'student-2',
