@@ -1572,6 +1572,10 @@ html[data-theme="dark"] .athletics-event-group {
   background: rgba(255,255,255,0.78);
 }
 
+.timeline-item--attendance {
+  border-left-color: var(--obsidian-blue);
+}
+
 .timeline-item--training,
 .timeline-item--training_opened {
   border-left-color: var(--obsidian-blue);
