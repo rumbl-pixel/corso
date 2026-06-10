@@ -1150,6 +1150,23 @@
     return Array.from(document.querySelectorAll('.training-student-check:checked')).map(function(input){return input.value;});
   }
 
+  function saveTrainingAssignmentWithBackend(assignment){
+    var guard=liveRosterGuard();
+    if(!guard.ok){return Promise.resolve({ok:false,blocked:true,error:guard.message||'Local training assignment blocked.'});}
+    if(guard.live&&window.RunClubBackend&&window.RunClubBackend.backendDataAccess&&window.RunClubBackend.backendDataAccess.createTrainingAssignment){
+      return window.RunClubBackend.backendDataAccess.createTrainingAssignment(Object.assign({},assignment,{
+        assigned_student_ids:(assignment.assigned_student_ids||[]).filter(isUuid),
+        metadata:{source_screen:'admin-dashboard',local_assignment_id:assignment.id}
+      })).then(function(result){
+        if(!result.ok){return result;}
+        var row=Array.isArray(result.data)?result.data[0]:result.data;
+        if(row&&row.assignment_id){assignment.id=row.assignment_id;assignment.backend_id=row.assignment_id;}
+        return result;
+      });
+    }
+    return Promise.resolve({ok:true,local:true});
+  }
+
   function createTrainingAssignment(e){
     e.preventDefault();
     var assigned=selectedTrainingStudents();
@@ -1166,13 +1183,16 @@
       created_at:new Date().toISOString(),
       created_by:session.email
     };
-    var assignments=trainingAssignments();
-    assignments.push(assignment);
-    save(K.training,assignments);
-    trainingFormEl.reset();
-    populateTrainingStudents();
-    showResult(trainingResultEl,{success:true,message:'Training assigned.',assigned_students:assigned.length,title:assignment.title});
-    renderTrainingStatus();
+    saveTrainingAssignmentWithBackend(assignment).then(function(result){
+      if(!result.ok){showResult(trainingResultEl,{success:false,error:result.error||result.reason||'Local training assignment blocked.'});return;}
+      var assignments=trainingAssignments();
+      assignments.push(assignment);
+      save(K.training,assignments);
+      trainingFormEl.reset();
+      populateTrainingStudents();
+      showResult(trainingResultEl,{success:true,message:'Training assigned.',assigned_students:assigned.length,title:assignment.title});
+      renderTrainingStatus();
+    });
   }
 
   function trainingClickFor(assignmentId,studentId){

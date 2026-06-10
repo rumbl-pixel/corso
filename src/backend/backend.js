@@ -447,6 +447,19 @@
     verifyGuardianAccess: function (code) {
       return callEdgeFunction('guardian_access', { code: code });
     },
+    createTrainingAssignment: function (assignment) {
+      var c = config();
+      return callRpc('create_training_assignment', {
+        p_school_id: c.schoolId,
+        p_title: assignment.title || '',
+        p_url: assignment.url || '',
+        p_notes: assignment.notes || '',
+        p_due_date: assignment.due_date || null,
+        p_assigned_student_ids: assignment.assigned_student_ids || [],
+        p_created_by_label: assignment.created_by || '',
+        p_metadata: assignment.metadata || {}
+      });
+    },
     leaderboardTotals: function () {
       if (!isConfigured()) { return Promise.resolve(localLoad('rc_students', [])); }
       return request('GET', TABLES.leaderboardTotals, null, 'school_id=eq.' + encodeURIComponent(config().schoolId) + '&order=total_laps.desc')
