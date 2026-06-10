@@ -21,6 +21,7 @@ function assert(condition, message) {
 
 assertFile('supabase/functions/student_auth/index.ts');
 assertFile('supabase/functions/csv_import/index.ts');
+assertFile('supabase/functions/guardian_access/index.ts');
 assertFile('supabase/seed.staging.sql');
 assertFile('docs/supabase-staging-checklist.md');
 
@@ -41,6 +42,15 @@ assert(/skipped_details/.test(csvImport), 'csv_import should report skipped dupl
 assert(/upsert/.test(csvImport), 'csv_import should upsert valid staging students');
 assert(!/localStorage/.test(csvImport), 'csv_import must not depend on browser storage');
 
+const guardianAccess = read('supabase/functions/guardian_access/index.ts');
+assert(/Deno\.serve/.test(guardianAccess), 'guardian_access should expose a Supabase Edge Function handler');
+assert(/SUPABASE_SERVICE_ROLE_KEY/.test(guardianAccess), 'guardian_access should use service role only inside the Edge Function');
+assert(/school_id/.test(guardianAccess) && /code/.test(guardianAccess), 'guardian_access should scope lookup by school and guardian code');
+assert(/guardian_links/.test(guardianAccess), 'guardian_access should validate guardian link records');
+assert(/scan_audit_logs/.test(guardianAccess), 'guardian_access should write access audit records');
+assert(/Access-Control-Allow-Origin/.test(guardianAccess), 'guardian_access should include CORS headers');
+assert(!/localStorage/.test(guardianAccess), 'guardian_access must not depend on browser storage');
+
 const seed = read('supabase/seed.staging.sql');
 assert(/Gwynne Park Run Club Staging/.test(seed), 'staging seed should create a fake school');
 assert(/STAGING1/.test(seed) && /STAGING2/.test(seed), 'staging seed should create fake student barcodes');
@@ -52,6 +62,7 @@ assert(/supabase db push/.test(runbook), 'runbook should include migration comma
 assert(/supabase db reset/.test(runbook), 'runbook should include local reset command');
 assert(/supabase functions deploy student_auth/.test(runbook), 'runbook should include student_auth deployment command');
 assert(/supabase functions deploy csv_import/.test(runbook), 'runbook should include csv_import deployment command');
+assert(/supabase functions deploy guardian_access/.test(runbook), 'runbook should include guardian_access deployment command');
 assert(/fake staging data/i.test(runbook), 'runbook should warn to use fake staging data');
 
 const packageJson = JSON.parse(read('package.json'));

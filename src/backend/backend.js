@@ -444,6 +444,9 @@
         p_metadata: { source_screen: 'admin-dashboard' }
       });
     },
+    verifyGuardianAccess: function (code) {
+      return callEdgeFunction('guardian_access', { code: code });
+    },
     leaderboardTotals: function () {
       if (!isConfigured()) { return Promise.resolve(localLoad('rc_students', [])); }
       return request('GET', TABLES.leaderboardTotals, null, 'school_id=eq.' + encodeURIComponent(config().schoolId) + '&order=total_laps.desc')

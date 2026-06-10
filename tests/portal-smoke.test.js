@@ -116,6 +116,7 @@ assert(/recordScanUndo/.test(backendJs), 'backend adapter should expose live sca
 assert(/recordActivityCredit/.test(backendJs), 'backend adapter should expose live activity credit writes');
 assert(/issueGuardianLink/.test(backendJs), 'backend adapter should expose live guardian link issuing');
 assert(/setGuardianLinkStatus/.test(backendJs), 'backend adapter should expose live guardian link status updates');
+assert(/verifyGuardianAccess/.test(backendJs), 'backend adapter should expose live guardian access verification');
 assert(/liveStyleSupabaseCheck/.test(backendJs), 'backend adapter should expose a live-style Supabase check');
 assert(/backendReadiness/.test(backendJs), 'backend adapter should expose a go-live backend readiness summary');
 assert(/requiresLiveBackend/.test(backendJs), 'backend adapter should expose a live backend guard for real student data');
@@ -342,8 +343,8 @@ assert(/training-status-list/.test(adminDashboardHtml), 'admin training tab shou
 assert(/role="tablist"/.test(adminDashboardHtml), 'admin tabs should expose a tablist role');
 assert(/aria-selected="true"/.test(adminDashboardHtml), 'admin active tab should expose selected state');
 assert(/aria-controls="tab-scanner"/.test(adminDashboardHtml), 'admin tabs should reference tab panels');
-assert(/admin-dashboard\.js\?v=24/.test(adminDashboardHtml), 'admin dashboard should request the current backend-gate dashboard script');
-assert(/backend\.js\?v=17/.test(adminDashboardHtml), 'admin dashboard should load the backend adapter before app scripts');
+assert(/admin-dashboard\.js\?v=25/.test(adminDashboardHtml), 'admin dashboard should request the current backend-gate dashboard script');
+assert(/backend\.js\?v=18/.test(adminDashboardHtml), 'admin dashboard should load the backend adapter before app scripts');
 
 const adminDashboardJs = read('admin-dashboard.js');
 assert(/MEDAL_TIERS/.test(adminDashboardJs), 'admin dashboard should calculate medal tiers');
@@ -522,6 +523,7 @@ const parentHtml = read('parent.html');
 assert(/id="parent-form"/.test(parentHtml), 'parent portal should expose a login form');
 assert(/DEMO/.test(parentHtml), 'parent portal should show a DEMO hint');
 assert(/parent\.js/.test(parentHtml), 'parent portal should load parent.js');
+assert(/backend\.js\?v=18/.test(parentHtml), 'parent portal should load the backend adapter before parent access checks');
 assert(!/Log Home Activity|Home Activity|parent-activity-form/.test(parentHtml), 'parent portal should not include home activity logging');
 assert(/print-parent-certificate-btn/.test(parentHtml), 'parent portal should let parents print child award certificates');
 assert(/guardian-link-code/.test(parentHtml), 'parent portal should explain guardian link codes');
@@ -544,6 +546,10 @@ assert(/findLinkedStudent/.test(parentJs), 'parent portal should resolve guardia
 assert(/GUARDIAN_ACCESS_LOG_KEY/.test(parentJs), 'parent portal should write guardian access logs');
 assert(/isGuardianLinkUsable/.test(parentJs), 'parent portal should reject inactive or expired guardian links');
 assert(/recordGuardianAccess/.test(parentJs), 'parent portal should record guardian access attempts');
+assert(/verifyGuardianAccessWithBackend/.test(parentJs), 'parent portal should verify guardian access through the backend when live-ready');
+assert(/RunClubBackend\.backendReadiness/.test(parentJs), 'parent portal should inspect backend readiness before live parent access');
+assert(/RunClubBackend\.backendDataAccess\.verifyGuardianAccess/.test(parentJs), 'parent portal should call backend guardian access verification');
+assert(/Parent access blocked until the live backend is ready/.test(parentJs), 'parent portal should block local-only parent access in live data mode');
 assert(/renderParentProgressSummary/.test(parentJs), 'parent portal should render richer progress summary');
 assert(/renderParentRecentProgress/.test(parentJs), 'parent portal should render recent progress rows');
 assert(/renderParentTraining/.test(parentJs), 'parent portal should render assigned training visibility');
@@ -608,12 +614,12 @@ assert(/skip-link/.test(styles), 'styles should include skip-link focus styling'
 assert(/:focus-visible/.test(styles), 'styles should include visible keyboard focus styles');
 assert(/multi-school-report-card/.test(styles), 'styles should include multi-school report styling');
 assert(/styles\.css\?v=22/.test(leaderboardHtml), 'leaderboard page should request the completed Priority 8 stylesheet version');
-assert(/admin-dashboard\.js\?v=24/.test(adminDashboardHtml), 'admin dashboard should request the current backend-gate dashboard script');
+assert(/admin-dashboard\.js\?v=25/.test(adminDashboardHtml), 'admin dashboard should request the current backend-gate dashboard script');
 assert(/goals\.js\?v=4/.test(adminDashboardHtml), 'admin dashboard should request a fresh goals script after interschool goals changes');
 assert(/admin-goals\.js\?v=4/.test(adminDashboardHtml), 'admin dashboard should request a fresh admin goals script after interschool goals changes');
 assert(/goals\.js\?v=4/.test(studentProfileHtml), 'student profile should request a fresh goals script');
 assert(/goals\.js\?v=4/.test(studentHtml), 'student login should request a fresh goals script');
-assert(/gwynne-park-run-club-v42/.test(serviceWorker), 'service worker cache should be bumped for the Priority 0 backend gate update');
+assert(/gwynne-park-run-club-v43/.test(serviceWorker), 'service worker cache should be bumped for the Priority 0 backend gate update');
 assert(/backend\.js/.test(serviceWorker), 'service worker should cache the backend adapter');
 assertFile('tests/backend-live-style.test.js');
 assertFile('tests/scanning-live-mode.test.js');

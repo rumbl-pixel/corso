@@ -34,6 +34,7 @@ Deploy the first Edge Functions:
 ```bash
 supabase functions deploy student_auth
 supabase functions deploy csv_import
+supabase functions deploy guardian_access
 ```
 
 Seed only fake staging data from `supabase/seed.staging.sql`. See `docs/supabase-staging-checklist.md` before connecting the UI to staging.

@@ -85,6 +85,34 @@
     return student ? { student: student, link: null, accessType: 'barcode' } : null;
   }
 
+  function liveParentAccessGuard() {
+    var backend = window.RunClubBackend;
+    var readiness = window.RunClubBackend && window.RunClubBackend.backendReadiness ? window.RunClubBackend.backendReadiness() : { liveDataMode: false, realDataAllowed: false };
+    if (!readiness.liveDataMode) { return { ok: true, live: false }; }
+    if (backend && backend.requiresLiveBackend) {
+      var guard = backend.requiresLiveBackend();
+      if (guard.ok) { return { ok: true, live: true }; }
+      return { ok: false, live: true, message: 'Parent access blocked until the live backend is ready.' };
+    }
+    return { ok: false, live: true, message: 'Parent access blocked until the live backend is ready.' };
+  }
+
+  function verifyGuardianAccessWithBackend(code) {
+    var guard = liveParentAccessGuard();
+    if (!guard.ok) {
+      return Promise.resolve({ denied: true, reason: guard.message || 'Parent access blocked until the live backend is ready.' });
+    }
+    if (guard.live) {
+      return window.RunClubBackend.backendDataAccess.verifyGuardianAccess(code).then(function (result) {
+        if (!result.ok || !result.data || !result.data.student) {
+          return { denied: true, reason: 'Guardian code not recognised or no longer active' };
+        }
+        return { student: result.data.student, link: null, accessType: 'guardian' };
+      });
+    }
+    return Promise.resolve(findStudent(code));
+  }
+
   function renderLinkSummary(access) {
     var el = document.getElementById('parent-link-summary');
     if (!el) { return; }
@@ -274,17 +302,19 @@
     e.preventDefault();
     var errorEl = document.getElementById('parent-error');
     errorEl.textContent = '';
-    var access = findStudent(document.getElementById('parent-code').value);
-    if (!access || access.denied) {
-      errorEl.textContent = access && access.reason ? access.reason + '. Ask the school for a new code.' : 'Code not recognised. Check the barcode card or ask the school.';
-      if (!access) {
-        recordGuardianAccess({ access_type: 'unknown', result: 'denied', reason: 'Code not recognised', code_suffix: document.getElementById('parent-code').value.slice(-4).toUpperCase() });
+    var rawCode = document.getElementById('parent-code').value;
+    verifyGuardianAccessWithBackend(rawCode).then(function (access) {
+      if (!access || access.denied) {
+        errorEl.textContent = access && access.reason ? access.reason + '. Ask the school for a new code.' : 'Code not recognised. Check the barcode card or ask the school.';
+        if (!access) {
+          recordGuardianAccess({ access_type: 'unknown', result: 'denied', reason: 'Code not recognised', code_suffix: rawCode.slice(-4).toUpperCase() });
+        }
+        return;
       }
-      return;
-    }
-    currentAccess = access;
-    recordGuardianAccess({ access_type: access.accessType, result: 'allowed', reason: 'Progress viewed', student_id: access.student.id, student_name: access.student.name });
-    render(access.student);
+      currentAccess = access;
+      recordGuardianAccess({ access_type: access.accessType, result: 'allowed', reason: 'Progress viewed', student_id: access.student.id, student_name: access.student.name });
+      render(access.student);
+    });
   });
 
   document.getElementById('print-parent-certificate-btn').addEventListener('click', printParentCertificate);

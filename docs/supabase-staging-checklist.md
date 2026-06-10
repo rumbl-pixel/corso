@@ -47,6 +47,7 @@ Deploy the browser-facing function routes:
 ```bash
 supabase functions deploy student_auth
 supabase functions deploy csv_import
+supabase functions deploy guardian_access
 ```
 
 Set required server-side secrets for Edge Functions in Supabase:
@@ -86,5 +87,6 @@ Before connecting real screens to staging:
 - staff-authenticated reads should return only the staging school
 - `student_auth` should return only the barcode-matched staging student
 - `csv_import` should validate rows in `dry_run` before upserting
+- `guardian_access` should return only the guardian-link matched child profile and write an access audit row
 
 Do not enter real student data until Priority 0 is complete.
