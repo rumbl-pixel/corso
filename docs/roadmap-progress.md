@@ -1,6 +1,6 @@
 # Gwynne Park Run Club - Progress Checklist
 
-Last updated: 2026-06-09
+Last updated: 2026-06-10
 
 This is the quick-read roadmap. `FEATURES.md` remains the full source of truth.
 
@@ -11,10 +11,10 @@ This is the quick-read roadmap. `FEATURES.md` remains the full source of truth.
 - [x] Priority 2 - Next Build: 8 / 8 complete. Done.
 - [x] Priority 3 - Backend And Cross-Device Sync: 10 / 10 complete. Done.
 - [x] Priority 4 - Reporting And Admin Power Tools: 10 / 10 complete. Done.
-- [ ] Priority 5 - Parent And Student Experience: 4 / 10 complete. In Progress.
-- [ ] Priority 6 - Competitions And Challenges: 0 / 8 complete. Planned.
-- [ ] Priority 7 - Sports Carnival And Cross Country: 0 / 10 complete. Planned.
-- [ ] Priority 8 - Polish, Help, And Long-Term Enhancements: 0 / 8 complete. Parked.
+- [x] Priority 5 - Parent And Student Experience: 10 / 10 complete. Done.
+- [x] Priority 6 - Competitions And Challenges: 8 / 8 complete. Done.
+- [x] Priority 7 - Interschool Athletics And Cross Country: 11 / 11 complete. Done.
+- [x] Priority 8 - Polish, Help, And Long-Term Enhancements: 9 / 9 complete. Done.
 
 ## Current Focus
 
@@ -27,17 +27,57 @@ This is the quick-read roadmap. `FEATURES.md` remains the full source of truth.
 - [x] 5.4 Student progress timeline completed with read-only scan, award, goal, and training events.
 - [x] Supabase fake-backend staging is running locally with fake data and Edge Function checks.
 - [x] Screen rollout started: Leaderboard now tries fake-backend data first and falls back to local demo data.
+- [x] 5.5 Milestone notifications completed for admin scans, with local notification history.
+- [x] 5.6 Challenge notifications completed for admin-created challenges, with local notification history.
+- [x] 5.7 Student progress PDFs per term completed through a print-ready student profile report.
+- [x] 5.8 Improved award and certificate display completed with award cards, next-milestone progress, and school-themed certificates.
+- [x] 5.9 Student-friendly goal reflection completed with non-scoring notes that do not add activity.
+- [x] 5.10 Assigned at-home training workflow completed with admin assignment, student viewing, link-open tracking, reviewed status, and parent/admin visibility.
+- [x] 6.1 House competitions started with optional student houses and public house totals.
+- [x] 6.2 Class competitions started with public class totals by distance.
+- [x] 6.3 Year-level competitions started with public year-group totals by distance.
+- [x] 6.4 Club-wide challenges started with public progress cards for admin-created challenges.
+- [x] 6.5 Team and house leaderboards started with optional team groups and public team totals.
+- [x] 6.6 Custom challenge rules completed with structured metric, target, scope, and rule type fields.
+- [x] 6.7 Challenge progress tracking completed with admin progress cards for active challenges.
+- [x] 6.8 Challenge award/certificate tie-ins completed with award-ready rows for completed challenges.
+- [x] 7.1 Interschool Athletics Mode module completed with Australian primary carnival event defaults.
+- [x] 7.2 Cross Country module completed with admin course setup for year/division distances and route notes.
+- [x] 7.3 PB tracking completed with per-student event bests and new-PB detection.
+- [x] 7.4 Sprint time results completed for 50m, 75m, 100m, and 200m events.
+- [x] 7.5 Distance event time results completed for 400m, 800m, and cross country timing.
+- [x] 7.6 Jump, throw, and length results completed for jump and throw event values.
+- [x] 7.7 Field-event attempt tracking completed with three attempt fields per result.
+- [x] 7.8 Age champion scoring completed with year-group points summaries.
+- [x] 7.9 House points completed with simple place-based house totals.
+- [x] 7.10 Carnival and cross country exports completed with CSV report buttons.
+- [x] 7.11 drag-and-drop training library completed with a quick workout builder for admin assignments.
+- [x] 8.1 Cleaner mobile and tablet layouts completed with stronger phone, iPad, and laptop responsive rules.
+- [x] 8.2 Admin help/setup notes completed with in-app quick start, device setup, workflow, and privacy gate notes.
+- [x] 8.3 Program resources and lesson-plan section completed with printable run club, athletics, cross country, safety, and device setup resource cards.
+- [x] 8.4 Granular privacy controls completed with admin pseudonyms, consent status, public-name hiding, certificate-sharing flags, and privacy-aware leaderboard names.
+- [x] 8.5 Custom milestone thresholds completed with admin save/reset controls for lap awards.
+- [x] 8.6 Multi-school reporting completed with school-filtered summaries and CSV export.
+- [x] 8.7 Theme and branding settings completed with local title, blue, and gold controls.
+- [x] 8.8 Accessibility audit and improvements completed with skip links, main landmarks, tab ARIA state, and visible keyboard focus.
+- [x] 8.9 Authorised Compass class-list sync completed as a CSV import pathway with template and authorisation notes.
+- [x] Priority 0.1 backend cutover started with a visible backend readiness gate, live roster write guard, live scanner write guard, live CSV/Compass import guard, live run-session guard, live manual-adjustment guard, Supabase student upsert, Supabase student batch import, Supabase student soft-delete, direct `record_lap_scan` calls, Supabase run session create/finish calls, a manual adjustment ledger/RPC, and student privacy fields migration.
+- [x] Signup/access model locked: invite-only staff/coaches, passwordless student barcode/QR/code access, parent child-name search plus guardian code/link confirmation. See `docs/access-model-decision.md`.
 
 ## Go-Live Gate
 
 Do not enter real student data until Priority 0 is complete.
 
 - [ ] 0.1 Replace local demo storage with a real backend.
+  - In progress: roster add/edit/delete, CSV/Compass roster imports, scanner lap writes, run sessions, and manual lap adjustments can now route through Supabase when live data mode is enabled and backend readiness passes.
 - [ ] 0.2 Add real staff/admin authentication.
+  - Locked decision: staff and coaches are invite-only through school-scoped Supabase Auth.
 - [ ] 0.3 Add role-based permissions for admin, coach, parent, and student views.
+  - Locked decision: parents get child-linked read-only access; students get own-profile-only passwordless access.
 - [ ] 0.4 Add school-scoped data isolation.
 - [ ] 0.5 Remove universal public `DEMO` access before launch.
 - [ ] 0.6 Use non-guessable student and parent access tokens.
+  - Locked decision: no predictable student username as the only credential; use generated barcode, QR, access code, or guardian link token.
 - [ ] 0.7 Add consent, retention, export, and deletion controls for student data.
 - [ ] 0.8 Add audit logs for imports, scans, edits, exports, deletions, and manual adjustments.
 - [ ] 0.9 Complete privacy policy, incident plan, admin onboarding notes, and backup/export process.
@@ -92,6 +132,6 @@ Do not enter real student data until Priority 0 is complete.
 ## Planned Later
 
 - [ ] Priority 5: milestone/challenge notifications, PDFs, award display polish, student reflection, completed backend-backed Training workflow.
-- [ ] Priority 6: house/class/year competitions and challenge progress.
-- [ ] Priority 7: Sports Carnival and Cross Country modules.
-- [ ] Priority 8: mobile polish, help notes, privacy controls, branding settings, accessibility audit.
+- [x] Priority 6: house/class/year competitions and challenge progress.
+- [x] Priority 7: Interschool Athletics and Cross Country modules.
+- [x] Priority 8: mobile polish, help notes, privacy controls, branding settings, accessibility audit, and authorised Compass class-list sync.

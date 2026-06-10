@@ -38,6 +38,7 @@
     return {
       demoMode: CONFIG.demoMode !== false,
       syncEnabled: CONFIG.syncEnabled === true,
+      liveDataMode: CONFIG.liveDataMode === true,
       schoolId: CONFIG.schoolId || '',
       supabaseUrl: String(CONFIG.supabaseUrl || '').replace(/\/+$/, ''),
       supabaseAnonKey: CONFIG.supabaseAnonKey || '',
@@ -50,9 +51,57 @@
     return !!(c.syncEnabled && c.schoolId && c.supabaseUrl && c.supabaseAnonKey);
   }
 
+  function backendReadiness() {
+    var c = config();
+    var blockers = [];
+    if (c.demoMode) { blockers.push('demo-mode-enabled'); }
+    if (!c.syncEnabled) { blockers.push('sync-disabled'); }
+    if (!c.schoolId) { blockers.push('missing-school-id'); }
+    if (!c.supabaseUrl) { blockers.push('missing-supabase-url'); }
+    if (!c.supabaseAnonKey) { blockers.push('missing-supabase-anon-key'); }
+
+    var configured = isConfigured();
+    var ready = configured && blockers.length === 0;
+    var mode = 'backend-ready';
+    if (c.demoMode) {
+      mode = 'demo-local-storage';
+    } else if (!c.syncEnabled) {
+      mode = 'local-storage-sync-disabled';
+    } else if (!configured) {
+      mode = 'backend-incomplete';
+    }
+
+    return {
+      ready: ready,
+      configured: configured,
+      mode: mode,
+      realDataAllowed: ready && c.liveDataMode,
+      liveDataMode: c.liveDataMode,
+      blockers: blockers,
+      schoolId: c.schoolId,
+      supabaseUrl: c.supabaseUrl
+    };
+  }
+
+  function requiresLiveBackend() {
+    var readiness = backendReadiness();
+    if (readiness.realDataAllowed) {
+      return { ok: true, readiness: readiness, message: 'Live backend is ready for real student data.' };
+    }
+    return {
+      ok: false,
+      readiness: readiness,
+      message: 'Do not enter real student data until Priority 0 is complete and live data mode is enabled.'
+    };
+  }
+
   function tableUrl(table, query) {
     var c = config();
     return c.supabaseUrl + '/rest/v1/' + table + (query ? '?' + query : '');
+  }
+
+  function rpcUrl(name) {
+    return config().supabaseUrl + '/rest/v1/rpc/' + name;
   }
 
   function edgeAlias(name) {
@@ -93,13 +142,13 @@
     return 'error';
   }
 
-  function request(method, table, body, query) {
+  function request(method, table, body, query, extraHeaders) {
     if (!isConfigured()) {
       return Promise.resolve({ ok: false, skipped: true, reason: 'backend-not-configured' });
     }
     return global.fetch(tableUrl(table, query), {
       method: method,
-      headers: headers(),
+      headers: headers(extraHeaders),
       body: body == null ? undefined : JSON.stringify(body)
     }).then(function (response) {
       return response.text().then(function (text) {
@@ -125,6 +174,28 @@
       method: options.method || 'POST',
       headers: headers(Object.assign({ 'X-School-Id': c.schoolId }, options.headers || {})),
       body: JSON.stringify(body)
+    }).then(function (response) {
+      return response.text().then(function (text) {
+        var data = text ? JSON.parse(text) : null;
+        if (!response.ok) {
+          return { ok: false, status: response.status, kind: classifySyncError(response.status, text), error: text || response.statusText };
+        }
+        return { ok: true, status: response.status, data: data };
+      });
+    }).catch(function (error) {
+      return { ok: false, kind: 'network', error: error && error.message ? error.message : String(error) };
+    });
+  }
+
+  function callRpc(name, payload, options) {
+    options = options || {};
+    if (!isConfigured()) {
+      return Promise.resolve({ ok: false, skipped: true, reason: 'backend-not-configured' });
+    }
+    return global.fetch(rpcUrl(name), {
+      method: options.method || 'POST',
+      headers: headers(options.headers),
+      body: JSON.stringify(payload || {})
     }).then(function (response) {
       return response.text().then(function (text) {
         var data = text ? JSON.parse(text) : null;
@@ -222,9 +293,36 @@
       name: (row.preferred_name || (row.first_name + ' ' + row.last_name)).trim(),
       year: row.year_group,
       cls: row.class_name,
+      house: row.house || '',
+      team: row.team || '',
+      pseudonym: row.pseudonym || '',
+      preferred_name: row.preferred_name || '',
+      consent_status: row.consent_status || 'pending',
+      hide_public_name: row.hide_public_name === true,
+      share_certificates_publicly: row.share_certificates_publicly === true,
       laps: Number(row.lap_count || row.laps || 0),
       minutes: Number(row.minutes || 0),
       events: []
+    };
+  }
+
+  function studentPayload(student) {
+    var c = config();
+    return {
+      school_id: c.schoolId,
+      barcode: student.barcode || student.id,
+      first_name: student.first || '',
+      last_name: student.last || '',
+      preferred_name: student.pseudonym || student.preferred_name || student.name || '',
+      year_group: student.year || '',
+      class_name: student.cls || '',
+      house: student.house || '',
+      team: student.team || '',
+      pseudonym: student.pseudonym || '',
+      consent_status: student.consent_status || 'pending',
+      hide_public_name: student.hide_public_name === true,
+      share_certificates_publicly: student.share_certificates_publicly === true,
+      active: true
     };
   }
 
@@ -239,21 +337,65 @@
         });
     },
     upsertStudent: function (student) {
-      var c = config();
-      var payload = {
-        school_id: c.schoolId,
-        barcode: student.barcode || student.id,
-        first_name: student.first || '',
-        last_name: student.last || '',
-        preferred_name: student.name || '',
-        year_group: student.year || '',
-        class_name: student.cls || '',
-        active: true
-      };
-      return request('POST', TABLES.students, payload);
+      return request('POST', TABLES.students, studentPayload(student), 'on_conflict=school_id,barcode', { Prefer: 'resolution=merge-duplicates,return=representation' });
+    },
+    upsertStudentsBatch: function (students) {
+      var rows = (students || []).map(studentPayload);
+      if (!rows.length) {
+        return Promise.resolve({ ok: true, data: [], skipped: true });
+      }
+      return request('POST', TABLES.students, rows, 'on_conflict=school_id,barcode', { Prefer: 'resolution=merge-duplicates,return=representation' });
+    },
+    deleteStudent: function (student) {
+      var barcode = student && (student.barcode || student.id);
+      if (!barcode) {
+        return Promise.resolve({ ok: false, kind: 'validation', error: 'Missing student barcode' });
+      }
+      return request('PATCH', TABLES.students, { active: false }, 'school_id=eq.' + encodeURIComponent(config().schoolId) + '&barcode=eq.' + encodeURIComponent(barcode), { Prefer: 'return=representation' });
     },
     createRunSession: function (session) {
-      return request('POST', TABLES.runSessions, Object.assign({ school_id: config().schoolId }, session));
+      return request('POST', TABLES.runSessions, {
+        school_id: config().schoolId,
+        session_type: session.session_type || session.type || 'Run Club',
+        notes: session.notes || '',
+        lap_distance_km: session.lap_distance_km || 0.25,
+        device_id: session.device_id || null
+      }, null, { Prefer: 'return=representation' });
+    },
+    finishRunSession: function (session) {
+      if (!session || !session.id) {
+        return Promise.resolve({ ok: false, kind: 'validation', error: 'Missing run session id' });
+      }
+      return request('PATCH', TABLES.runSessions, {
+        finished_at: session.finished_at || new Date().toISOString()
+      }, 'school_id=eq.' + encodeURIComponent(config().schoolId) + '&id=eq.' + encodeURIComponent(session.id), { Prefer: 'return=representation' });
+    },
+    recordLapScan: function (scan) {
+      var c = config();
+      return callRpc('record_lap_scan', {
+        p_school_id: c.schoolId,
+        p_student_id: scan.student_id,
+        p_session_id: scan.session_id || null,
+        p_device_id: scan.device_id || null,
+        p_idempotency_key: scan.idempotency_key,
+        p_lap_distance_km: scan.lap_distance_km,
+        p_source: scan.source || 'scanner',
+        p_barcode: scan.barcode || '',
+        p_metadata: scan.metadata || {}
+      });
+    },
+    recordManualAdjustment: function (adjustment) {
+      var c = config();
+      return callRpc('record_manual_adjustment', {
+        p_school_id: c.schoolId,
+        p_student_id: adjustment.student_id || null,
+        p_barcode: adjustment.barcode || '',
+        p_delta_laps: adjustment.delta_laps,
+        p_reason: adjustment.reason || '',
+        p_staff: adjustment.staff || '',
+        p_lap_distance_km: adjustment.lap_distance_km || 0.25,
+        p_metadata: adjustment.metadata || {}
+      });
     },
     leaderboardTotals: function () {
       if (!isConfigured()) { return Promise.resolve(localLoad('rc_students', [])); }
@@ -332,9 +474,12 @@
     TABLES: TABLES,
     config: config,
     isConfigured: isConfigured,
+    backendReadiness: backendReadiness,
+    requiresLiveBackend: requiresLiveBackend,
     backendDataAccess: backendDataAccess,
     edgeFunctionUrl: edgeFunctionUrl,
     callEdgeFunction: callEdgeFunction,
+    callRpc: callRpc,
     liveStyleSupabaseCheck: liveStyleSupabaseCheck,
     makeIdempotencyKey: makeIdempotencyKey,
     enqueueMutation: enqueueMutation,

@@ -10,7 +10,9 @@
   var STUDENT_SESSION_KEY = 'runClubStudentSession';
   var TRAINING_KEY = 'rc_training';
   var TRAINING_CLICKS_KEY = 'rc_training_clicks';
+  var TRAINING_COMPLETIONS_KEY = 'rc_training_completions';
   var SCAN_AUDIT_KEY = 'rc_scan_audit';
+  var GOAL_REFLECTIONS_KEY = 'rc_goal_reflections';
 
   var MILESTONE_LABELS = { 5: 'First 5 Laps', 10: '10 Lap Club', 25: 'Quarter Century', 50: 'Half Century', 100: 'Century Club', 200: 'Double Century', 500: 'Elite Runner' };
   var MEDAL_TIERS = [
@@ -60,6 +62,13 @@
     var session = getStudentSession();
     if (!session || !session.code) { return null; }
     return findStudent(session.code);
+  }
+
+  function studentFromQuery() {
+    var params = new URLSearchParams(window.location.search);
+    var code = params.get('student') || params.get('studentId') || params.get('barcode');
+    if (!code) { return null; }
+    return findStudent(code);
   }
 
   // --- Login: look up the code against the shared roster ---
@@ -152,6 +161,119 @@
     };
   }
 
+  function currentTermLabel() {
+    var now = new Date();
+    var month = now.getMonth();
+    var term = month < 3 ? 'Term 1' : month < 6 ? 'Term 2' : month < 9 ? 'Term 3' : 'Term 4';
+    return term + ' ' + now.getFullYear();
+  }
+
+  function studentTermReportRows(student) {
+    var rows = studentTimelineRows(student);
+    var goals = Goals.goalsFor(student.id).filter(function (goal) {
+      return Goals.isMetricVisible(goal.metric);
+    });
+    var openedTraining = trainingAssignmentsFor(student.id).filter(function (task) {
+      return trainingOpened(task.id);
+    }).length;
+    var earned = Scan.MILESTONES.filter(function (m) { return student.laps >= m; });
+    return {
+      term: currentTermLabel(),
+      laps: student.laps || 0,
+      distance: Scan.totalKm(student).toFixed(2) + ' km',
+      awards: earned.map(function (m) { return MILESTONE_LABELS[m] || (m + ' laps'); }),
+      goals: goals.map(function (goal) {
+        var progress = Goals.progress(student.id, goal);
+        return {
+          title: goal.title,
+          owner: goal.owner === 'coach' ? 'Coach' : 'Student',
+          progress: progress.percent + '%',
+          status: progress.met ? 'Achieved' : 'In progress'
+        };
+      }),
+      training: {
+        assigned: trainingAssignmentsFor(student.id).length,
+        opened: openedTraining
+      },
+      timeline: rows.slice(0, 12)
+    };
+  }
+
+  function printStudentTermReport(student) {
+    var report = studentTermReportRows(student);
+    var win = window.open('', '_blank');
+    if (!win) { return; }
+    var awardRows = report.awards.length
+      ? report.awards.map(function (award) { return '<li>' + escapeHtml(award) + '</li>'; }).join('')
+      : '<li>No awards earned yet.</li>';
+    var goalRows = report.goals.length
+      ? report.goals.map(function (goal) {
+        return '<tr><td>' + escapeHtml(goal.title) + '</td><td>' + escapeHtml(goal.owner) + '</td><td>' + escapeHtml(goal.progress) + '</td><td>' + escapeHtml(goal.status) + '</td></tr>';
+      }).join('')
+      : '<tr><td colspan="4">No active goals yet.</td></tr>';
+    var timelineRows = report.timeline.length
+      ? report.timeline.map(function (row) {
+        return '<tr><td>' + new Date(row.date).toLocaleDateString() + '</td><td>' + escapeHtml(timelineKind(row.type)) + '</td><td>' + escapeHtml(row.title) + '</td><td>' + escapeHtml(row.value) + '</td></tr>';
+      }).join('')
+      : '<tr><td colspan="4">No progress events yet.</td></tr>';
+    var html = '<html><head><title>' + escapeHtml(student.name) + ' Term Progress Report</title>' +
+      '<style>@page{size:A4;margin:14mm;}*{box-sizing:border-box;}body{font-family:Arial,sans-serif;color:#102a43;margin:0;}header{border-bottom:3px solid #003880;padding-bottom:8mm;margin-bottom:8mm;}h1{color:#003880;margin:0 0 2mm;font-size:24pt;}h2{color:#003880;margin:8mm 0 3mm;font-size:14pt;}.meta{color:#4b5563;font-size:10pt;}.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:4mm;margin:6mm 0;}.box{border:1px solid #d9e2ec;border-left:4px solid #c99722;padding:4mm;border-radius:2mm;}.value{font-size:18pt;font-weight:700;color:#003880;}.label{text-transform:uppercase;font-size:8pt;color:#64748b;}table{width:100%;border-collapse:collapse;font-size:9.5pt;}th{background:#eef4fb;color:#0b1f38;text-align:left;}th,td{border-bottom:1px solid #d9e2ec;padding:2.5mm;}ul{margin-top:0;}footer{margin-top:10mm;color:#64748b;font-size:8pt;}@media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact;}}</style>' +
+      '</head><body><header><h1>Gwynne Park Run Club</h1><div class="meta">' + escapeHtml(report.term) + ' progress report for ' + escapeHtml(student.name) + ' - ' + escapeHtml(student.year) + ' / ' + escapeHtml(student.cls) + '</div></header>' +
+      '<section class="summary"><div class="box"><div class="value">' + report.laps + '</div><div class="label">Laps</div></div><div class="box"><div class="value">' + escapeHtml(report.distance) + '</div><div class="label">Distance</div></div><div class="box"><div class="value">' + report.training.opened + ' / ' + report.training.assigned + '</div><div class="label">Training Opened</div></div></section>' +
+      '<h2>Awards</h2><ul>' + awardRows + '</ul>' +
+      '<h2>Goals</h2><table><thead><tr><th>Goal</th><th>Set By</th><th>Progress</th><th>Status</th></tr></thead><tbody>' + goalRows + '</tbody></table>' +
+      '<h2>Recent Progress</h2><table><thead><tr><th>Date</th><th>Type</th><th>Event</th><th>Value</th></tr></thead><tbody>' + timelineRows + '</tbody></table>' +
+      '<footer>Generated from local Gwynne Park Run Club demo data. Use the browser print dialog to save this report as a PDF.</footer>' +
+      '</body></html>';
+    win.document.write(html);
+    win.document.close();
+    win.focus();
+    win.print();
+  }
+
+  function wireStudentTermReport(student) {
+    var btn = document.getElementById('print-student-term-report-btn');
+    if (!btn) { return; }
+    btn.onclick = function () {
+      printStudentTermReport(student);
+    };
+  }
+
+  function awardDisplayRows(student) {
+    var earned = Scan.MILESTONES.filter(function (m) { return student.laps >= m; });
+    var next = Scan.MILESTONES.find(function (m) { return student.laps < m; });
+    var rows = earned.map(function (m) {
+      return {
+        status: 'earned',
+        title: MILESTONE_LABELS[m] || (m + ' laps'),
+        detail: m + ' laps completed',
+        progress: 100
+      };
+    });
+    if (next) {
+      rows.push({
+        status: 'next',
+        title: MILESTONE_LABELS[next] || (next + ' laps'),
+        detail: Math.max(0, next - student.laps) + ' laps to go',
+        progress: Math.min(100, Math.round((student.laps / next) * 100))
+      });
+    }
+    return rows;
+  }
+
+  function awardCardsHtml(rows) {
+    if (!rows.length) {
+      return '<p style="color:#888;font-size:0.85rem;">Keep running to earn your first award at 5 laps!</p>';
+    }
+    return '<div class="award-card-grid">' + rows.map(function (row) {
+      return '<div class="award-card award-card--' + escapeHtml(row.status) + '">' +
+        '<div class="award-card-icon">' + (row.status === 'earned' ? '&#127942;' : '&#11088;') + '</div>' +
+        '<div><strong>' + escapeHtml(row.title) + '</strong><p>' + escapeHtml(row.detail) + '</p>' +
+        '<div class="award-card-bar"><span style="width:' + row.progress + '%"></span></div></div>' +
+        '</div>';
+    }).join('') + '</div>';
+  }
+
   function renderAthlete(s) {
     var km = Scan.lapsToKm(s.laps).toFixed(2);
     document.getElementById('athlete-name').textContent = s.name;
@@ -168,16 +290,15 @@
       '<div class="stat-box"><div class="stat-value">#' + schoolRank + '</div><div class="stat-label">School rank</div></div>' +
       '<div class="stat-box"><div class="stat-value">#' + classRank + '</div><div class="stat-label">Class rank</div></div>';
 
-    var earned = Scan.MILESTONES.filter(function (m) { return s.laps >= m; });
     var awardsEl = document.getElementById('athlete-awards');
-    awardsEl.innerHTML = earned.length
-      ? earned.map(function (m) { return '<span class="award-badge">🏆 ' + (MILESTONE_LABELS[m] || (m + ' laps')) + '</span>'; }).join('')
-      : '<p style="color:#888;font-size:0.85rem;">Keep running to earn your first award at 5 laps!</p>';
+    awardsEl.innerHTML = awardCardsHtml(awardDisplayRows(s));
 
     document.getElementById('result-card').hidden = false;
     renderStudentBarcode(s);
+    wireStudentTermReport(s);
     renderMedalProgress(s);
     renderGoals();
+    renderGoalReflections();
     renderStudentTimeline();
     renderTraining();
   }
@@ -208,6 +329,26 @@
     })[0] || null;
   }
 
+  function trainingCompletionFor(taskId) {
+    return loadLocal(TRAINING_COMPLETIONS_KEY, []).filter(function (row) {
+      return row.assignment_id === taskId && row.student_id === currentStudent.id;
+    }).sort(function (a, b) {
+      return String(b.completed_at || '').localeCompare(String(a.completed_at || ''));
+    })[0] || null;
+  }
+
+  function recordTrainingCompletion(task) {
+    var rows = loadLocal(TRAINING_COMPLETIONS_KEY, []);
+    rows.push({
+      assignment_id: task.id,
+      student_id: currentStudent.id,
+      student_name: currentStudent.name,
+      title: task.title,
+      completed_at: new Date().toISOString()
+    });
+    saveLocal(TRAINING_COMPLETIONS_KEY, rows.slice(-500));
+  }
+
   function renderTraining() {
     var listEl = document.getElementById('student-training-list');
     if (!listEl || !currentStudent) { return; }
@@ -218,18 +359,30 @@
     }
     listEl.innerHTML = tasks.slice().reverse().map(function (task) {
       var opened = trainingOpened(task.id);
+      var completed = trainingCompletionFor(task.id);
       return '<div class="training-card">' +
         '<div class="training-card-head"><strong>' + escapeHtml(task.title) + '</strong>' +
-        (opened ? '<span class="award-badge">Opened</span>' : '<span class="training-status-pill">New</span>') + '</div>' +
+        (completed ? '<span class="award-badge">Reviewed</span>' : opened ? '<span class="award-badge">Opened</span>' : '<span class="training-status-pill">New</span>') + '</div>' +
         '<p>' + escapeHtml(task.notes || 'Review this training task before your next run club session.') + '</p>' +
-        '<div class="training-meta">' + (task.due_date ? 'Due ' + escapeHtml(task.due_date) : 'No due date') + (opened ? ' · Opened ' + new Date(opened.opened_at).toLocaleDateString() : '') + '</div>' +
-        '<a class="btn-primary training-open-link" href="' + escapeHtml(task.url) + '" target="_blank" rel="noopener" data-training-id="' + escapeHtml(task.id) + '">Open training</a>' +
+        '<div class="training-meta">' + (task.due_date ? 'Due ' + escapeHtml(task.due_date) : 'No due date') + (opened ? ' · Opened ' + new Date(opened.opened_at).toLocaleDateString() : '') + (completed ? ' · Reviewed ' + new Date(completed.completed_at).toLocaleDateString() : '') + '</div>' +
+        '<div class="training-actions"><a class="btn-primary training-open-link" href="' + escapeHtml(task.url) + '" target="_blank" rel="noopener" data-training-id="' + escapeHtml(task.id) + '">Open training</a>' +
+        '<button class="secondary training-reviewed-btn" type="button" data-training-id="' + escapeHtml(task.id) + '"' + (completed ? ' disabled' : '') + '>' + (completed ? 'Reviewed' : 'Mark reviewed') + '</button></div>' +
       '</div>';
     }).join('');
     document.querySelectorAll('.training-open-link').forEach(function (link) {
       link.addEventListener('click', function () {
         var task = tasks.find(function (item) { return item.id === link.dataset.trainingId; });
         if (task) { recordTrainingClick(task); }
+      });
+    });
+    document.querySelectorAll('.training-reviewed-btn').forEach(function (button) {
+      button.addEventListener('click', function () {
+        var task = tasks.find(function (item) { return item.id === button.dataset.trainingId; });
+        if (task) {
+          recordTrainingCompletion(task);
+          renderTraining();
+          renderStudentTimeline();
+        }
       });
     });
   }
@@ -240,7 +393,9 @@
       award: 'Award milestone',
       goal: 'Goal',
       training: 'Training assigned',
-      training_opened: 'Training opened'
+      training_opened: 'Training opened',
+      training_reviewed: 'Training reviewed',
+      reflection: 'Goal reflection'
     }[type] || type;
   }
 
@@ -296,6 +451,28 @@
         });
       }
     });
+    loadLocal(TRAINING_COMPLETIONS_KEY, []).forEach(function (completion) {
+      if (completion.student_id === student.id) {
+        rows.push({
+          date: completion.completed_at || new Date().toISOString(),
+          type: 'training_reviewed',
+          title: completion.title || 'Training reviewed',
+          detail: 'You marked this assigned training as reviewed.',
+          value: 'Reviewed'
+        });
+      }
+    });
+    loadLocal(GOAL_REFLECTIONS_KEY, []).forEach(function (reflection) {
+      if (reflection.student_id === student.id) {
+        rows.push({
+          date: reflection.created_at || new Date().toISOString(),
+          type: 'reflection',
+          title: reflection.goal_title || 'Goal reflection',
+          detail: reflection.note || 'Student reflected on this goal.',
+          value: reflection.feeling || 'Reflection'
+        });
+      }
+    });
     return rows.sort(function (a, b) {
       return new Date(b.date) - new Date(a.date);
     });
@@ -308,7 +485,7 @@
     var rows = studentTimelineRows(currentStudent);
     var scanCount = rows.filter(function (row) { return row.type === 'scan'; }).length;
     var awardCount = rows.filter(function (row) { return row.type === 'award'; }).length;
-    var trainingCount = rows.filter(function (row) { return row.type === 'training' || row.type === 'training_opened'; }).length;
+    var trainingCount = rows.filter(function (row) { return row.type === 'training' || row.type === 'training_opened' || row.type === 'training_reviewed'; }).length;
     summaryEl.innerHTML = '<div class="progress-summary-grid">' +
       '<div class="stat-box"><div class="stat-value">' + rows.length + '</div><div class="stat-label">Timeline events</div></div>' +
       '<div class="stat-box"><div class="stat-value">' + scanCount + '</div><div class="stat-label">Run events</div></div>' +
@@ -405,8 +582,90 @@
           var v = prompt('Log your result (number only):');
           if (v !== null && v.trim() && !isNaN(Number(v))) { Goals.logResult(currentStudent.id, id, v); renderGoals(); }
         }
+        renderGoalReflections();
         renderStudentTimeline();
       };
+    });
+  }
+
+  function studentGoalReflectionRows() {
+    return loadLocal(GOAL_REFLECTIONS_KEY, []).filter(function (reflection) {
+      return reflection.student_id === currentStudent.id;
+    }).sort(function (a, b) {
+      return String(b.created_at || '').localeCompare(String(a.created_at || ''));
+    });
+  }
+
+  function activeGoalOptions() {
+    return Goals.goalsFor(currentStudent.id).filter(function (goal) {
+      return Goals.isMetricVisible(goal.metric);
+    });
+  }
+
+  function renderGoalReflectionOptions(goals) {
+    var select = document.getElementById('goal-reflection-goal');
+    if (!select) { return; }
+    if (!goals.length) {
+      select.innerHTML = '<option value="">No goals yet</option>';
+      select.disabled = true;
+      return;
+    }
+    select.disabled = false;
+    select.innerHTML = goals.map(function (goal) {
+      return '<option value="' + escapeHtml(goal.id) + '">' + escapeHtml(goal.title) + '</option>';
+    }).join('');
+  }
+
+  function recordGoalReflection(goalId, feeling, note) {
+    var goals = activeGoalOptions();
+    var goal = goals.find(function (item) { return item.id === goalId; });
+    if (!goal) { return false; }
+    var rows = loadLocal(GOAL_REFLECTIONS_KEY, []);
+    rows.push({
+      id: 'reflection-' + Date.now(),
+      student_id: currentStudent.id,
+      student_name: currentStudent.name,
+      goal_id: goal.id,
+      goal_title: goal.title,
+      feeling: feeling,
+      note: String(note || '').trim(),
+      created_at: new Date().toISOString()
+    });
+    saveLocal(GOAL_REFLECTIONS_KEY, rows.slice(-300));
+    return true;
+  }
+
+  function renderGoalReflections() {
+    var listEl = document.getElementById('goal-reflection-list');
+    if (!listEl || !currentStudent) { return; }
+    var goals = activeGoalOptions();
+    renderGoalReflectionOptions(goals);
+    var rows = studentGoalReflectionRows();
+    if (!rows.length) {
+      listEl.innerHTML = '<p style="color:#888;font-size:0.85rem;margin-top:0.75rem;">No reflections yet. These notes do not add laps or activity.</p>';
+      return;
+    }
+    listEl.innerHTML = '<div class="reflection-list">' + rows.slice(0, 6).map(function (row) {
+      return '<div class="reflection-item"><strong>' + escapeHtml(row.goal_title) + '</strong>' +
+        '<span>' + escapeHtml(row.feeling) + ' · ' + new Date(row.created_at).toLocaleDateString() + '</span>' +
+        (row.note ? '<p>' + escapeHtml(row.note) + '</p>' : '') +
+        '</div>';
+    }).join('') + '</div>';
+  }
+
+  function wireGoalReflection() {
+    var form = document.getElementById('goal-reflection-form');
+    if (!form) { return; }
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var goalId = document.getElementById('goal-reflection-goal').value;
+      var feeling = document.getElementById('goal-reflection-feeling').value;
+      var note = document.getElementById('goal-reflection-note').value;
+      if (recordGoalReflection(goalId, feeling, note)) {
+        document.getElementById('goal-reflection-note').value = '';
+        renderGoalReflections();
+        renderStudentTimeline();
+      }
     });
   }
 
@@ -434,6 +693,7 @@
       e.target.reset();
       panel.hidden = true;
       renderGoals();
+      renderGoalReflections();
       renderStudentTimeline();
     });
   }
@@ -464,15 +724,17 @@
   }
 
   if (resultCard) {
-    var student = sessionStudent();
+    var student = studentFromQuery() || sessionStudent();
     if (!student) {
       window.location.href = 'student.html';
       return;
     }
+    saveStudentSession(student);
     currentStudent = student;
     wireStudentTabs();
     renderAthlete(student);
     wireAddGoal();
+    wireGoalReflection();
 
     var logoutBtn = document.getElementById('student-logout-btn');
     if (logoutBtn) {

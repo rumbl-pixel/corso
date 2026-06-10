@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
   <title>Gwynne Park Run Club - Scanner Kiosk</title>
-  <link rel="stylesheet" href="styles.css?v=10" />
+  <link rel="stylesheet" href="styles.css?v=22" />
   <link rel="stylesheet" href="kiosk.css?v=6" />
   <link rel="manifest" href="manifest.webmanifest" />
   <meta name="theme-color" content="#0c5aa8" />
@@ -12,6 +12,7 @@
   <script src="config.js"></script>
 </head>
 <body class="page page-kiosk">
+    <a class="skip-link" href="#main-content">Skip to main content</a>
   <header class="kiosk-header">
     <div class="kiosk-brand"><img class="kiosk-brand-logo" src="assets/gwynne-park-logo.png" alt="Gwynne Park Schools" />Gwynne Park Run Club</div>
     <div class="kiosk-status">
@@ -21,7 +22,7 @@
     </div>
   </header>
 
-  <main class="kiosk-main">
+  <main id="main-content" class="kiosk-main">
     <!-- Big, high-contrast feedback banner: the single focal point -->
     <section id="kiosk-banner" class="kiosk-banner kiosk-banner--ready">
       <h1 id="kiosk-banner-title">Ready to scan</h1>
@@ -51,7 +52,7 @@
     <button id="kiosk-exit" class="kiosk-exit" type="button">Exit kiosk</button>
   </footer>
 
-  <script src="backend.js?v=9"></script>
+  <script src="backend.js?v=14"></script>
   <script src="scanning.js"></script>
   <script src="kiosk.js"></script>
   <script src="pwa.js"></script>

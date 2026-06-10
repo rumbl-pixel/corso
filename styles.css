@@ -36,6 +36,29 @@ body {
 a { color: var(--school-blue-2); text-decoration: none; }
 a:hover { text-decoration: underline; }
 
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: 0.75rem;
+  z-index: 1000;
+  transform: translateY(-160%);
+  background: #fff;
+  color: var(--school-blue);
+  border: 2px solid var(--uniform-gold);
+  border-radius: 8px;
+  padding: 0.55rem 0.8rem;
+  font-weight: 800;
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+:focus-visible {
+  outline: 3px solid var(--uniform-gold);
+  outline-offset: 3px;
+}
+
 /* ===========================
    Header
 =========================== */
@@ -507,6 +530,63 @@ pre {
   margin: 0.2rem;
 }
 
+.award-card-grid {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0.75rem 0;
+}
+
+.award-card {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 0.75rem;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.8rem;
+  background: #fff;
+}
+
+.award-card--earned {
+  border-color: rgba(201, 151, 34, 0.42);
+  background: linear-gradient(135deg, rgba(201, 151, 34, 0.14), #fff 58%);
+}
+
+.award-card--next {
+  background: var(--surface-tint);
+}
+
+.award-card-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 56, 128, 0.08);
+  color: var(--school-blue);
+  font-size: 1.35rem;
+}
+
+.award-card p {
+  margin: 0.1rem 0 0.45rem;
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+.award-card-bar {
+  height: 7px;
+  border-radius: 999px;
+  background: #e9eef5;
+  overflow: hidden;
+}
+
+.award-card-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--uniform-gold);
+}
+
 /* ===========================
    Lists
 =========================== */
@@ -529,6 +609,38 @@ pre {
   gap: 0.45rem;
   align-items: center;
   white-space: nowrap;
+}
+
+.student-name-link {
+  color: var(--school-blue);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.student-name-link:hover,
+.student-name-link:focus {
+  color: var(--school-blue-strong);
+}
+
+.privacy-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.4rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-tint);
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.1rem 0.45rem;
+  white-space: nowrap;
+}
+
+.privacy-badge--public {
+  border-color: rgba(201, 151, 34, 0.45);
+  background: rgba(201, 151, 34, 0.12);
+  color: var(--school-blue);
 }
 
 .danger-link {
@@ -672,6 +784,206 @@ pre {
   font-size: 0.85rem;
 }
 
+.training-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+  margin-top: 0.75rem;
+}
+
+.training-library-chip {
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--line);
+  border-left: 5px solid var(--uniform-gold);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  padding: 0.75rem;
+  margin-bottom: 0.65rem;
+  box-shadow: none;
+}
+
+.training-library-chip span,
+.training-library-chip small,
+.workout-builder-list span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.82rem;
+  margin-top: 0.2rem;
+}
+
+#workout-builder-dropzone {
+  min-height: 150px;
+  border: 2px dashed var(--line-strong);
+  border-radius: 8px;
+  background: var(--surface-tint);
+  padding: 0.85rem;
+  margin-bottom: 0.85rem;
+}
+
+.workout-builder-list {
+  margin: 0;
+  padding-left: 1.15rem;
+}
+
+.workout-builder-list li {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.admin-help-card {
+  border-left: 5px solid var(--uniform-gold);
+}
+
+.help-checklist {
+  margin: 0.65rem 0 0;
+  padding-left: 1.25rem;
+  color: var(--ink);
+}
+
+.help-checklist li {
+  margin: 0.35rem 0;
+}
+
+.help-note-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.8rem;
+  margin-top: 0.8rem;
+}
+
+.help-note-grid > div {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-tint);
+  padding: 0.8rem;
+}
+
+.help-note-grid strong {
+  color: var(--school-blue);
+}
+
+.help-note-grid p {
+  margin: 0.35rem 0 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.backend-readiness-summary {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.85rem;
+  margin: 0.75rem 0;
+  background: var(--surface-tint);
+}
+
+.backend-readiness-summary strong,
+.backend-readiness-summary span {
+  display: block;
+}
+
+.backend-readiness-summary span {
+  color: var(--muted);
+  font-size: 0.82rem;
+  margin-top: 0.2rem;
+}
+
+.backend-readiness-summary p {
+  margin: 0.45rem 0 0;
+  color: var(--ink);
+  font-size: 0.9rem;
+}
+
+.backend-readiness-blocked {
+  border-color: #fecaca;
+  background: #fff5f5;
+}
+
+.backend-readiness-ready {
+  border-color: #86efac;
+  background: #f0fdf4;
+}
+
+.resource-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: 0.9rem;
+  margin-top: 1rem;
+}
+
+.resource-card {
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--uniform-gold);
+  border-radius: 8px;
+  background: var(--surface);
+  padding: 1rem;
+  box-shadow: var(--shadow-soft);
+}
+
+.resource-card h3 {
+  margin: 0 0 0.55rem;
+  color: var(--school-blue);
+  font-size: 1.05rem;
+}
+
+.resource-card p {
+  margin: 0.45rem 0;
+  color: var(--muted);
+}
+
+.resource-card ul {
+  margin: 0.65rem 0 0;
+  padding-left: 1.15rem;
+}
+
+.resource-card li {
+  margin: 0.35rem 0;
+}
+
+.resource-card--lesson {
+  background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(246,249,253,0.98));
+}
+
+.resource-card--safety {
+  border-left-color: var(--school-blue);
+  background: #f8fbff;
+}
+
+.resource-card--printable {
+  background: #fffdf7;
+}
+
+#multi-school-report-card {
+  border-left: 4px solid var(--school-blue);
+}
+
+#multi-school-summary-list .report-mini {
+  margin-top: 0;
+}
+
+.challenge-progress-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.challenge-progress-card {
+  border: 1px solid var(--line);
+  border-left: 5px solid var(--uniform-gold);
+  border-radius: 8px;
+  padding: 0.85rem;
+  background: var(--surface-tint);
+}
+
+.challenge-progress-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: center;
+  color: var(--school-blue);
+}
+
 .training-status-table {
   width: 100%;
   min-width: 560px;
@@ -751,6 +1063,60 @@ pre {
   font-size: 0.75rem;
   font-weight: 700;
   padding: 0.2rem 0.55rem;
+}
+
+.milestone-notification {
+  margin-top: 0.75rem;
+  padding: 0.85rem;
+  border: 1px solid var(--uniform-gold-soft);
+  border-left: 4px solid var(--uniform-gold);
+  border-radius: 8px;
+  background: var(--uniform-gold-wash);
+}
+
+.milestone-notification strong,
+.milestone-notification span {
+  display: block;
+}
+
+.milestone-notification strong {
+  color: var(--school-blue);
+}
+
+.milestone-notification span,
+.milestone-notification p {
+  color: var(--muted);
+  font-size: 0.86rem;
+  margin: 0.2rem 0 0;
+}
+
+.notification-list {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.notification-item {
+  padding: 0.75rem;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--school-blue);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.notification-item strong,
+.notification-item span {
+  display: block;
+}
+
+.notification-item strong {
+  color: var(--school-blue);
+}
+
+.notification-item span,
+.notification-item p {
+  color: var(--muted);
+  font-size: 0.84rem;
+  margin: 0.2rem 0 0;
 }
 
 .report-summary-grid,
@@ -1044,13 +1410,90 @@ pre {
 /* ===========================
    Responsive
 =========================== */
-@media (max-width: 700px) {
+@media (max-width: 900px) {
   .header-inner { flex-direction: column; align-items: flex-start; }
-  .content { padding: 1rem; }
+  .main-nav {
+    width: 100%;
+    justify-content: flex-start;
+    overflow-x: auto;
+    padding-bottom: 0.15rem;
+  }
+  .tabs {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 0.35rem;
+    scroll-snap-type: x proximity;
+  }
+  .tab-btn {
+    white-space: nowrap;
+    scroll-snap-align: start;
+  }
+  .content { padding: 1.25rem; }
   .hero-section { grid-template-columns: 1fr; }
+  .form-grid { grid-template-columns: 1fr; }
+  .training-assignment-head,
+  .training-card-head,
+  .challenge-progress-head,
+  .offline-batch-head {
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 640px) {
+  .site-header {
+    padding: 0.75rem 0;
+  }
+  .brand {
+    align-items: center;
+  }
+  .brand-logo {
+    width: 64px;
+  }
+  .brand h1 {
+    font-size: 1.55rem;
+    line-height: 1.08;
+  }
+  .content {
+    padding: 0.75rem;
+  }
+  .card {
+    padding: 1rem;
+    border-radius: 8px;
+  }
+  .main-nav {
+    gap: 0.5rem;
+  }
+  .main-nav a,
+  .main-nav button {
+    flex: 1 1 calc(50% - 0.5rem);
+    min-width: 0;
+    text-align: center;
+  }
+  button,
+  .btn-primary,
+  .secondary {
+    min-height: 44px;
+  }
+  .tabs {
+    margin-left: -0.25rem;
+    margin-right: -0.25rem;
+  }
+  .tab-btn {
+    min-height: 44px;
+    font-size: 0.86rem;
+  }
   .portal-grid { grid-template-columns: 1fr 1fr; }
   .features-grid { grid-template-columns: 1fr; }
   .athlete-stats { gap: 0.75rem; }
+  .progress-history-table,
+  .training-status-table {
+    min-width: 520px;
+  }
+  .training-actions,
+  .goal-actions,
+  .student-list-actions {
+    gap: 0.5rem;
+  }
 }
 
 @media (max-width: 480px) {
@@ -1080,6 +1523,70 @@ pre {
 .goal-bar-fill { background:var(--uniform-gold); height:100%; transition:width .3s ease; }
 .goal-actions { margin-top:8px; display:flex; gap:12px; }
 .link-btn { background:none; border:none; color:var(--school-blue); cursor:pointer; font-size:0.82rem; padding:0; text-decoration:underline; }
+
+.reflection-list {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 0.9rem;
+}
+
+.reflection-item {
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--school-blue);
+  border-radius: 8px;
+  padding: 0.75rem;
+  background: var(--surface-tint);
+}
+
+.reflection-item span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.78rem;
+  margin-top: 0.15rem;
+}
+
+.reflection-item p {
+  margin: 0.45rem 0 0;
+  color: #243b53;
+  font-size: 0.88rem;
+}
+
+.athletics-event-list {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 0.9rem;
+}
+
+.athletics-event-group {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.75rem;
+  background: var(--surface-tint);
+}
+
+.athletics-event-group strong {
+  display: block;
+  color: var(--school-blue);
+  margin-bottom: 0.45rem;
+}
+
+.athletics-event-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  padding: 0.28rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 56, 128, 0.16);
+  background: #fff;
+  color: var(--ink);
+  font-size: 0.8rem;
+  margin: 0.18rem;
+}
+
+.athletics-event-chip small {
+  color: var(--muted);
+  font-size: 0.68rem;
+}
 
 /* --- Admin goals modal --- */
 .ag-overlay { position:fixed; inset:0; background:rgba(20,32,51,.52); display:flex; align-items:center; justify-content:center; z-index:1000; padding:16px; }

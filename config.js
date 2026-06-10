@@ -3,6 +3,7 @@
 window.RUN_CLUB_CONFIG = {
   demoMode: true,
   syncEnabled: false,
+  liveDataMode: false,
   schoolId: '',
   supabaseUrl: '',
   supabaseAnonKey: '',

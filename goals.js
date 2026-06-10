@@ -13,6 +13,26 @@
   var STORE = 'rc_goals';
   var SETTINGS_STORE = 'rc_goal_settings';
   var BASE_METRICS = ['laps', 'time', 'distance'];
+  var INTERSCHOOL_ATHLETICS_EVENTS = [
+    { group: 'Sprints', name: '50m', metric: 'time', years: 'Junior' },
+    { group: 'Sprints', name: '75m', metric: 'time', years: 'Junior / Intermediate' },
+    { group: 'Sprints', name: '100m', metric: 'time', years: 'Intermediate / Senior' },
+    { group: 'Middle Distance', name: '200m', metric: 'time', years: 'Intermediate / Senior' },
+    { group: 'Middle Distance', name: '400m', metric: 'time', years: 'Intermediate / Senior' },
+    { group: 'Middle Distance', name: '800m', metric: 'time', years: 'Senior / selected' },
+    { group: 'Ball Games', name: 'Tunnel Ball', metric: 'team-time', years: 'All' },
+    { group: 'Ball Games', name: 'Leader Ball', metric: 'team-time', years: 'All' },
+    { group: 'Ball Games', name: 'Pass Ball', metric: 'team-time', years: 'All' },
+    { group: 'Relays', name: 'Flag Relay', metric: 'team-time', years: 'All' },
+    { group: 'Relays', name: 'Baton Relay', metric: 'team-time', years: 'Intermediate / Senior' },
+    { group: 'Jumps', name: 'Long Jump', metric: 'distance', years: 'All' },
+    { group: 'Jumps', name: 'High Jump', metric: 'height', years: 'Selected / Senior' },
+    { group: 'Jumps', name: 'Triple Jump', metric: 'distance', years: 'Selected / Senior' },
+    { group: 'Throws', name: 'Distance Throw', metric: 'distance', years: 'All' },
+    { group: 'Throws', name: 'Shot Put', metric: 'distance', years: 'Intermediate / Senior' },
+    { group: 'Throws', name: 'Discus', metric: 'distance', years: 'Selected / Senior' },
+    { group: 'Throws', name: 'Javelin / Turbo Jav / Teeball Throw', metric: 'distance', years: 'Selected / modified' }
+  ];
 
   // --- Metric catalogue -----------------------------------------------------
   // kind: 'cumulative' (fills up toward target, auto-tracked from laps)
@@ -43,18 +63,28 @@
     localStorage.setItem(SETTINGS_STORE, JSON.stringify(settings));
   }
 
-  function isSportsCarnivalMode() {
-    return loadSettings().sportsCarnivalMode === true;
+  function isInterschoolAthleticsMode() {
+    var settings = loadSettings();
+    return settings.interschoolAthleticsMode === true || settings.sportsCarnivalMode === true;
   }
 
-  function setSportsCarnivalMode(enabled) {
+  function setInterschoolAthleticsMode(enabled) {
     var settings = loadSettings();
+    settings.interschoolAthleticsMode = enabled === true;
     settings.sportsCarnivalMode = enabled === true;
     saveSettings(settings);
   }
 
+  function isSportsCarnivalMode() {
+    return isInterschoolAthleticsMode();
+  }
+
+  function setSportsCarnivalMode(enabled) {
+    setInterschoolAthleticsMode(enabled);
+  }
+
   function isMetricVisible(metric) {
-    return isSportsCarnivalMode() || BASE_METRICS.indexOf(metric) !== -1;
+    return isInterschoolAthleticsMode() || BASE_METRICS.indexOf(metric) !== -1;
   }
 
   function visibleMetrics() {
@@ -190,9 +220,12 @@
 
   global.RunClubGoals = {
     METRICS: METRICS,
+    INTERSCHOOL_ATHLETICS_EVENTS: INTERSCHOOL_ATHLETICS_EVENTS,
     metricInfo: metricInfo,
     visibleMetrics: visibleMetrics,
     isMetricVisible: isMetricVisible,
+    isInterschoolAthleticsMode: isInterschoolAthleticsMode,
+    setInterschoolAthleticsMode: setInterschoolAthleticsMode,
     isSportsCarnivalMode: isSportsCarnivalMode,
     setSportsCarnivalMode: setSportsCarnivalMode,
     goalsFor: goalsFor,

@@ -4,13 +4,14 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Gwynne Park Run Club - Student Profile</title>
-    <link rel="stylesheet" href="styles.css?v=10" />
+    <link rel="stylesheet" href="styles.css?v=22" />
     <link rel="manifest" href="manifest.webmanifest" />
     <meta name="theme-color" content="#0c5aa8" />
     <link rel="apple-touch-icon" href="assets/app-icon-192.png" />
     <script src="config.js"></script>
   </head>
   <body class="page page-student">
+    <a class="skip-link" href="#main-content">Skip to main content</a>
     <header class="site-header">
       <div class="header-inner">
         <div class="brand"><img class="brand-logo" src="assets/gwynne-park-logo.png" alt="Gwynne Park Schools" /><h1>Gwynne Park Run Club</h1></div>
@@ -23,7 +24,7 @@
       <p class="tagline">Student profile - see your laps, distance, awards and challenges.</p>
     </header>
 
-    <main class="content">
+    <main id="main-content" class="content">
       <div style="max-width:480px;margin:0 auto;">
         <section id="result-card" hidden>
           <div class="athlete-card">
@@ -55,6 +56,12 @@
             </div>
 
             <div class="card">
+              <h2>&#128196; Term Progress Report</h2>
+              <p style="color:#555;font-size:0.85rem;">Print a simple term snapshot of your laps, distance, awards, goals, and training.</p>
+              <button id="print-student-term-report-btn" type="button" class="secondary">Print term progress PDF</button>
+            </div>
+
+            <div class="card">
               <div style="display:flex;justify-content:space-between;align-items:center;">
                 <h2 style="margin:0;">&#127919; My Goals</h2>
                 <button id="add-goal-btn" type="button" class="add-goal-btn">+ Add goal</button>
@@ -81,6 +88,28 @@
               <p style="color:#555;font-size:0.85rem;">Goals your coach has set for you. You can see your progress but only your coach can change these.</p>
               <div id="coach-goals-list"></div>
             </div>
+
+            <div class="card">
+              <h2>&#128172; Goal Reflection</h2>
+              <p style="color:#555;font-size:0.85rem;">Reflect on a goal without logging laps, time, distance, or home activity.</p>
+              <form id="goal-reflection-form">
+                <label>Goal
+                  <select id="goal-reflection-goal"></select>
+                </label>
+                <label>How is it feeling?
+                  <select id="goal-reflection-feeling">
+                    <option value="Ready">Ready</option>
+                    <option value="Building">Building</option>
+                    <option value="Needs help">Needs help</option>
+                  </select>
+                </label>
+                <label>Reflection note
+                  <textarea id="goal-reflection-note" rows="3" maxlength="240" placeholder="What will you focus on next?"></textarea>
+                </label>
+                <button type="submit" class="secondary">Save reflection</button>
+              </form>
+              <div id="goal-reflection-list"></div>
+            </div>
           </div>
 
           <div class="student-tab-panel" id="tab-student-timeline">
@@ -106,9 +135,9 @@
       <p>Gwynne Park Run Club &copy; 2026 &middot; <a href="privacy-policy.html">Privacy Policy</a></p>
     </footer>
     <script src="scanning.js"></script>
-    <script src="goals.js"></script>
+    <script src="goals.js?v=4"></script>
     <script src="assets/qrcode-generator.js"></script>
-    <script src="student.js?v=10"></script>
+    <script src="student.js?v=13"></script>
     <script src="pwa.js"></script>
   </body>
 </html>

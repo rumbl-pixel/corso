@@ -12,28 +12,34 @@ Quick progress view lives in `docs/roadmap-progress.md`.
 - Priority 2: 8 / 8 complete. Status: Done.
 - Priority 3: 10 / 10 complete. Status: Done.
 - Priority 4: 10 / 10 complete. Status: Done.
-- Priority 5: 4 / 10 complete. Status: In Progress.
-- Priority 6: 0 / 8 complete. Status: Planned.
-- Priority 7: 0 / 10 complete. Status: Planned.
-- Priority 8: 0 / 8 complete. Status: Parked.
+- Priority 5: 10 / 10 complete. Status: Done.
+- Priority 6: 8 / 8 complete. Status: Done.
+- Priority 7: 11 / 11 complete. Status: Done.
+- Priority 8: 9 / 9 complete. Status: Done.
 
 ## Current Focus
 
-- Current lane: Priority 5 - Parent And Student Experience.
-- Recommended next item: fake-backend screen rollout, one screen at a time, then 5.5 Milestone notifications.
+- Current lane: Priority 0 - Live Privacy And Security Gate.
+- Recommended next item: 0.1 Replace local demo storage with a real backend.
 - Privacy note: Priority 0 stays visible as the go-live gate and must be completed before real student data is entered.
 - Backend pilot: local Supabase fake backend is running; Leaderboard is the first screen wired to try backend data and fall back to local demo data.
+- 0.1 progress: admin roster add/edit/delete now has live backend upsert/soft-delete helpers, CSV and Compass roster imports can batch-upsert through Supabase, scanner lap writes can call the idempotent Supabase `record_lap_scan` RPC, run sessions can create/finish through Supabase, manual adjustments have a Supabase ledger/RPC path, and roster/scan/import/session/adjustment local-only writes are blocked when live data mode is enabled before the backend is ready.
+- Access model locked: staff/coaches are invite-only; students are passwordless by barcode/QR/non-guessable code; parents search by child name but must confirm with a guardian link/code before seeing a full profile. See `docs/access-model-decision.md`.
 
 ## Priority 0 - Live Privacy And Security Gate
 
 Status: Go-Live Gate. Complete before using real student data.
 
 - [ ] 0.1 Replace local demo storage with a real backend.
+  - In progress: backend readiness gate, live-data guard, student roster upsert, student roster soft-delete, live scan write guard, direct `record_lap_scan` RPC calls, privacy roster fields migration, and cache-busted live scripts are in place.
 - [ ] 0.2 Add real staff/admin authentication.
+  - Locked decision: staff and coaches are invite-only through school-scoped Supabase Auth, not public self-signup.
 - [ ] 0.3 Add role-based permissions for admin, coach, parent, and student views.
+  - Locked decision: parent access is child-linked and read-only; student access is own-profile-only and passwordless.
 - [ ] 0.4 Add school-scoped data isolation.
 - [ ] 0.5 Remove universal public `DEMO` access before launch.
 - [ ] 0.6 Use non-guessable student and parent access tokens.
+  - Locked decision: friendly handles like `JSmith` can be labels, but actual student/parent access must use generated non-guessable barcode, QR, or guardian tokens.
 - [ ] 0.7 Add consent, retention, export, and deletion controls for student data.
 - [ ] 0.8 Add audit logs for imports, scans, edits, exports, deletions, and manual adjustments.
 - [ ] 0.9 Complete privacy policy, incident plan, admin onboarding notes, and backup/export process.
@@ -103,7 +109,7 @@ Status: Done. Keep stable unless a bug is found.
 
 ## Priority 5 - Parent And Student Experience
 
-Status: In Progress.
+Status: Done.
 
 Training And At-Home Tasks now has a local-first skeleton in place. Before launch, this lane needs privacy-reviewed backend storage, clearer guardian visibility, and careful language so assigned at-home training remains teacher-directed rather than student self-reported activity.
 
@@ -112,55 +118,63 @@ Completed so far in this lane:
 - [x] Parent linking, guardian controls, parent progress view, and student progress timeline.
 - [x] Local Supabase fake-backend staging setup for safe testing before real student data.
 - [x] First fake-backend screen connection started with the public Leaderboard.
+- [x] Milestone notifications are shown and stored when admin scans cross an award threshold.
+- [x] Challenge notifications are stored and shown when admins create new challenges.
+- [x] Student profiles can print a term progress report for browser PDF export.
+- [x] Student and parent award panels now use clearer award cards with next-milestone progress, and parent certificates use the school theme.
+- [x] Student goal reflections are available as non-scoring notes, separate from any activity logging.
+- [x] Assigned at-home training now supports admin assignment, student viewing, link-open tracking, reviewed status, and parent/admin visibility.
 
 - [x] ~~5.1 Parent account linking.~~
 - [x] ~~5.2 Stronger guardian access controls.~~
 - [x] ~~5.3 Parent view for child progress, awards, and goals.~~
 - [x] ~~5.4 Student progress timeline.~~
-- [ ] 5.5 Milestone notifications.
-- [ ] 5.6 Challenge notifications.
-- [ ] 5.7 Student progress PDFs per term.
-- [ ] 5.8 Improved award and certificate display.
-- [ ] 5.9 Student-friendly goal reflection without self-reported activity logging.
-- [ ] 5.10 Complete assigned at-home training tasks with admin assignment, student viewing, and link click visibility.
+- [x] ~~5.5 Milestone notifications.~~
+- [x] ~~5.6 Challenge notifications.~~
+- [x] ~~5.7 Student progress PDFs per term.~~
+- [x] ~~5.8 Improved award and certificate display.~~
+- [x] ~~5.9 Student-friendly goal reflection without self-reported activity logging.~~
+- [x] ~~5.10 Complete assigned at-home training tasks with admin assignment, student viewing, and link click visibility.~~
 
 ## Priority 6 - Competitions And Challenges
 
-Status: Planned.
+Status: Done.
 
-- [ ] 6.1 House competitions.
-- [ ] 6.2 Class competitions.
-- [ ] 6.3 Year-level competitions.
-- [ ] 6.4 Club-wide challenges.
-- [ ] 6.5 Team and house leaderboards.
-- [ ] 6.6 Custom challenge rules.
-- [ ] 6.7 Challenge progress tracking.
-- [ ] 6.8 Challenge award/certificate tie-ins.
+- [x] ~~6.1 House competitions.~~
+- [x] ~~6.2 Class competitions.~~
+- [x] ~~6.3 Year-level competitions.~~
+- [x] ~~6.4 Club-wide challenges.~~
+- [x] ~~6.5 Team and house leaderboards.~~
+- [x] ~~6.6 Custom challenge rules.~~
+- [x] ~~6.7 Challenge progress tracking.~~
+- [x] ~~6.8 Challenge award/certificate tie-ins.~~
 
-## Priority 7 - Sports Carnival And Cross Country
+## Priority 7 - Interschool Athletics And Cross Country
 
-Status: Planned.
+Status: Done.
 
-- [ ] 7.1 Sports Carnival module.
-- [ ] 7.2 Cross Country module.
-- [ ] 7.3 PB tracking.
-- [ ] 7.4 Sprint time results.
-- [ ] 7.5 Distance event time results.
-- [ ] 7.6 Jump, throw, and length results.
-- [ ] 7.7 Field-event attempt tracking.
-- [ ] 7.8 Age champion scoring.
-- [ ] 7.9 House points.
-- [ ] 7.10 Carnival and cross country exports.
+- [x] ~~7.1 Interschool Athletics Mode module.~~
+- [x] ~~7.2 Cross Country module.~~
+- [x] ~~7.3 PB tracking.~~
+- [x] ~~7.4 Sprint time results.~~
+- [x] ~~7.5 Distance event time results.~~
+- [x] ~~7.6 Jump, throw, and length results.~~
+- [x] ~~7.7 Field-event attempt tracking.~~
+- [x] ~~7.8 Age champion scoring.~~
+- [x] ~~7.9 House points.~~
+- [x] ~~7.10 Carnival and cross country exports.~~
+- [x] ~~7.11 drag-and-drop training library for quick workout building.~~
 
 ## Priority 8 - Polish, Help, And Long-Term Enhancements
 
-Status: Parked.
+Status: Done.
 
-- [ ] 8.1 Cleaner mobile and tablet layouts.
-- [ ] 8.2 Admin help/setup notes inside the app.
-- [ ] 8.3 Program resources and lesson-plan section.
-- [ ] 8.4 Granular privacy controls such as pseudonyms and consent flags.
-- [ ] 8.5 Custom milestone thresholds.
-- [ ] 8.6 Multi-school reporting.
-- [ ] 8.7 Theme and branding settings.
-- [ ] 8.8 Accessibility audit and improvements.
+- [x] ~~8.1 Cleaner mobile and tablet layouts.~~
+- [x] ~~8.2 Admin help/setup notes inside the app.~~
+- [x] ~~8.3 Program resources and lesson-plan section.~~
+- [x] ~~8.4 Granular privacy controls such as pseudonyms and consent flags.~~
+- [x] ~~8.5 Custom milestone thresholds.~~
+- [x] ~~8.6 Multi-school reporting.~~
+- [x] ~~8.7 Theme and branding settings.~~
+- [x] ~~8.8 Accessibility audit and improvements.~~
+- [x] ~~8.9 Authorised Compass class-list sync, starting with Compass CSV import and only moving to API sync if school/department approval and credentials are provided.~~

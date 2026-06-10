@@ -44,6 +44,18 @@
   function getStudents() { return load(KEYS.students, defaultStudents()); }
   function saveStudents(s) { save(KEYS.students, s); }
 
+  function liveScanGuard() {
+    var backend = global.RunClubBackend;
+    var readiness = backend && backend.backendReadiness ? backend.backendReadiness() : { liveDataMode: false, realDataAllowed: false };
+    if (!readiness.liveDataMode) { return { ok: true, live: false }; }
+    if (backend && backend.requiresLiveBackend) {
+      var guard = backend.requiresLiveBackend();
+      if (guard.ok) { return { ok: true, live: true }; }
+      return { ok: false, live: true, message: 'Local scan write blocked until the live backend is ready.' };
+    }
+    return { ok: false, live: true, message: 'Local scan write blocked until the live backend adapter is available.' };
+  }
+
   // --- Conversions ---
   function defaultProgramSettings() {
     return {
@@ -140,6 +152,10 @@
     var scannerId = options.scanner_id || options.scannerId || 'unknown-scanner';
     var scanTime = new Date().toISOString();
     var idem = idempotencyKey(barcode, options);
+    var liveGuard = liveScanGuard();
+    if (!liveGuard.ok) {
+      return { success: false, error: liveGuard.message, barcode: barcode };
+    }
 
     if (isRapidDuplicate(barcode, options)) {
       auditScan({ barcode: barcode, scanner_id: scannerId, source: options.source || 'scanner', success: false, duplicate: true, error: 'Duplicate scan ignored', idempotency_key: idem });
@@ -160,7 +176,27 @@
     saveStudents(students);
     auditScan({ barcode: barcode, scanner_id: scannerId, source: options.source || 'scanner', success: true, duplicate: false, student_id: student.id, student_name: student.name, laps_after: student.laps, idempotency_key: idem, time: scanTime });
 
-    if (global.RunClubBackend && global.RunClubBackend.enqueueMutation) {
+    var backendStatus = 'local-only';
+    if (liveGuard.live && global.RunClubBackend && global.RunClubBackend.backendDataAccess && global.RunClubBackend.backendDataAccess.recordLapScan) {
+      backendStatus = 'live-write-started';
+      global.RunClubBackend.backendDataAccess.recordLapScan({
+        school_id: global.RunClubBackend.config().schoolId,
+        student_id: student.id,
+        session_id: options.session_id || options.sessionId || null,
+        device_id: options.device_id || options.deviceId || null,
+        barcode: barcode,
+        scanner_id: scannerId,
+        source: options.source || 'scanner',
+        scanned_at: scanTime,
+        lap_distance_km: lapDistanceKm(),
+        idempotency_key: idem,
+        metadata: {
+          scanner_id: scannerId,
+          laps_after: student.laps
+        }
+      });
+    } else if (global.RunClubBackend && global.RunClubBackend.enqueueMutation) {
+      backendStatus = 'queued';
       global.RunClubBackend.enqueueMutation('lap_entries', {
         school_id: global.RunClubBackend.config().schoolId || 'demo-school',
         student_id: student.id,
@@ -187,6 +223,7 @@
         km: lapsToKm(student.laps)
       },
       idempotency_key: idem,
+      backend_status: backendStatus,
       milestone: milestoneJustReached(student.laps)
     };
   }
@@ -226,6 +263,7 @@
     defaultStudents: defaultStudents,
     getStudents: getStudents,
     saveStudents: saveStudents,
+    liveScanGuard: liveScanGuard,
     lapsToKm: lapsToKm,
     minutesToKm: minutesToKm,
     totalKm: totalKm,

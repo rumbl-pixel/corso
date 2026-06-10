@@ -52,18 +52,24 @@ const studentId = 'STUDENT1';
 let visibleMetrics = Goals.visibleMetrics();
 assert(visibleMetrics.map((metric) => metric.key).join(',') === 'laps,time,distance', 'default visible metrics should be laps, lap time, and distance only');
 assert(Goals.metricInfo('time').label === 'Lap Time', 'time metric should be labelled Lap Time');
-assert(Goals.isSportsCarnivalMode() === false, 'sports carnival mode should be off by default');
+assert(Goals.isInterschoolAthleticsMode() === false, 'interschool athletics mode should be off by default');
+assert(Array.isArray(Goals.INTERSCHOOL_ATHLETICS_EVENTS), 'interschool athletics event catalogue should be available');
+assert(Goals.INTERSCHOOL_ATHLETICS_EVENTS.some((event) => event.name === 'Tunnel Ball'), 'event catalogue should include tunnel ball');
+assert(Goals.INTERSCHOOL_ATHLETICS_EVENTS.some((event) => event.name === 'Leader Ball'), 'event catalogue should include leader ball');
+assert(Goals.INTERSCHOOL_ATHLETICS_EVENTS.some((event) => event.name === 'Pass Ball'), 'event catalogue should include pass ball');
+assert(Goals.INTERSCHOOL_ATHLETICS_EVENTS.some((event) => event.name === '800m'), 'event catalogue should include 800m as a common longer primary event');
+assert(Goals.INTERSCHOOL_ATHLETICS_EVENTS.some((event) => event.name === 'Flag Relay'), 'event catalogue should include flag relay');
 
-Goals.setSportsCarnivalMode(true);
+Goals.setInterschoolAthleticsMode(true);
 visibleMetrics = Goals.visibleMetrics();
-assert(visibleMetrics.some((metric) => metric.key === 'jump'), 'sports carnival mode should reveal jump metric');
-assert(visibleMetrics.some((metric) => metric.key === 'throw'), 'sports carnival mode should reveal throw metric');
-assert(visibleMetrics.some((metric) => metric.key === 'length'), 'sports carnival mode should reveal length metric');
-assert(visibleMetrics.some((metric) => metric.key === 'run'), 'sports carnival mode should reveal run metric');
+assert(visibleMetrics.some((metric) => metric.key === 'jump'), 'interschool athletics mode should reveal jump metric');
+assert(visibleMetrics.some((metric) => metric.key === 'throw'), 'interschool athletics mode should reveal throw metric');
+assert(visibleMetrics.some((metric) => metric.key === 'length'), 'interschool athletics mode should reveal length metric');
+assert(visibleMetrics.some((metric) => metric.key === 'run'), 'interschool athletics mode should reveal run metric');
 
-Goals.setSportsCarnivalMode(false);
+Goals.setInterschoolAthleticsMode(false);
 visibleMetrics = Goals.visibleMetrics();
-assert(!visibleMetrics.some((metric) => metric.key === 'jump'), 'jump metric should be hidden when sports carnival mode is off');
+assert(!visibleMetrics.some((metric) => metric.key === 'jump'), 'jump metric should be hidden when interschool athletics mode is off');
 
 const initialStudent = Scan.getStudents().find((student) => student.id === studentId);
 assert(initialStudent.laps === 12, 'test expects demo STUDENT1 to start with 12 laps');
