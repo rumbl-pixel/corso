@@ -97,6 +97,9 @@ function assert(condition, message) {
     if (url.includes('/rest/v1/rpc/set_guardian_link_status')) {
       return Promise.resolve(response(200, [{ guardian_link_id: 'guardian-live-1', status: 'revoked' }]));
     }
+    if (url.includes('/rest/v1/rpc/create_training_assignment')) {
+      return Promise.resolve(response(200, [{ assignment_id: 'training-live-1', assigned_count: 2 }]));
+    }
     return Promise.resolve(response(404, { error: 'missing route' }));
   });
 
@@ -277,6 +280,22 @@ function assert(condition, message) {
   const guardianStatusBody = JSON.parse(guardianStatusCall.options.body);
   assert(guardianStatusBody.p_school_id === 'school-live-style', 'guardian link status should include school scope');
   assert(guardianStatusBody.p_status === 'revoked', 'guardian link status should persist revoke/restore state');
+
+  await backend.backendDataAccess.createTrainingAssignment({
+    title: 'Stride practice',
+    url: 'https://example.test/stride',
+    notes: 'Open and review before next run club.',
+    due_date: '2026-06-20',
+    assigned_student_ids: ['student-1', 'student-2'],
+    created_by: 'coach@example.test'
+  });
+  const trainingCall = calls.find((call) => call.url.includes('/rest/v1/rpc/create_training_assignment'));
+  assert(trainingCall, 'training assignment should write through a Supabase RPC');
+  const trainingBody = JSON.parse(trainingCall.options.body);
+  assert(trainingBody.p_school_id === 'school-live-style', 'training assignment should include school scope');
+  assert(trainingBody.p_title === 'Stride practice', 'training assignment should include title');
+  assert(trainingBody.p_assigned_student_ids.length === 2, 'training assignment should include assigned students');
+  assert(trainingBody.p_url === 'https://example.test/stride', 'training assignment should include the URL');
 
   await backend.backendDataAccess.deleteStudent({ id: 'student-2', barcode: 'STAGING2' });
   const deleteCall = calls.find((call) => call.url.includes('/rest/v1/students') && call.options.method === 'PATCH');

@@ -117,6 +117,7 @@ assert(/recordActivityCredit/.test(backendJs), 'backend adapter should expose li
 assert(/issueGuardianLink/.test(backendJs), 'backend adapter should expose live guardian link issuing');
 assert(/setGuardianLinkStatus/.test(backendJs), 'backend adapter should expose live guardian link status updates');
 assert(/verifyGuardianAccess/.test(backendJs), 'backend adapter should expose live guardian access verification');
+assert(/createTrainingAssignment/.test(backendJs), 'backend adapter should expose live training assignment creation');
 assert(/liveStyleSupabaseCheck/.test(backendJs), 'backend adapter should expose a live-style Supabase check');
 assert(/backendReadiness/.test(backendJs), 'backend adapter should expose a go-live backend readiness summary');
 assert(/requiresLiveBackend/.test(backendJs), 'backend adapter should expose a live backend guard for real student data');
@@ -343,8 +344,8 @@ assert(/training-status-list/.test(adminDashboardHtml), 'admin training tab shou
 assert(/role="tablist"/.test(adminDashboardHtml), 'admin tabs should expose a tablist role');
 assert(/aria-selected="true"/.test(adminDashboardHtml), 'admin active tab should expose selected state');
 assert(/aria-controls="tab-scanner"/.test(adminDashboardHtml), 'admin tabs should reference tab panels');
-assert(/admin-dashboard\.js\?v=25/.test(adminDashboardHtml), 'admin dashboard should request the current backend-gate dashboard script');
-assert(/backend\.js\?v=18/.test(adminDashboardHtml), 'admin dashboard should load the backend adapter before app scripts');
+assert(/admin-dashboard\.js\?v=26/.test(adminDashboardHtml), 'admin dashboard should request the current backend-gate dashboard script');
+assert(/backend\.js\?v=19/.test(adminDashboardHtml), 'admin dashboard should load the backend adapter before app scripts');
 
 const adminDashboardJs = read('admin-dashboard.js');
 assert(/MEDAL_TIERS/.test(adminDashboardJs), 'admin dashboard should calculate medal tiers');
@@ -496,6 +497,9 @@ assert(/rc_training_clicks/.test(adminDashboardJs), 'admin dashboard should read
 assert(/trainingCompletions/.test(adminDashboardJs), 'admin dashboard should read student training review completions');
 assert(/trainingCompletionFor/.test(adminDashboardJs), 'admin dashboard should show completed training review status');
 assert(/createTrainingAssignment/.test(adminDashboardJs), 'admin dashboard should create training assignments');
+assert(/saveTrainingAssignmentWithBackend/.test(adminDashboardJs), 'admin dashboard should guard training assignments before storing student tasks');
+assert(/backendDataAccess\.createTrainingAssignment/.test(adminDashboardJs), 'admin dashboard should create training assignments through the backend when live-ready');
+assert(/Local training assignment blocked/.test(adminDashboardJs), 'admin dashboard should block local-only training assignments in live data mode');
 assert(/renderTrainingStatus/.test(adminDashboardJs), 'admin dashboard should render training status');
 assert(/editStudentHouseEl/.test(adminDashboardJs), 'admin dashboard should persist optional student houses');
 assert(/editStudentTeamEl/.test(adminDashboardJs), 'admin dashboard should persist optional student teams');
@@ -523,7 +527,7 @@ const parentHtml = read('parent.html');
 assert(/id="parent-form"/.test(parentHtml), 'parent portal should expose a login form');
 assert(/DEMO/.test(parentHtml), 'parent portal should show a DEMO hint');
 assert(/parent\.js/.test(parentHtml), 'parent portal should load parent.js');
-assert(/backend\.js\?v=18/.test(parentHtml), 'parent portal should load the backend adapter before parent access checks');
+assert(/backend\.js\?v=19/.test(parentHtml), 'parent portal should load the backend adapter before parent access checks');
 assert(!/Log Home Activity|Home Activity|parent-activity-form/.test(parentHtml), 'parent portal should not include home activity logging');
 assert(/print-parent-certificate-btn/.test(parentHtml), 'parent portal should let parents print child award certificates');
 assert(/guardian-link-code/.test(parentHtml), 'parent portal should explain guardian link codes');
@@ -614,12 +618,12 @@ assert(/skip-link/.test(styles), 'styles should include skip-link focus styling'
 assert(/:focus-visible/.test(styles), 'styles should include visible keyboard focus styles');
 assert(/multi-school-report-card/.test(styles), 'styles should include multi-school report styling');
 assert(/styles\.css\?v=22/.test(leaderboardHtml), 'leaderboard page should request the completed Priority 8 stylesheet version');
-assert(/admin-dashboard\.js\?v=25/.test(adminDashboardHtml), 'admin dashboard should request the current backend-gate dashboard script');
+assert(/admin-dashboard\.js\?v=26/.test(adminDashboardHtml), 'admin dashboard should request the current backend-gate dashboard script');
 assert(/goals\.js\?v=4/.test(adminDashboardHtml), 'admin dashboard should request a fresh goals script after interschool goals changes');
 assert(/admin-goals\.js\?v=4/.test(adminDashboardHtml), 'admin dashboard should request a fresh admin goals script after interschool goals changes');
 assert(/goals\.js\?v=4/.test(studentProfileHtml), 'student profile should request a fresh goals script');
 assert(/goals\.js\?v=4/.test(studentHtml), 'student login should request a fresh goals script');
-assert(/gwynne-park-run-club-v43/.test(serviceWorker), 'service worker cache should be bumped for the Priority 0 backend gate update');
+assert(/gwynne-park-run-club-v44/.test(serviceWorker), 'service worker cache should be bumped for the Priority 0 backend gate update');
 assert(/backend\.js/.test(serviceWorker), 'service worker should cache the backend adapter');
 assertFile('tests/backend-live-style.test.js');
 assertFile('tests/scanning-live-mode.test.js');
@@ -730,6 +734,7 @@ assertFile('supabase/migrations/202606100002_priority0_manual_adjustments.sql');
 assertFile('supabase/migrations/202606100003_priority0_scan_undo.sql');
 assertFile('supabase/migrations/202606100004_priority0_activity_credits.sql');
 assertFile('supabase/migrations/202606100005_priority0_guardian_links.sql');
+assertFile('supabase/migrations/202606100006_priority0_training_assignments.sql');
 const initialSchema = read('supabase/migrations/202606080001_initial_schema.sql');
 const syncSchema = read('supabase/migrations/202606080002_priority3_sync_jobs.sql');
 const priority0StudentSchema = read('supabase/migrations/202606100001_priority0_student_privacy_fields.sql');
@@ -737,6 +742,7 @@ const priority0AdjustmentSchema = read('supabase/migrations/202606100002_priorit
 const priority0ScanUndoSchema = read('supabase/migrations/202606100003_priority0_scan_undo.sql');
 const priority0ActivitySchema = read('supabase/migrations/202606100004_priority0_activity_credits.sql');
 const priority0GuardianSchema = read('supabase/migrations/202606100005_priority0_guardian_links.sql');
+const priority0TrainingSchema = read('supabase/migrations/202606100006_priority0_training_assignments.sql');
 ['pseudonym','consent_status','hide_public_name','share_certificates_publicly','house','team'].forEach((column) => {
   assert(new RegExp(`add column if not exists ${column}`).test(priority0StudentSchema), `Priority 0 student schema should add ${column}`);
 });
@@ -753,6 +759,9 @@ assert(/create table if not exists public\.guardian_links/.test(priority0Guardia
 assert(/issue_guardian_link/.test(priority0GuardianSchema), 'Priority 0 schema should add guardian link issuing RPC');
 assert(/set_guardian_link_status/.test(priority0GuardianSchema), 'Priority 0 schema should add guardian link status RPC');
 assert(/guardian-link/.test(priority0GuardianSchema), 'guardian link RPC should record traceable audit metadata');
+assert(/create_training_assignment/.test(priority0TrainingSchema), 'Priority 0 schema should add a training assignment RPC');
+assert(/training_assignment_students/.test(priority0TrainingSchema), 'training assignment RPC should persist assigned students');
+assert(/training-assignment/.test(priority0TrainingSchema), 'training assignment RPC should record traceable audit metadata');
 [
   'schools',
   'school_users',
