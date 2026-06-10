@@ -15,10 +15,12 @@ This is the quick-read roadmap. `FEATURES.md` remains the full source of truth.
 - [x] Priority 6 - Competitions And Challenges: 8 / 8 complete. Done.
 - [x] Priority 7 - Interschool Athletics And Cross Country: 11 / 11 complete. Done.
 - [x] Priority 8 - Polish, Help, And Long-Term Enhancements: 9 / 9 complete. Done.
+- [x] Priority 9 - Smart Coach And Celebration Tools: 5 / 5 skeletons created. Bookmarked for later.
 
 ## Current Focus
 
-- [x] All tracked feature priorities are complete. Remaining launch work is operational setup, school approval, and real Supabase/Auth configuration before live student data is entered.
+- [x] All core tracked feature priorities are complete. Remaining launch work is operational setup, school approval, and real Supabase/Auth configuration before live student data is entered.
+- [x] Priority 9 smart coach skeletons created for Mini Coach AI, Personal Bests, Coach Notes, Celebration Wall, and Next Best Action Admin Cards; full data logic is parked for later privacy review.
 - [x] 3.1 Backend stack decision completed: Supabase Postgres/Auth/RLS/Edge Functions.
 - [x] 3.2 Initial production schema completed with RLS enabled on student/school data tables.
 - [x] Priority 3 backend adapter, idempotent scan sync, report views, backup/export tracking, and demo migration path completed.
@@ -136,3 +138,4 @@ Priority 0 implementation is complete. Keep demo mode enabled until the real sch
 - [x] Priority 6: house/class/year competitions and challenge progress.
 - [x] Priority 7: Interschool Athletics and Cross Country modules.
 - [x] Priority 8: mobile polish, help notes, privacy controls, branding settings, accessibility audit, and authorised Compass class-list sync.
+- [x] Priority 9: smart coach and celebration skeletons bookmarked for a later full build.

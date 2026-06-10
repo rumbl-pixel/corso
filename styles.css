@@ -562,6 +562,112 @@ html[data-theme="dark"] [style*="color: #888"] {
   color: var(--muted) !important;
 }
 
+.section-heading-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.muted-copy {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.bookmark-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  border-radius: 999px;
+  border: 1px solid rgba(201,151,34,0.42);
+  background: rgba(255,248,221,0.9);
+  color: #533f08;
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 0.22rem 0.7rem;
+  white-space: nowrap;
+}
+
+.future-bookmark-card {
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.16), rgba(255,255,255,0.045)),
+    var(--glass-surface);
+}
+
+.future-skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.9rem;
+  margin-top: 1rem;
+}
+
+.future-skeleton-card,
+.coach-note-placeholder {
+  border: 1px solid color-mix(in srgb, var(--line) 72%, var(--uniform-gold) 28%);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.06)),
+    rgba(255,255,255,0.68);
+  padding: 0.9rem;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.42);
+}
+
+.future-skeleton-card--wide {
+  grid-column: 1 / -1;
+}
+
+.future-skeleton-card span {
+  display: inline-flex;
+  color: #6f520c;
+  background: rgba(255,248,221,0.95);
+  border: 1px solid rgba(201,151,34,0.34);
+  border-radius: 999px;
+  padding: 0.12rem 0.52rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.future-skeleton-card h3 {
+  margin: 0.58rem 0 0.35rem;
+  color: var(--obsidian-navy-3);
+}
+
+.future-skeleton-card p,
+.future-skeleton-card small,
+.coach-note-placeholder span {
+  color: var(--muted);
+}
+
+.future-skeleton-card small {
+  display: block;
+  margin-top: 0.65rem;
+  font-size: 0.78rem;
+}
+
+.coach-note-placeholder {
+  display: grid;
+  gap: 0.25rem;
+}
+
+html[data-theme="dark"] .bookmark-pill,
+html[data-theme="dark"] .future-skeleton-card span {
+  background: rgba(242,216,145,0.9);
+  color: #071426;
+}
+
+html[data-theme="dark"] .future-skeleton-card,
+html[data-theme="dark"] .coach-note-placeholder {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03)),
+    rgba(7,20,38,0.66);
+  border-color: rgba(242,216,145,0.24);
+}
+
+html[data-theme="dark"] .future-skeleton-card h3,
+html[data-theme="dark"] .coach-note-placeholder strong {
+  color: #edf4ff;
+}
+
 /* ===========================
    Steps
 =========================== */
