@@ -881,48 +881,96 @@
     return 'GP-' + seed + '-' + random;
   }
 
-  function upsertGuardianLink(student){
-    var rows=guardianLinks();
-    var existing=rows.find(function(row){return row.student_id===student.id;});
-    var code=generateGuardianLinkCode(student);
-    if(existing){
-      existing.code=code;
-      existing.student_name=student.name;
-      existing.year=student.year;
-      existing.class_name=student.cls;
-      existing.status='active';
-      existing.expires_at=guardianExpiryDate();
-      existing.updated_at=new Date().toISOString();
-    } else {
-      rows.push({student_id:student.id,student_name:student.name,year:student.year,class_name:student.cls,code:code,status:'active',expires_at:guardianExpiryDate(),created_at:new Date().toISOString(),updated_at:new Date().toISOString()});
+  function guardianLinkFromBackendRow(student,row){
+    row=Array.isArray(row)?row[0]:row;
+    return {
+      student_id:student.id,
+      student_name:student.name,
+      year:student.year,
+      class_name:student.cls,
+      code:(row&&row.code)||generateGuardianLinkCode(student),
+      status:(row&&row.status)||'active',
+      expires_at:(row&&row.expires_at)||guardianExpiryDate(),
+      created_at:new Date().toISOString(),
+      updated_at:new Date().toISOString()
+    };
+  }
+
+  function saveGuardianLinkWithBackend(student){
+    var guard=liveRosterGuard();
+    if(!guard.ok){return Promise.resolve({ok:false,blocked:true,error:guard.message||'Local guardian link blocked.'});}
+    if(guard.live&&window.RunClubBackend&&window.RunClubBackend.backendDataAccess&&window.RunClubBackend.backendDataAccess.issueGuardianLink){
+      return window.RunClubBackend.backendDataAccess.issueGuardianLink(student).then(function(result){
+        if(!result.ok){return result;}
+        return Object.assign({},result,{guardian_link:guardianLinkFromBackendRow(student,result.data)});
+      });
     }
-    saveGuardianLinks(rows);
-    renderGuardianLinks();
+    return Promise.resolve({ok:true,local:true,guardian_link:guardianLinkFromBackendRow(student,null)});
+  }
+
+  function setGuardianLinkStatusWithBackend(row,status){
+    var guard=liveRosterGuard();
+    if(!guard.ok){return Promise.resolve({ok:false,blocked:true,error:guard.message||'Local guardian link blocked.'});}
+    if(guard.live&&window.RunClubBackend&&window.RunClubBackend.backendDataAccess&&window.RunClubBackend.backendDataAccess.setGuardianLinkStatus){
+      return window.RunClubBackend.backendDataAccess.setGuardianLinkStatus({
+        student_id:isUuid(row.student_id)?row.student_id:null,
+        code:row.code,
+        status:status
+      });
+    }
+    return Promise.resolve({ok:true,local:true});
+  }
+
+  function upsertGuardianLink(student){
+    saveGuardianLinkWithBackend(student).then(function(result){
+      if(!result.ok){showResult(addStudentResultEl,{success:false,error:result.error||result.reason||'Local guardian link blocked.'});return;}
+      var rows=guardianLinks();
+      var existing=rows.find(function(row){return row.student_id===student.id;});
+      var link=result.guardian_link||guardianLinkFromBackendRow(student,null);
+      if(existing){
+        Object.assign(existing,link,{created_at:existing.created_at||link.created_at});
+      } else {
+        rows.push(link);
+      }
+      saveGuardianLinks(rows);
+      renderGuardianLinks();
+      showResult(addStudentResultEl,{success:true,message:'Guardian link issued.',student:student.name,code:link.code});
+    });
   }
 
   function generateMissingGuardianLinks(){
     var rows=guardianLinks();
     var has={};
     rows.forEach(function(row){has[row.student_id]=true;});
-    getStudents().forEach(function(student){
-      if(!has[student.id]){
-        rows.push({student_id:student.id,student_name:student.name,year:student.year,class_name:student.cls,code:generateGuardianLinkCode(student),status:'active',expires_at:guardianExpiryDate(),created_at:new Date().toISOString(),updated_at:new Date().toISOString()});
-      }
+    var missing=getStudents().filter(function(student){return !has[student.id];});
+    Promise.all(missing.map(saveGuardianLinkWithBackend)).then(function(results){
+      var blocked=results.find(function(result){return !result.ok;});
+      if(blocked){showResult(addStudentResultEl,{success:false,error:blocked.error||blocked.reason||'Local guardian link blocked.'});return;}
+      results.forEach(function(result,index){
+        rows.push(result.guardian_link||guardianLinkFromBackendRow(missing[index],null));
+      });
+      saveGuardianLinks(rows);
+      renderGuardianLinks();
+      showResult(addStudentResultEl,{success:true,message:'Guardian links generated.',count:missing.length});
     });
-    saveGuardianLinks(rows);
-    renderGuardianLinks();
   }
 
   function setGuardianLinkStatus(studentId,status){
     var rows=guardianLinks();
-    rows.forEach(function(row){
-      if(row.student_id===studentId){
-        row.status=status;
-        row.updated_at=new Date().toISOString();
-      }
+    var target=rows.find(function(row){return row.student_id===studentId;});
+    if(!target){return;}
+    setGuardianLinkStatusWithBackend(target,status).then(function(result){
+      if(!result.ok){showResult(addStudentResultEl,{success:false,error:result.error||result.reason||'Local guardian link blocked.'});return;}
+      rows.forEach(function(row){
+        if(row.student_id===studentId){
+          row.status=status;
+          row.updated_at=new Date().toISOString();
+        }
+      });
+      saveGuardianLinks(rows);
+      renderGuardianLinks();
+      showResult(addStudentResultEl,{success:true,message:'Guardian link '+(status==='revoked'?'revoked.':'restored.'),student:target.student_name});
     });
-    saveGuardianLinks(rows);
-    renderGuardianLinks();
   }
 
   function guardianLinkStatus(row){

@@ -422,6 +422,28 @@
         p_metadata: activity.metadata || {}
       });
     },
+    issueGuardianLink: function (student) {
+      var c = config();
+      return callRpc('issue_guardian_link', {
+        p_school_id: c.schoolId,
+        p_student_id: student.id || null,
+        p_barcode: student.barcode || '',
+        p_student_name: student.name || '',
+        p_year_group: student.year || '',
+        p_class_name: student.cls || '',
+        p_metadata: { source_screen: 'admin-dashboard' }
+      });
+    },
+    setGuardianLinkStatus: function (link) {
+      var c = config();
+      return callRpc('set_guardian_link_status', {
+        p_school_id: c.schoolId,
+        p_student_id: link.student_id || null,
+        p_code: link.code || '',
+        p_status: link.status,
+        p_metadata: { source_screen: 'admin-dashboard' }
+      });
+    },
     leaderboardTotals: function () {
       if (!isConfigured()) { return Promise.resolve(localLoad('rc_students', [])); }
       return request('GET', TABLES.leaderboardTotals, null, 'school_id=eq.' + encodeURIComponent(config().schoolId) + '&order=total_laps.desc')
