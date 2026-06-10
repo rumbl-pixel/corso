@@ -2395,14 +2395,25 @@ html[data-theme="dark"] .reflection-item p {
   border-radius: 999px;
   border: 1px solid rgba(7,20,38,0.16);
   background: #fff;
-  color: var(--ink);
+  color: var(--obsidian-navy-2);
   font-size: 0.8rem;
   margin: 0.18rem;
 }
 
 .athletics-event-chip small {
-  color: var(--muted);
+  color: #5d718a;
   font-size: 0.68rem;
+}
+
+html[data-theme="dark"] .athletics-event-chip {
+  border-color: rgba(242,216,145,0.48);
+  background: linear-gradient(180deg, rgba(255,248,221,0.98), rgba(242,216,145,0.88));
+  color: #071426;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.72);
+}
+
+html[data-theme="dark"] .athletics-event-chip small {
+  color: #52657f;
 }
 
 /* --- Admin goals modal --- */
