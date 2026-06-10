@@ -460,6 +460,17 @@
         p_metadata: assignment.metadata || {}
       });
     },
+    recordTrainingEvent: function (event) {
+      var c = config();
+      return callRpc('record_training_event', {
+        p_school_id: c.schoolId,
+        p_assignment_id: event.assignment_id,
+        p_student_id: event.student_id,
+        p_event_type: event.event_type,
+        p_title: event.title || '',
+        p_metadata: event.metadata || {}
+      });
+    },
     leaderboardTotals: function () {
       if (!isConfigured()) { return Promise.resolve(localLoad('rc_students', [])); }
       return request('GET', TABLES.leaderboardTotals, null, 'school_id=eq.' + encodeURIComponent(config().schoolId) + '&order=total_laps.desc')
