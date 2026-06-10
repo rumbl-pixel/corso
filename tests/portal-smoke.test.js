@@ -680,7 +680,8 @@ assert(/body\.mobile-header-compact \.site-header/.test(styles), 'site header sh
 assert(/mobile-nav-open/.test(styles), 'site header should support a pop-out menu state');
 assert(/mobile-menu-toggle/.test(styles), 'site header should include a compact menu button style');
 assert(/cubic-bezier\(0\.2,\s*0,\s*0,\s*1\)/.test(styles), 'compact header motion should use a smoother easing curve');
-assert(/body\.mobile-header-compact \.tagline[\s\S]*max-height:\s*0[\s\S]*opacity:\s*0/.test(styles), 'compact header should fade and collapse the tagline instead of snapping it off');
+assert(/--header-logo-size/.test(styles) && /--header-tagline-opacity/.test(styles), 'compact header should expose scroll-driven motion variables');
+assert(/\.tagline[\s\S]*max-height:\s*var\(--header-tagline-max\)[\s\S]*opacity:\s*var\(--header-tagline-opacity\)/.test(styles), 'compact header should fade and collapse the tagline through motion variables');
 assert(/body\.mobile-header-compact \.mobile-menu-toggle[\s\S]*order:\s*3/.test(styles), 'compact header should place the menu button after the theme toggle');
 assert(/body\.mobile-header-compact \.theme-toggle[\s\S]*order:\s*2/.test(styles), 'compact header should place the theme toggle before the menu button');
 assert(/body\.mobile-header-compact \.main-nav[\s\S]*position:\s*absolute[\s\S]*opacity:\s*0[\s\S]*transform:\s*translateY\(-8px\) scale\(0\.98\)/.test(styles), 'compact header should animate the hidden nav state');
@@ -693,8 +694,8 @@ assert(/privacy-badge/.test(styles), 'styles should include privacy badge stylin
 assert(/skip-link/.test(styles), 'styles should include skip-link focus styling');
 assert(/:focus-visible/.test(styles), 'styles should include visible keyboard focus styles');
 assert(/multi-school-report-card/.test(styles), 'styles should include multi-school report styling');
-assert(/styles\.css\?v=44/.test(leaderboardHtml), 'leaderboard page should request the gold-tinted motion, medical, and dark contrast stylesheet version');
-assert(/theme\.js\?v=6/.test(studentProfileHtml), 'student profile should load the shared light/dark theme switch');
+assert(/styles\.css\?v=45/.test(leaderboardHtml), 'leaderboard page should request the gold-tinted motion, medical, and dark contrast stylesheet version');
+assert(/theme\.js\?v=7/.test(studentProfileHtml), 'student profile should load the shared light/dark theme switch');
 assert(/data-theme="dark"/.test(styles), 'site styles should define dark theme overrides');
 assert(/theme-toggle/.test(styles), 'site styles should include the top light/dark mode switch');
 assert(/html\[data-theme="dark"\]\s+\.barcode-card-preview[\s\S]*background:\s*#fff[\s\S]*color:\s*#102a43/.test(styles), 'dark mode should keep printable barcode card text readable on the white card');
@@ -706,7 +707,8 @@ assert(/data-theme-toggle/.test(themeJs), 'theme switch should inject a header t
 assert(/☾/.test(themeJs) && /☀/.test(themeJs), 'theme switch should use moon and sun icons instead of text labels');
 assert(/requestAnimationFrame/.test(themeJs), 'theme script should smooth scroll-driven compact header updates');
 assert(/data-mobile-menu-toggle/.test(themeJs), 'theme script should inject the compact mobile menu control');
-assert(/currentlyCompact \? window\.scrollY > 24 : window\.scrollY > 96/.test(themeJs), 'theme script should use hysteresis so the compact menu does not flicker at page edges');
+assert(/scrollProgress = Math\.max\(0, Math\.min\(1, window\.scrollY \/ 132\)\)/.test(themeJs), 'theme script should drive header shrink with scroll progress');
+assert(/currentlyCompact \? window\.scrollY > 32 : window\.scrollY > 132/.test(themeJs), 'theme script should use hysteresis so the compact menu does not flicker at page edges');
 assert(/mobile-nav-open/.test(themeJs), 'theme script should toggle the pop-out mobile nav');
 assert(/page-kiosk/.test(themeJs), 'theme switch should stay out of the locked kiosk surface');
 assert(/feature-suggestion-btn/.test(adminDashboardHtml), 'admin dashboard footer should include a feature suggestion button');
@@ -718,7 +720,7 @@ assert(/goals\.js\?v=4/.test(adminDashboardHtml), 'admin dashboard should reques
 assert(/admin-goals\.js\?v=4/.test(adminDashboardHtml), 'admin dashboard should request a fresh admin goals script after interschool goals changes');
 assert(/goals\.js\?v=4/.test(studentProfileHtml), 'student profile should request a fresh goals script');
 assert(/goals\.js\?v=4/.test(studentHtml), 'student login should request a fresh goals script');
-assert(/gwynne-park-run-club-v70/.test(serviceWorker), 'service worker cache should be bumped for the pale gold feature suggestion button');
+assert(/gwynne-park-run-club-v71/.test(serviceWorker), 'service worker cache should be bumped for the fluid compact header motion');
 assert(/backend\.js/.test(serviceWorker), 'service worker should cache the backend adapter');
 assertFile('tests/backend-live-style.test.js');
 assertFile('tests/scanning-live-mode.test.js');
