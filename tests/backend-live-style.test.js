@@ -100,6 +100,9 @@ function assert(condition, message) {
     if (url.includes('/rest/v1/rpc/create_training_assignment')) {
       return Promise.resolve(response(200, [{ assignment_id: 'training-live-1', assigned_count: 2 }]));
     }
+    if (url.includes('/rest/v1/rpc/record_training_event')) {
+      return Promise.resolve(response(200, [{ event_id: 'training-event-live-1', event_type: 'opened' }]));
+    }
     return Promise.resolve(response(404, { error: 'missing route' }));
   });
 
@@ -296,6 +299,21 @@ function assert(condition, message) {
   assert(trainingBody.p_title === 'Stride practice', 'training assignment should include title');
   assert(trainingBody.p_assigned_student_ids.length === 2, 'training assignment should include assigned students');
   assert(trainingBody.p_url === 'https://example.test/stride', 'training assignment should include the URL');
+
+  await backend.backendDataAccess.recordTrainingEvent({
+    assignment_id: 'training-live-1',
+    student_id: 'student-1',
+    event_type: 'opened',
+    title: 'Stride practice',
+    metadata: { source_screen: 'student-profile' }
+  });
+  const trainingEventCall = calls.find((call) => call.url.includes('/rest/v1/rpc/record_training_event'));
+  assert(trainingEventCall, 'training event should write through a Supabase RPC');
+  const trainingEventBody = JSON.parse(trainingEventCall.options.body);
+  assert(trainingEventBody.p_school_id === 'school-live-style', 'training event should include school scope');
+  assert(trainingEventBody.p_assignment_id === 'training-live-1', 'training event should include assignment id');
+  assert(trainingEventBody.p_student_id === 'student-1', 'training event should include student id');
+  assert(trainingEventBody.p_event_type === 'opened', 'training event should include opened/reviewed type');
 
   await backend.backendDataAccess.deleteStudent({ id: 'student-2', barcode: 'STAGING2' });
   const deleteCall = calls.find((call) => call.url.includes('/rest/v1/students') && call.options.method === 'PATCH');

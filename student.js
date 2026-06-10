@@ -309,16 +309,47 @@
     });
   }
 
+  function liveStudentDataGuard() {
+    var backend = window.RunClubBackend;
+    var readiness = window.RunClubBackend && window.RunClubBackend.backendReadiness ? window.RunClubBackend.backendReadiness() : { liveDataMode: false, realDataAllowed: false };
+    if (!readiness.liveDataMode) { return { ok: true, live: false }; }
+    if (backend && backend.requiresLiveBackend) {
+      var guard = backend.requiresLiveBackend();
+      if (guard.ok) { return { ok: true, live: true }; }
+      return { ok: false, live: true, message: 'Local training event blocked until the live backend is ready.' };
+    }
+    return { ok: false, live: true, message: 'Local training event blocked until the live backend is ready.' };
+  }
+
+  function recordTrainingEventWithBackend(task, eventType) {
+    var guard = liveStudentDataGuard();
+    if (!guard.ok) { return Promise.resolve({ ok: false, blocked: true, error: guard.message || 'Local training event blocked.' }); }
+    if (guard.live && window.RunClubBackend && window.RunClubBackend.backendDataAccess && window.RunClubBackend.backendDataAccess.recordTrainingEvent) {
+      return window.RunClubBackend.backendDataAccess.recordTrainingEvent({
+        assignment_id: task.backend_id || task.id,
+        student_id: currentStudent.id,
+        event_type: eventType,
+        title: task.title,
+        metadata: { source_screen: 'student-profile', student_name: currentStudent.name }
+      });
+    }
+    return Promise.resolve({ ok: true, local: true });
+  }
+
   function recordTrainingClick(task) {
-    var clicks = loadLocal(TRAINING_CLICKS_KEY, []);
-    clicks.push({
-      assignment_id: task.id,
-      student_id: currentStudent.id,
-      student_name: currentStudent.name,
-      title: task.title,
-      opened_at: new Date().toISOString()
+    return recordTrainingEventWithBackend(task, 'opened').then(function (result) {
+      if (!result.ok) { return result; }
+      var clicks = loadLocal(TRAINING_CLICKS_KEY, []);
+      clicks.push({
+        assignment_id: task.id,
+        student_id: currentStudent.id,
+        student_name: currentStudent.name,
+        title: task.title,
+        opened_at: new Date().toISOString()
+      });
+      saveLocal(TRAINING_CLICKS_KEY, clicks);
+      return result;
     });
-    saveLocal(TRAINING_CLICKS_KEY, clicks);
   }
 
   function trainingOpened(taskId) {
@@ -338,15 +369,19 @@
   }
 
   function recordTrainingCompletion(task) {
-    var rows = loadLocal(TRAINING_COMPLETIONS_KEY, []);
-    rows.push({
-      assignment_id: task.id,
-      student_id: currentStudent.id,
-      student_name: currentStudent.name,
-      title: task.title,
-      completed_at: new Date().toISOString()
+    return recordTrainingEventWithBackend(task, 'reviewed').then(function (result) {
+      if (!result.ok) { return result; }
+      var rows = loadLocal(TRAINING_COMPLETIONS_KEY, []);
+      rows.push({
+        assignment_id: task.id,
+        student_id: currentStudent.id,
+        student_name: currentStudent.name,
+        title: task.title,
+        completed_at: new Date().toISOString()
+      });
+      saveLocal(TRAINING_COMPLETIONS_KEY, rows.slice(-500));
+      return result;
     });
-    saveLocal(TRAINING_COMPLETIONS_KEY, rows.slice(-500));
   }
 
   function renderTraining() {
@@ -379,9 +414,11 @@
       button.addEventListener('click', function () {
         var task = tasks.find(function (item) { return item.id === button.dataset.trainingId; });
         if (task) {
-          recordTrainingCompletion(task);
-          renderTraining();
-          renderStudentTimeline();
+          recordTrainingCompletion(task).then(function (result) {
+            if (!result.ok) { return; }
+            renderTraining();
+            renderStudentTimeline();
+          });
         }
       });
     });

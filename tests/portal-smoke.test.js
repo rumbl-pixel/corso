@@ -118,6 +118,7 @@ assert(/issueGuardianLink/.test(backendJs), 'backend adapter should expose live 
 assert(/setGuardianLinkStatus/.test(backendJs), 'backend adapter should expose live guardian link status updates');
 assert(/verifyGuardianAccess/.test(backendJs), 'backend adapter should expose live guardian access verification');
 assert(/createTrainingAssignment/.test(backendJs), 'backend adapter should expose live training assignment creation');
+assert(/recordTrainingEvent/.test(backendJs), 'backend adapter should expose live training event records');
 assert(/liveStyleSupabaseCheck/.test(backendJs), 'backend adapter should expose a live-style Supabase check');
 assert(/backendReadiness/.test(backendJs), 'backend adapter should expose a go-live backend readiness summary');
 assert(/requiresLiveBackend/.test(backendJs), 'backend adapter should expose a live backend guard for real student data');
@@ -176,6 +177,9 @@ assert(/awardDisplayRows/.test(studentJs), 'student portal should build richer a
 assert(/award-card-grid/.test(studentJs), 'student portal should render awards as polished award cards');
 assert(/timelineKind/.test(studentJs), 'student portal should label timeline event types');
 assert(/recordTrainingClick/.test(studentJs), 'student portal should record when a student opens assigned training');
+assert(/recordTrainingEventWithBackend/.test(studentJs), 'student portal should guard training events before storing student progress');
+assert(/RunClubBackend\.backendDataAccess\.recordTrainingEvent/.test(studentJs), 'student portal should record training events through the backend when live-ready');
+assert(/Local training event blocked/.test(studentJs), 'student portal should block local-only training events in live data mode');
 assert(/TRAINING_COMPLETIONS_KEY/.test(studentJs), 'student portal should store training review completions separately');
 assert(/recordTrainingCompletion/.test(studentJs), 'student portal should let students mark assigned training as reviewed');
 assert(/training-reviewed-btn/.test(studentJs), 'student training cards should include a reviewed action');
@@ -183,7 +187,7 @@ assert(/GOAL_REFLECTIONS_KEY/.test(studentJs), 'student portal should store goal
 assert(/recordGoalReflection/.test(studentJs), 'student portal should save goal reflections');
 assert(/renderGoalReflections/.test(studentJs), 'student portal should render goal reflections');
 assert(!/rc_selfreports/.test(studentJs), 'student reflections should not reuse self-reported activity storage');
-assert(/student\.js\?v=13/.test(studentProfileHtml) && /student\.js\?v=13/.test(studentHtml), 'student pages should request the current training-completion-aware student script');
+assert(/student\.js\?v=14/.test(studentProfileHtml) && /student\.js\?v=14/.test(studentHtml), 'student pages should request the current training-completion-aware student script');
 
 const homeHtml = read('index.html');
 assert(!/href="kiosk\.html"|Scanner kiosk/.test(homeHtml), 'public home page should not link directly to the admin-only kiosk');
@@ -344,8 +348,8 @@ assert(/training-status-list/.test(adminDashboardHtml), 'admin training tab shou
 assert(/role="tablist"/.test(adminDashboardHtml), 'admin tabs should expose a tablist role');
 assert(/aria-selected="true"/.test(adminDashboardHtml), 'admin active tab should expose selected state');
 assert(/aria-controls="tab-scanner"/.test(adminDashboardHtml), 'admin tabs should reference tab panels');
-assert(/admin-dashboard\.js\?v=26/.test(adminDashboardHtml), 'admin dashboard should request the current backend-gate dashboard script');
-assert(/backend\.js\?v=19/.test(adminDashboardHtml), 'admin dashboard should load the backend adapter before app scripts');
+assert(/admin-dashboard\.js\?v=27/.test(adminDashboardHtml), 'admin dashboard should request the current backend-gate dashboard script');
+assert(/backend\.js\?v=20/.test(adminDashboardHtml), 'admin dashboard should load the backend adapter before app scripts');
 
 const adminDashboardJs = read('admin-dashboard.js');
 assert(/MEDAL_TIERS/.test(adminDashboardJs), 'admin dashboard should calculate medal tiers');
@@ -527,7 +531,7 @@ const parentHtml = read('parent.html');
 assert(/id="parent-form"/.test(parentHtml), 'parent portal should expose a login form');
 assert(/DEMO/.test(parentHtml), 'parent portal should show a DEMO hint');
 assert(/parent\.js/.test(parentHtml), 'parent portal should load parent.js');
-assert(/backend\.js\?v=19/.test(parentHtml), 'parent portal should load the backend adapter before parent access checks');
+assert(/backend\.js\?v=20/.test(parentHtml), 'parent portal should load the backend adapter before parent access checks');
 assert(!/Log Home Activity|Home Activity|parent-activity-form/.test(parentHtml), 'parent portal should not include home activity logging');
 assert(/print-parent-certificate-btn/.test(parentHtml), 'parent portal should let parents print child award certificates');
 assert(/guardian-link-code/.test(parentHtml), 'parent portal should explain guardian link codes');
@@ -618,12 +622,12 @@ assert(/skip-link/.test(styles), 'styles should include skip-link focus styling'
 assert(/:focus-visible/.test(styles), 'styles should include visible keyboard focus styles');
 assert(/multi-school-report-card/.test(styles), 'styles should include multi-school report styling');
 assert(/styles\.css\?v=22/.test(leaderboardHtml), 'leaderboard page should request the completed Priority 8 stylesheet version');
-assert(/admin-dashboard\.js\?v=26/.test(adminDashboardHtml), 'admin dashboard should request the current backend-gate dashboard script');
+assert(/admin-dashboard\.js\?v=27/.test(adminDashboardHtml), 'admin dashboard should request the current backend-gate dashboard script');
 assert(/goals\.js\?v=4/.test(adminDashboardHtml), 'admin dashboard should request a fresh goals script after interschool goals changes');
 assert(/admin-goals\.js\?v=4/.test(adminDashboardHtml), 'admin dashboard should request a fresh admin goals script after interschool goals changes');
 assert(/goals\.js\?v=4/.test(studentProfileHtml), 'student profile should request a fresh goals script');
 assert(/goals\.js\?v=4/.test(studentHtml), 'student login should request a fresh goals script');
-assert(/gwynne-park-run-club-v44/.test(serviceWorker), 'service worker cache should be bumped for the Priority 0 backend gate update');
+assert(/gwynne-park-run-club-v45/.test(serviceWorker), 'service worker cache should be bumped for the Priority 0 backend gate update');
 assert(/backend\.js/.test(serviceWorker), 'service worker should cache the backend adapter');
 assertFile('tests/backend-live-style.test.js');
 assertFile('tests/scanning-live-mode.test.js');
@@ -735,6 +739,7 @@ assertFile('supabase/migrations/202606100003_priority0_scan_undo.sql');
 assertFile('supabase/migrations/202606100004_priority0_activity_credits.sql');
 assertFile('supabase/migrations/202606100005_priority0_guardian_links.sql');
 assertFile('supabase/migrations/202606100006_priority0_training_assignments.sql');
+assertFile('supabase/migrations/202606100007_priority0_training_events.sql');
 const initialSchema = read('supabase/migrations/202606080001_initial_schema.sql');
 const syncSchema = read('supabase/migrations/202606080002_priority3_sync_jobs.sql');
 const priority0StudentSchema = read('supabase/migrations/202606100001_priority0_student_privacy_fields.sql');
@@ -743,6 +748,7 @@ const priority0ScanUndoSchema = read('supabase/migrations/202606100003_priority0
 const priority0ActivitySchema = read('supabase/migrations/202606100004_priority0_activity_credits.sql');
 const priority0GuardianSchema = read('supabase/migrations/202606100005_priority0_guardian_links.sql');
 const priority0TrainingSchema = read('supabase/migrations/202606100006_priority0_training_assignments.sql');
+const priority0TrainingEventsSchema = read('supabase/migrations/202606100007_priority0_training_events.sql');
 ['pseudonym','consent_status','hide_public_name','share_certificates_publicly','house','team'].forEach((column) => {
   assert(new RegExp(`add column if not exists ${column}`).test(priority0StudentSchema), `Priority 0 student schema should add ${column}`);
 });
@@ -762,6 +768,9 @@ assert(/guardian-link/.test(priority0GuardianSchema), 'guardian link RPC should 
 assert(/create_training_assignment/.test(priority0TrainingSchema), 'Priority 0 schema should add a training assignment RPC');
 assert(/training_assignment_students/.test(priority0TrainingSchema), 'training assignment RPC should persist assigned students');
 assert(/training-assignment/.test(priority0TrainingSchema), 'training assignment RPC should record traceable audit metadata');
+assert(/record_training_event/.test(priority0TrainingEventsSchema), 'Priority 0 schema should add a training event RPC');
+assert(/training_link_events/.test(priority0TrainingEventsSchema), 'training event RPC should persist link-open events');
+assert(/training-event/.test(priority0TrainingEventsSchema), 'training event RPC should record traceable audit metadata');
 [
   'schools',
   'school_users',

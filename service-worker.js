@@ -1,4 +1,4 @@
-var CACHE_NAME = 'gwynne-park-run-club-v44';
+var CACHE_NAME = 'gwynne-park-run-club-v45';
 var CORE_ASSETS = [
   './',
   './index.html',
