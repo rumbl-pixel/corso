@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Gwynne Park Run Club - Admin Dashboard</title>
-    <link rel="stylesheet" href="styles.css?v=48" />
+    <link rel="stylesheet" href="styles.css?v=49" />
     <link rel="manifest" href="manifest.webmanifest" />
     <meta name="theme-color" content="#0c5aa8" />
     <link rel="apple-touch-icon" href="assets/app-icon-192.png" />
@@ -43,6 +43,7 @@
         <button class="tab-btn" data-tab="training" role="tab" aria-selected="false" aria-controls="tab-training">&#127947; Training</button>
         <button class="tab-btn" data-tab="resources" role="tab" aria-selected="false" aria-controls="tab-resources">Resources</button>
         <button class="tab-btn" data-tab="reports" role="tab" aria-selected="false" aria-controls="tab-reports">&#128202; Reports</button>
+        <button class="tab-btn" data-tab="future-intelligence" role="tab" aria-selected="false" aria-controls="tab-future-intelligence">Coach Tools</button>
         <button class="tab-btn" data-tab="import" role="tab" aria-selected="false" aria-controls="tab-import">&#128229; Import</button>
         <button class="tab-btn" data-tab="help" role="tab" aria-selected="false" aria-controls="tab-help">Help</button>
       </div>
@@ -904,6 +905,28 @@
         </div>
       </div>
 
+      <div class="tab-panel" id="tab-future-intelligence">
+        <div class="card future-bookmark-card">
+          <div class="section-heading-row">
+            <div>
+              <h2>Coach Tools Bookmarks</h2>
+              <p class="muted-copy">Skeletons for the next smart coaching layer. These cards are visible bookmarks only; they do not make automated decisions or create student records yet.</p>
+            </div>
+            <span class="bookmark-pill">Parked for later build</span>
+          </div>
+          <div id="future-intelligence-skeleton" class="future-skeleton-grid" aria-live="polite"></div>
+        </div>
+
+        <div class="card">
+          <h2>Coach Notes Skeleton</h2>
+          <p class="muted-copy">Later this will hold private staff notes, follow-up flags, and parent-safe summary language. For now, keep real coaching notes outside the demo until live permissions are final.</p>
+          <div class="coach-note-placeholder">
+            <strong>Future note flow</strong>
+            <span>Pick student -> add staff-only note -> choose follow-up date -> optional training link.</span>
+          </div>
+        </div>
+      </div>
+
       <!-- IMPORT TAB -->
       <div class="tab-panel" id="tab-import">
         <div class="card">
@@ -1035,7 +1058,7 @@
     <script src="goals.js?v=4"></script>
     <script src="admin-goals.js?v=4"></script>
     <script src="assets/qrcode-generator.js"></script>
-    <script src="admin-dashboard.js?v=31"></script>
+    <script src="admin-dashboard.js?v=32"></script>
     <script src="pwa.js"></script>
   </body>
 </html>

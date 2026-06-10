@@ -2653,6 +2653,42 @@
       '</div>';
   }
 
+  function nextCertificateFor(student){
+    var km=totalKm(student);
+    return CERTIFICATE_MILESTONES.find(function(m){return km<m.km;}) || null;
+  }
+
+  function renderFutureIntelligenceSkeleton(){
+    var target=document.getElementById('future-intelligence-skeleton');
+    if(!target){return;}
+    var students=getStudents();
+    var inactive=students.filter(function(s){return !(s.laps||0);}).slice(0,3);
+    var nearAward=students.map(function(s){
+      var next=nextCertificateFor(s);
+      if(!next){return null;}
+      var kmLeft=Math.max(0,next.km-totalKm(s));
+      var lapsLeft=Math.ceil(kmLeft/(programSettings().lapDistanceKm||0.25));
+      return {student:s,next:next,lapsLeft:lapsLeft};
+    }).filter(function(row){return row&&row.lapsLeft<=8;}).sort(function(a,b){return a.lapsLeft-b.lapsLeft;}).slice(0,3);
+    var unopened=load(K.training,[]).reduce(function(total,task){
+      return total+(task.student_ids||[]).filter(function(studentId){
+        return !load(K.trainingClicks,[]).some(function(click){return click.training_id===task.id&&click.student_id===studentId;});
+      }).length;
+    },0);
+    var pbCount=athleticsResults().filter(function(row){return row.personal_best;}).length;
+    var classRows=groupedSummary('cls').sort(function(a,b){return b.km-a.km;});
+    var inactiveText=inactive.length?inactive.map(function(s){return escapeHtml(s.name);}).join(', '):'No obvious inactive students in demo data.';
+    var awardText=nearAward.length?nearAward.map(function(row){return escapeHtml(row.student.name)+' needs '+row.lapsLeft+' lap'+(row.lapsLeft===1?'':'s')+' for '+escapeHtml(row.next.name);}).join('<br>'):'No near-award runners flagged yet.';
+    target.innerHTML=
+      '<article class="future-skeleton-card"><span>Mini Coach AI</span><h3>Smart Suggestions</h3><p>Later: assess timeline, goals, PBs, and training history to suggest realistic next steps.</p><small>Bookmark: needs live data rules and staff review before advice appears.</small></article>'+
+      '<article class="future-skeleton-card"><span>Needs Attention</span><h3>'+inactive.length+' flagged</h3><p>'+inactiveText+'</p><small>Future action: filter by attendance gap, injury note, or missed sessions.</small></article>'+
+      '<article class="future-skeleton-card"><span>Close To Award</span><h3>'+nearAward.length+' runners nearby</h3><p>'+awardText+'</p><small>Future action: one-tap celebration or encouragement note.</small></article>'+
+      '<article class="future-skeleton-card"><span>Training Not Opened</span><h3>'+unopened+' pending views</h3><p>Shows assigned training that has not been opened by students yet.</p><small>Future action: class reminder list and parent-safe summary.</small></article>'+
+      '<article class="future-skeleton-card"><span>Personal Bests</span><h3>'+pbCount+' PB markers</h3><p>Later: PB cards across run club, athletics, cross country, jumps, and throws.</p><small>Future action: trend line and next realistic target.</small></article>'+
+      '<article class="future-skeleton-card"><span>Class Trends</span><h3>'+escapeHtml(classRows[0]?classRows[0].group:'No class yet')+'</h3><p>Later: compare participation, growth, and award readiness by class.</p><small>Future action: Next Best Action cards for admin.</small></article>'+
+      '<article class="future-skeleton-card future-skeleton-card--wide"><span>Celebration Wall</span><h3>Future showcase</h3><p>A moderated display for PBs, milestones, effort shout-outs, and team wins without exposing private student information.</p><small>Bookmark: needs privacy settings, approved display names, and staff moderation.</small></article>';
+  }
+
   function renderAuditTrail(){
     var rows=(window.RunClubScan&&window.RunClubScan.scanAudit?window.RunClubScan.scanAudit():load(K.scanAudit,[])).slice().reverse().slice(0,12);
     if(!rows.length){auditTrailListEl.innerHTML='<p style="color:#888;font-size:0.85rem;">No scan audit rows yet.</p>';return;}
@@ -2682,6 +2718,7 @@
   renderReportSummaries();
   renderSummaryDashboards();
   renderAdminAnalytics();
+  renderFutureIntelligenceSkeleton();
   renderMultiSchoolReports();
   renderBrandingSettings();
   renderBackendReadiness();

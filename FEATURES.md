@@ -16,10 +16,11 @@ Quick progress view lives in `docs/roadmap-progress.md`.
 - Priority 6: 8 / 8 complete. Status: Done.
 - Priority 7: 11 / 11 complete. Status: Done.
 - Priority 8: 9 / 9 complete. Status: Done.
+- Priority 9: 5 / 5 skeletons created. Status: Bookmarked for later.
 
 ## Current Focus
 
-- Current lane: all tracked feature priorities are complete. The remaining work is operational launch setup, not unfinished roadmap development.
+- Current lane: all core tracked feature priorities are complete. Priority 9 is a visible skeleton/bookmark lane for later smart coach tools, not a live decision system.
 - Recommended next item: review live environment variables, school-scoped roles, staff invite accounts, and school approval with the school before entering real student data.
 - Privacy note: keep demo mode for testing; turn on live data mode only after the configured backend readiness gate shows ready.
 - Backend pilot: local Supabase fake backend remains available for safe testing; live-style guards are in place for roster, scans, sessions, guardian access, training, medical safety notes, exports, and audit flows.
@@ -178,3 +179,21 @@ Status: Done.
 - [x] ~~8.7 Theme and branding settings.~~
 - [x] ~~8.8 Accessibility audit and improvements.~~
 - [x] ~~8.9 Authorised Compass class-list sync, starting with Compass CSV import and only moving to API sync if school/department approval and credentials are provided.~~
+
+## Priority 9 - Smart Coach And Celebration Tools
+
+Status: Bookmarked. Skeletons are visible in the Admin Coach Tools tab and student Training tab; full data logic, AI assistance, note storage, and moderation are deliberately parked until after live permissions, privacy review, and school approval.
+
+- [x] 9.1 Mini Coach AI / Smart Suggestions skeleton created.
+- [x] 9.2 Personal Bests coaching skeleton created.
+- [x] 9.3 Coach Notes skeleton created.
+- [x] 9.4 Celebration Wall skeleton created.
+- [x] 9.5 Next Best Action Admin Cards skeleton created.
+
+Later build requirements:
+
+- [ ] Add privacy-reviewed storage for staff-only coach notes.
+- [ ] Add staff-approved suggestion rules before any AI-generated advice appears.
+- [ ] Add parent/student-safe language rules for visible tips.
+- [ ] Add moderation controls for Celebration Wall items.
+- [ ] Add backend-backed trend calculations for PBs, attendance, training opens, and realistic next goals.
