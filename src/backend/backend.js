@@ -408,6 +408,20 @@
         p_metadata: adjustment.metadata || {}
       });
     },
+    recordActivityCredit: function (activity) {
+      var c = config();
+      return callRpc('record_activity_credit', {
+        p_school_id: c.schoolId,
+        p_student_id: activity.student_id || null,
+        p_barcode: activity.barcode || '',
+        p_activity_type: activity.activity_type || 'Activity',
+        p_minutes: activity.minutes,
+        p_km_credit: activity.km_credit,
+        p_activity_date: activity.date || new Date().toISOString().slice(0, 10),
+        p_staff: activity.staff || '',
+        p_metadata: activity.metadata || {}
+      });
+    },
     leaderboardTotals: function () {
       if (!isConfigured()) { return Promise.resolve(localLoad('rc_students', [])); }
       return request('GET', TABLES.leaderboardTotals, null, 'school_id=eq.' + encodeURIComponent(config().schoolId) + '&order=total_laps.desc')
