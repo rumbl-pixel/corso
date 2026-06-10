@@ -1658,6 +1658,24 @@
   }
   renderActivityLog();
 
+  function saveActivityCreditWithBackend(student, record){
+    var guard=liveRosterGuard();
+    if(!guard.ok){return Promise.resolve({ok:false,blocked:true,error:guard.message||'Local activity credit blocked.'});}
+    if(guard.live&&window.RunClubBackend&&window.RunClubBackend.backendDataAccess&&window.RunClubBackend.backendDataAccess.recordActivityCredit){
+      return window.RunClubBackend.backendDataAccess.recordActivityCredit({
+        student_id:isUuid(student.id)?student.id:null,
+        barcode:student.barcode||student.id,
+        activity_type:record.activity_type,
+        minutes:record.minutes,
+        km_credit:Number(record.km||0),
+        date:record.date,
+        staff:session.email||'admin',
+        metadata:{source_screen:'admin-dashboard',local_record_id:record.id,student_name:student.name}
+      });
+    }
+    return Promise.resolve({ok:true,local:true});
+  }
+
   document.getElementById('log-activity-btn').addEventListener('click',function(){
     var studentId=actStudentEl.value;
     var student=getStudents().find(function(s){return s.id===studentId;});
@@ -1665,15 +1683,19 @@
     var mins=Number(actMinsEl.value||'0');
     if(!student||mins<=0){showResult(actResultEl,{success:false,error:'Choose a student and enter valid minutes.'});return;}
     var logs=load(K.activity,[]);
-    logs.push({id:'act-'+Date.now(),student_id:studentId,student_name:student.name,activity_type:type,minutes:mins,km:minutesToKm(mins).toFixed(2),date:new Date().toISOString().slice(0,10)});
-    save(K.activity,logs);
-    // Also add to student minutes
-    var students=getStudents();
-    var st=students.find(function(s){return s.id===studentId;});
-    if(st){st.minutes=(st.minutes||0)+mins; saveStudents(students);}
-    showResult(actResultEl,{success:true,message:'Activity logged.',student:student.name,minutes:mins,km_credit:minutesToKm(mins).toFixed(2)});
-    renderActivityLog(); renderLeaderboard(); renderMedals(); renderCertificates(); renderSchoolSummary(); renderReportSummaries();
-    actMinsEl.value='';
+    var record={id:'act-'+Date.now(),student_id:studentId,student_name:student.name,activity_type:type,minutes:mins,km:minutesToKm(mins).toFixed(2),date:new Date().toISOString().slice(0,10)};
+    saveActivityCreditWithBackend(student,record).then(function(result){
+      if(!result.ok){showResult(actResultEl,{success:false,error:result.error||result.reason||'Local activity credit blocked.'});return;}
+      logs.push(record);
+      save(K.activity,logs);
+      // Also add to student minutes
+      var students=getStudents();
+      var st=students.find(function(s){return s.id===studentId;});
+      if(st){st.minutes=(st.minutes||0)+mins; saveStudents(students);}
+      showResult(actResultEl,{success:true,message:'Activity logged.',student:student.name,minutes:mins,km_credit:minutesToKm(mins).toFixed(2)});
+      renderActivityLog(); renderLeaderboard(); renderMedals(); renderCertificates(); renderSchoolSummary(); renderReportSummaries();
+      actMinsEl.value='';
+    });
   });
 
   // === EVENTS ===

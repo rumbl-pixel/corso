@@ -79,6 +79,9 @@ function assert(condition, message) {
     if (url.includes('/rest/v1/rpc/record_scan_undo')) {
       return Promise.resolve(response(200, [{ lap_entry_id: 'lap-live-1', outcome: 'undone', undone: true }]));
     }
+    if (url.includes('/rest/v1/rpc/record_activity_credit')) {
+      return Promise.resolve(response(200, [{ activity_credit_id: 'activity-live-1', km_credit: 1.5 }]));
+    }
     return Promise.resolve(response(404, { error: 'missing route' }));
   });
 
@@ -213,6 +216,24 @@ function assert(condition, message) {
   assert(undoScanBody.p_idempotency_key === 'scan-STAGING1-123', 'scan undo should target the original scan idempotency key');
   assert(undoScanBody.p_barcode === 'STAGING1', 'scan undo should include the barcode for audit');
   assert(undoScanBody.p_reason === 'Undo last scan', 'scan undo should include an audit reason');
+
+  await backend.backendDataAccess.recordActivityCredit({
+    student_id: 'student-1',
+    barcode: 'STAGING1',
+    activity_type: 'Teacher verified training',
+    minutes: 30,
+    km_credit: 1.5,
+    date: '2026-06-10',
+    staff: 'coach@example.test',
+    metadata: { source_screen: 'admin-dashboard' }
+  });
+  const activityCreditCall = calls.find((call) => call.url.includes('/rest/v1/rpc/record_activity_credit'));
+  assert(activityCreditCall, 'activity credit should write through a Supabase RPC');
+  const activityCreditBody = JSON.parse(activityCreditCall.options.body);
+  assert(activityCreditBody.p_school_id === 'school-live-style', 'activity credit should include school scope');
+  assert(activityCreditBody.p_student_id === 'student-1', 'activity credit should target the student');
+  assert(activityCreditBody.p_minutes === 30, 'activity credit should include minutes');
+  assert(activityCreditBody.p_km_credit === 1.5, 'activity credit should include converted kilometre credit');
 
   await backend.backendDataAccess.deleteStudent({ id: 'student-2', barcode: 'STAGING2' });
   const deleteCall = calls.find((call) => call.url.includes('/rest/v1/students') && call.options.method === 'PATCH');
