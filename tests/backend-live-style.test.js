@@ -82,6 +82,18 @@ function assert(condition, message) {
     if (url.includes('/rest/v1/rpc/record_activity_credit')) {
       return Promise.resolve(response(200, [{ activity_credit_id: 'activity-live-1', km_credit: 1.5 }]));
     }
+    if (url.includes('/rest/v1/rpc/issue_guardian_link')) {
+      return Promise.resolve(response(200, [{
+        guardian_link_id: 'guardian-live-1',
+        student_id: 'student-1',
+        code: 'GP-STAGING1-A1B2C3D4E5',
+        status: 'active',
+        expires_at: '2027-06-10T00:00:00.000Z'
+      }]));
+    }
+    if (url.includes('/rest/v1/rpc/set_guardian_link_status')) {
+      return Promise.resolve(response(200, [{ guardian_link_id: 'guardian-live-1', status: 'revoked' }]));
+    }
     return Promise.resolve(response(404, { error: 'missing route' }));
   });
 
@@ -234,6 +246,27 @@ function assert(condition, message) {
   assert(activityCreditBody.p_student_id === 'student-1', 'activity credit should target the student');
   assert(activityCreditBody.p_minutes === 30, 'activity credit should include minutes');
   assert(activityCreditBody.p_km_credit === 1.5, 'activity credit should include converted kilometre credit');
+
+  await backend.backendDataAccess.issueGuardianLink({
+    id: 'student-1',
+    barcode: 'STAGING1',
+    name: 'Staging Student',
+    year: 'Year 5',
+    cls: '5A'
+  });
+  const guardianIssueCall = calls.find((call) => call.url.includes('/rest/v1/rpc/issue_guardian_link'));
+  assert(guardianIssueCall, 'guardian link issue should write through a Supabase RPC');
+  const guardianIssueBody = JSON.parse(guardianIssueCall.options.body);
+  assert(guardianIssueBody.p_school_id === 'school-live-style', 'guardian link issue should include school scope');
+  assert(guardianIssueBody.p_student_id === 'student-1', 'guardian link issue should target the student');
+  assert(guardianIssueBody.p_barcode === 'STAGING1', 'guardian link issue should include barcode fallback');
+
+  await backend.backendDataAccess.setGuardianLinkStatus({ student_id: 'student-1', code: 'GP-STAGING1-A1B2C3D4E5', status: 'revoked' });
+  const guardianStatusCall = calls.find((call) => call.url.includes('/rest/v1/rpc/set_guardian_link_status'));
+  assert(guardianStatusCall, 'guardian link status should write through a Supabase RPC');
+  const guardianStatusBody = JSON.parse(guardianStatusCall.options.body);
+  assert(guardianStatusBody.p_school_id === 'school-live-style', 'guardian link status should include school scope');
+  assert(guardianStatusBody.p_status === 'revoked', 'guardian link status should persist revoke/restore state');
 
   await backend.backendDataAccess.deleteStudent({ id: 'student-2', barcode: 'STAGING2' });
   const deleteCall = calls.find((call) => call.url.includes('/rest/v1/students') && call.options.method === 'PATCH');
