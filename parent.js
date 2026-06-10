@@ -8,6 +8,7 @@
   var GUARDIAN_ACCESS_LOG_KEY = 'rc_guardian_access_log';
   var TRAINING_KEY = 'rc_training';
   var TRAINING_CLICKS_KEY = 'rc_training_clicks';
+  var TRAINING_COMPLETIONS_KEY = 'rc_training_completions';
   var currentStudent = null;
   var currentAccess = null;
   var MILESTONE_LABELS = { 5: 'First 5 Laps', 10: '10 Lap Club', 25: 'Quarter Century', 50: 'Half Century', 100: 'Century Club', 200: 'Double Century', 500: 'Elite Runner' };
@@ -27,6 +28,12 @@
 
   function save(key, value) {
     localStorage.setItem(key, JSON.stringify(value));
+  }
+
+  function escapeHtml(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, function (ch) {
+      return ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[ch];
+    });
   }
 
   function isGuardianLinkUsable(link) {
@@ -140,10 +147,42 @@
   }
 
   function renderAwards(student) {
+    document.getElementById('parent-awards').innerHTML = awardCardsHtml(awardDisplayRows(student));
+  }
+
+  function awardDisplayRows(student) {
     var earned = Scan.MILESTONES.filter(function (m) { return student.laps >= m; });
-    document.getElementById('parent-awards').innerHTML = earned.length
-      ? earned.map(function (m) { return '<span class="award-badge">&#127942; ' + (MILESTONE_LABELS[m] || (m + ' laps')) + '</span>'; }).join('')
-      : '<p style="color:#888;font-size:0.85rem;">No awards yet. The first milestone is 5 laps.</p>';
+    var next = Scan.MILESTONES.find(function (m) { return student.laps < m; });
+    var rows = earned.map(function (m) {
+      return {
+        status: 'earned',
+        title: MILESTONE_LABELS[m] || (m + ' laps'),
+        detail: m + ' laps completed',
+        progress: 100
+      };
+    });
+    if (next) {
+      rows.push({
+        status: 'next',
+        title: MILESTONE_LABELS[next] || (next + ' laps'),
+        detail: Math.max(0, next - student.laps) + ' laps to go',
+        progress: Math.min(100, Math.round((student.laps / next) * 100))
+      });
+    }
+    return rows;
+  }
+
+  function awardCardsHtml(rows) {
+    if (!rows.length) {
+      return '<p style="color:#888;font-size:0.85rem;">No awards yet. The first milestone is 5 laps.</p>';
+    }
+    return '<div class="award-card-grid">' + rows.map(function (row) {
+      return '<div class="award-card award-card--' + escapeHtml(row.status) + '">' +
+        '<div class="award-card-icon">' + (row.status === 'earned' ? '&#127942;' : '&#11088;') + '</div>' +
+        '<div><strong>' + escapeHtml(row.title) + '</strong><p>' + escapeHtml(row.detail) + '</p>' +
+        '<div class="award-card-bar"><span style="width:' + row.progress + '%"></span></div></div>' +
+        '</div>';
+    }).join('') + '</div>';
   }
 
   function printParentCertificate() {
@@ -154,8 +193,8 @@
       : '<p>Keep running toward the first 5 lap milestone.</p>';
     var win = window.open('', '_blank');
     if (!win) { return; }
-    var html = '<html><head><title>' + currentStudent.name + ' Award Certificate</title><style>body{font-family:Arial,sans-serif;padding:2rem;color:#102a43;}.cert{border:4px solid #f59e0b;padding:2.5rem;text-align:center;min-height:70vh;display:flex;flex-direction:column;align-items:center;justify-content:center;}h1{color:#0c5aa8;font-size:2.4rem;margin:0 0 0.5rem;}h2{font-size:2rem;margin:0.4rem 0;}.badge{display:inline-block;padding:0.35rem 0.8rem;border-radius:999px;background:#fff8e1;border:1px solid #f59e0b;margin:0.25rem;font-size:0.95rem;}@media print{@page{margin:1cm;}}</style></head><body>';
-    html += '<div class="cert"><h1>Gwynne Park Run Club</h1><p>Award Certificate</p><h2>' + currentStudent.name + '</h2><p>' + currentStudent.year + ' / Class ' + currentStudent.cls + '</p><p>Total laps: <strong>' + currentStudent.laps + '</strong> (' + Scan.lapsToKm(currentStudent.laps).toFixed(2) + ' km)</p><div>' + awardCopy + '</div><p style="margin-top:1.5rem;color:#64748b;">Keep building momentum.</p></div>';
+    var html = '<html><head><title>' + escapeHtml(currentStudent.name) + ' Award Certificate</title><style>body{font-family:Arial,sans-serif;padding:2rem;color:#102a43;background:#f6f8fb;}.certificate-preview{border:5px solid #003880;box-shadow:inset 0 0 0 8px #c99722;background:#fff;padding:2.5rem;text-align:center;min-height:70vh;display:flex;flex-direction:column;align-items:center;justify-content:center;}h1{color:#003880;font-size:2.4rem;margin:0 0 0.5rem;}h2{font-size:2rem;margin:0.4rem 0;color:#0b1f38;}.badge{display:inline-block;padding:0.35rem 0.8rem;border-radius:999px;background:#fff8e1;border:1px solid #c99722;margin:0.25rem;font-size:0.95rem;}@media print{@page{margin:1cm;}body{background:#fff;print-color-adjust:exact;-webkit-print-color-adjust:exact;}}</style></head><body>';
+    html += '<div class="certificate-preview"><h1>Gwynne Park Run Club</h1><p>Award Certificate</p><h2>' + escapeHtml(currentStudent.name) + '</h2><p>' + escapeHtml(currentStudent.year) + ' / Class ' + escapeHtml(currentStudent.cls) + '</p><p>Total laps: <strong>' + currentStudent.laps + '</strong> (' + Scan.lapsToKm(currentStudent.laps).toFixed(2) + ' km)</p><div>' + awardCopy + '</div><p style="margin-top:1.5rem;color:#64748b;">Keep building momentum.</p></div>';
     html += '</body></html>';
     win.document.write(html);
     win.document.close();
@@ -195,6 +234,12 @@
     }).sort(function (a, b) { return String(b.opened_at || '').localeCompare(String(a.opened_at || '')); })[0] || null;
   }
 
+  function trainingCompletionFor(task, student) {
+    return load(TRAINING_COMPLETIONS_KEY, []).filter(function (row) {
+      return row.assignment_id === task.id && row.student_id === student.id;
+    }).sort(function (a, b) { return String(b.completed_at || '').localeCompare(String(a.completed_at || '')); })[0] || null;
+  }
+
   function renderParentTraining(student) {
     var el = document.getElementById('parent-training-view');
     var tasks = trainingAssignmentsFor(student);
@@ -204,10 +249,11 @@
     }
     el.innerHTML = tasks.slice().reverse().map(function (task) {
       var opened = trainingOpened(task, student);
+      var completed = trainingCompletionFor(task, student);
       return '<div class="training-card">' +
-        '<div class="training-card-head"><strong>' + task.title + '</strong>' + (opened ? '<span class="award-badge">Opened</span>' : '<span class="training-status-pill">New</span>') + '</div>' +
+        '<div class="training-card-head"><strong>' + task.title + '</strong>' + (completed ? '<span class="award-badge">Reviewed</span>' : opened ? '<span class="award-badge">Opened</span>' : '<span class="training-status-pill">New</span>') + '</div>' +
         '<p>' + (task.notes || 'Review this teacher-assigned training task.') + '</p>' +
-        '<div class="training-meta">' + (task.due_date ? 'Due ' + task.due_date : 'No due date') + (opened ? ' · Opened ' + new Date(opened.opened_at).toLocaleDateString() : '') + '</div>' +
+        '<div class="training-meta">' + (task.due_date ? 'Due ' + task.due_date : 'No due date') + (opened ? ' · Opened ' + new Date(opened.opened_at).toLocaleDateString() : '') + (completed ? ' · Reviewed ' + new Date(completed.completed_at).toLocaleDateString() : '') + '</div>' +
         '</div>';
     }).join('');
   }

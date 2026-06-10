@@ -4,13 +4,14 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Gwynne Park Run Club - Admin Dashboard</title>
-    <link rel="stylesheet" href="styles.css?v=10" />
+    <link rel="stylesheet" href="styles.css?v=22" />
     <link rel="manifest" href="manifest.webmanifest" />
     <meta name="theme-color" content="#0c5aa8" />
     <link rel="apple-touch-icon" href="assets/app-icon-192.png" />
     <script src="config.js"></script>
   </head>
   <body class="page page-admin-dashboard">
+    <a class="skip-link" href="#main-content">Skip to main content</a>
     <header class="site-header">
       <div class="header-inner">
         <a class="brand brand-home-link" href="index.html" aria-label="Back to Gwynne Park Run Club home page">
@@ -28,19 +29,21 @@
       <p id="session-label" class="session-bar"></p>
     </header>
 
-    <main class="content">
+    <main id="main-content" class="content">
 
       <!-- TABS -->
-      <div class="tabs">
-        <button class="tab-btn active" data-tab="scanner">&#128247; Scanner</button>
-        <button class="tab-btn" data-tab="students">&#128101; Students</button>
-        <button class="tab-btn" data-tab="leaderboard">&#127942; Leaderboard</button>
-        <button class="tab-btn" data-tab="activity">&#9201; Activity</button>
-        <button class="tab-btn" data-tab="events">&#128197; Events</button>
-        <button class="tab-btn" data-tab="awards">&#127885; Awards</button>
-        <button class="tab-btn" data-tab="training">&#127947; Training</button>
-        <button class="tab-btn" data-tab="reports">&#128202; Reports</button>
-        <button class="tab-btn" data-tab="import">&#128229; Import</button>
+      <div class="tabs" role="tablist" aria-label="Admin dashboard sections">
+        <button class="tab-btn active" data-tab="scanner" role="tab" aria-selected="true" aria-controls="tab-scanner">&#128247; Scanner</button>
+        <button class="tab-btn" data-tab="students" role="tab" aria-selected="false" aria-controls="tab-students">&#128101; Students</button>
+        <button class="tab-btn" data-tab="leaderboard" role="tab" aria-selected="false" aria-controls="tab-leaderboard">&#127942; Leaderboard</button>
+        <button class="tab-btn" data-tab="activity" role="tab" aria-selected="false" aria-controls="tab-activity">&#9201; Activity</button>
+        <button class="tab-btn" data-tab="events" role="tab" aria-selected="false" aria-controls="tab-events">&#128197; Events</button>
+        <button class="tab-btn" data-tab="awards" role="tab" aria-selected="false" aria-controls="tab-awards">&#127885; Awards</button>
+        <button class="tab-btn" data-tab="training" role="tab" aria-selected="false" aria-controls="tab-training">&#127947; Training</button>
+        <button class="tab-btn" data-tab="resources" role="tab" aria-selected="false" aria-controls="tab-resources">Resources</button>
+        <button class="tab-btn" data-tab="reports" role="tab" aria-selected="false" aria-controls="tab-reports">&#128202; Reports</button>
+        <button class="tab-btn" data-tab="import" role="tab" aria-selected="false" aria-controls="tab-import">&#128229; Import</button>
+        <button class="tab-btn" data-tab="help" role="tab" aria-selected="false" aria-controls="tab-help">Help</button>
       </div>
 
       <!-- SCANNER TAB -->
@@ -76,6 +79,7 @@
           </div>
           <button id="undo-admin-scan-btn" type="button" class="secondary" hidden style="margin-top:0.75rem;">Undo last scan</button>
           <pre id="scan-result" hidden></pre>
+          <div id="milestone-notification" class="milestone-notification" hidden></div>
           <div id="session-log" style="margin-top:1rem;"></div>
           <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:1rem;">
             <button id="download-session-btn" type="button" class="secondary">Download session JSON</button>
@@ -161,6 +165,12 @@
               <label>Class
                 <input type="text" id="new-student-class" required placeholder="e.g. 5B" autocomplete="off" />
               </label>
+              <label>House (optional)
+                <input type="text" id="new-student-house" placeholder="e.g. Gold" autocomplete="off" />
+              </label>
+              <label>Team (optional)
+                <input type="text" id="new-student-team" placeholder="e.g. Blue Band" autocomplete="off" />
+              </label>
             </div>
             <button id="generate-student-barcode-btn" type="submit">Generate barcode</button>
           </form>
@@ -210,10 +220,45 @@
         <div class="card">
           <h2>&#127947; Goal Settings</h2>
           <label class="checkbox-row">
-            <input type="checkbox" id="sports-carnival-mode" />
-            <span>Sports Carnival Mode</span>
+            <input type="checkbox" id="interschool-athletics-mode" />
+            <span>Interschool Athletics Mode</span>
           </label>
-          <p style="color:#555;font-size:0.9rem;">When off, goal options stay focused on Laps, Lap Time, and Distance. Turn this on to show jump, throw, length, and sprint goal types.</p>
+          <p style="color:#555;font-size:0.9rem;">When off, goal options stay focused on Laps, Lap Time, and Distance. Turn this on to show jump, throw, length, sprint, and interschool athletics event options.</p>
+          <div id="interschool-athletics-events" class="athletics-event-list"></div>
+        </div>
+
+        <div class="card" id="cross-country-card">
+          <h2>Cross Country Courses</h2>
+          <form id="cross-country-course-form" class="compact-form">
+            <div class="form-grid">
+              <label>Course name
+                <input type="text" id="cross-country-course-name" placeholder="e.g. Junior oval loop" required autocomplete="off" />
+              </label>
+              <label>Year group
+                <select id="cross-country-year">
+                  <option value="Year 1">Year 1</option>
+                  <option value="Year 2">Year 2</option>
+                  <option value="Year 3">Year 3</option>
+                  <option value="Year 4">Year 4</option>
+                  <option value="Year 5">Year 5</option>
+                  <option value="Year 6">Year 6</option>
+                  <option value="Senior">Senior</option>
+                  <option value="Intermediate">Intermediate</option>
+                  <option value="Junior">Junior</option>
+                  <option value="Whole school">Whole school</option>
+                </select>
+              </label>
+              <label>Distance
+                <input type="number" id="cross-country-distance" min="100" max="10000" step="50" placeholder="e.g. 1000" required />
+              </label>
+              <label>Route / marshal notes
+                <input type="text" id="cross-country-notes" placeholder="e.g. Start at undercover area, 2 oval laps" autocomplete="off" />
+              </label>
+            </div>
+            <button type="submit">Save course</button>
+          </form>
+          <pre id="cross-country-result" hidden></pre>
+          <div id="cross-country-course-list" style="margin-top:1rem;"></div>
         </div>
       </div>
 
@@ -244,6 +289,30 @@
               </label>
               <label>Class
                 <input type="text" id="edit-student-class" required autocomplete="off" />
+              </label>
+              <label>House (optional)
+                <input type="text" id="edit-student-house" autocomplete="off" />
+              </label>
+              <label>Team (optional)
+                <input type="text" id="edit-student-team" autocomplete="off" />
+              </label>
+              <label>Public pseudonym
+                <input type="text" id="edit-student-pseudonym" placeholder="e.g. Runner 12" autocomplete="off" />
+              </label>
+              <label>Consent status
+                <select id="edit-student-consent-status">
+                  <option value="pending">Pending</option>
+                  <option value="granted">Granted</option>
+                  <option value="declined">Declined</option>
+                </select>
+              </label>
+              <label class="checkbox-row">
+                <input type="checkbox" id="edit-student-hide-public-name" />
+                <span>Hide real name on public leaderboards</span>
+              </label>
+              <label class="checkbox-row">
+                <input type="checkbox" id="edit-student-share-certificates" />
+                <span>Allow public certificate / award sharing</span>
               </label>
             </div>
             <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-top:0.75rem;">
@@ -314,6 +383,62 @@
           <pre id="event-result" hidden></pre>
           <div id="events-list" style="margin-top:1rem;"></div>
         </div>
+
+        <div class="card" id="athletics-results-card">
+          <h2>Interschool Results</h2>
+          <form id="athletics-result-form" class="compact-form">
+            <div class="form-grid">
+              <label>Student
+                <select id="athletics-result-student"></select>
+              </label>
+              <label>Event
+                <select id="athletics-event-select"></select>
+              </label>
+              <label>Result value
+                <input type="text" id="athletics-result-value" placeholder="e.g. 14.23, 1:42.5, 3.20" required />
+              </label>
+              <label>House / team
+                <input type="text" id="athletics-result-house" placeholder="Optional house override" autocomplete="off" />
+              </label>
+              <label>Attempt 1
+                <input type="text" id="field-attempt-1" placeholder="Optional field attempt" autocomplete="off" />
+              </label>
+              <label>Attempt 2
+                <input type="text" id="field-attempt-2" placeholder="Optional field attempt" autocomplete="off" />
+              </label>
+              <label>Attempt 3
+                <input type="text" id="field-attempt-3" placeholder="Optional field attempt" autocomplete="off" />
+              </label>
+              <label>Place
+                <select id="athletics-result-place">
+                  <option value="">No placing yet</option>
+                  <option value="1">1st</option>
+                  <option value="2">2nd</option>
+                  <option value="3">3rd</option>
+                  <option value="4">4th</option>
+                  <option value="5">5th</option>
+                  <option value="6">6th</option>
+                </select>
+              </label>
+            </div>
+            <button type="submit">Save result</button>
+          </form>
+          <pre id="athletics-result-output" hidden></pre>
+          <div class="form-grid" style="margin-top:1rem;">
+            <div>
+              <h3>PB Tracking</h3>
+              <div id="pb-summary-list"></div>
+            </div>
+            <div>
+              <h3>Age Champions</h3>
+              <div id="age-champion-list"></div>
+            </div>
+            <div>
+              <h3>House Points</h3>
+              <div id="house-points-list"></div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- AWARDS TAB -->
@@ -333,6 +458,22 @@
           <p style="color:#555;font-size:0.9rem;">Simple distance tiers for celebrating regular progress.</p>
           <div id="medal-rules"></div>
           <div id="medal-summary" style="margin-top:1rem;"></div>
+        </div>
+
+        <div class="card" id="custom-milestone-card">
+          <h2>Custom Milestone Thresholds</h2>
+          <p style="color:#555;font-size:0.9rem;">Set the lap milestones that trigger award badges and scan notifications. Keep the list simple so students understand the next target.</p>
+          <form id="custom-milestone-form" class="compact-form">
+            <label>Milestone laps
+              <input type="text" id="custom-milestone-thresholds" placeholder="5, 10, 25, 50, 100, 200, 500" />
+            </label>
+            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+              <button id="save-custom-milestones-btn" type="submit">Save milestones</button>
+              <button id="reset-custom-milestones-btn" type="button" class="secondary">Reset defaults</button>
+            </div>
+          </form>
+          <pre id="custom-milestone-result" hidden></pre>
+          <div id="custom-milestone-preview" class="setup-summary"></div>
         </div>
 
         <div class="card">
@@ -356,9 +497,39 @@
           <p style="color:#555;font-size:0.9rem;">Set club-wide goals and fun challenges to keep participants motivated.</p>
           <label>Challenge name <input type="text" id="challenge-name" placeholder="e.g. 20 laps in Term 2" /></label>
           <label>Goal (laps or minutes) <input type="text" id="challenge-goal" placeholder="e.g. 20 laps" /></label>
+          <div class="form-grid">
+            <label>Rule type
+              <select id="challenge-rule-type">
+                <option value="total">Total target</option>
+                <option value="per-student">Per-student target</option>
+                <option value="top-group">Top group wins</option>
+              </select>
+            </label>
+            <label>Metric
+              <select id="challenge-metric">
+                <option value="laps">Laps</option>
+                <option value="km">Distance (km)</option>
+              </select>
+            </label>
+            <label>Target
+              <input type="number" id="challenge-target" min="1" step="any" placeholder="e.g. 500" />
+            </label>
+            <label>Scope
+              <select id="challenge-scope">
+                <option value="school">Whole school</option>
+                <option value="house">House</option>
+                <option value="team">Team</option>
+                <option value="class">Class</option>
+                <option value="year">Year group</option>
+              </select>
+            </label>
+          </div>
           <button id="create-challenge-btn" type="button">Create challenge</button>
           <pre id="challenge-result" hidden></pre>
+          <div id="challenge-notification-list" class="notification-list" style="margin-top:1rem;"></div>
           <div id="challenges-list" style="margin-top:1rem;"></div>
+          <div id="challenge-progress-summary" style="margin-top:1rem;"></div>
+          <div id="challenge-award-list" style="margin-top:1rem;"></div>
         </div>
       </div>
 
@@ -366,7 +537,7 @@
       <div class="tab-panel" id="tab-training">
         <div class="card">
           <h2>&#127947; Assign Training</h2>
-          <p style="color:#555;font-size:0.9rem;">Assign at-home training links or tasks for students to review. This skeleton tracks whether a student has opened the training link; it does not let students self-report completion.</p>
+          <p style="color:#555;font-size:0.9rem;">Assign at-home training links or tasks for students to review. This skeleton tracks whether students have opened the link and marked the assigned task as reviewed; it does not collect self-reported activity.</p>
           <form id="training-form" class="compact-form">
             <div class="form-grid">
               <label>Training title
@@ -394,10 +565,108 @@
           <pre id="training-result" hidden></pre>
         </div>
 
+        <div class="card" id="training-library-builder">
+          <h2>Workout Builder Library</h2>
+          <div class="form-grid">
+            <div>
+              <h3>Drill Library</h3>
+              <div id="training-library-list"></div>
+            </div>
+            <div>
+              <h3>Workout Plan</h3>
+              <div id="workout-builder-dropzone" tabindex="0"></div>
+              <label>Workout title
+                <input type="text" id="workout-builder-title" placeholder="e.g. Sprint start tune-up" autocomplete="off" />
+              </label>
+              <label>Workout link
+                <input type="text" id="workout-builder-url" placeholder="Optional link, defaults to in-app plan" autocomplete="off" />
+              </label>
+              <button id="assign-builder-workout-btn" type="button" class="secondary">Use builder as assignment</button>
+            </div>
+          </div>
+        </div>
+
         <div class="card">
           <h2>&#128203; Training Status</h2>
-          <p style="color:#555;font-size:0.9rem;">Shows assigned tasks and whether students have opened the training link.</p>
+          <p style="color:#555;font-size:0.9rem;">Shows assigned tasks, link opens, and student reviewed status.</p>
           <div id="training-status-list"></div>
+        </div>
+      </div>
+
+      <!-- RESOURCES TAB -->
+      <div class="tab-panel" id="tab-resources">
+        <div class="card" id="program-resource-hub">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+            <div>
+              <h2>Program Resources</h2>
+              <p style="color:#555;font-size:0.9rem;">Quick teacher-facing cards for planning run club, carnival practice, cross country, and scanner setup. These are printable notes only; they do not collect student data.</p>
+            </div>
+            <button id="print-program-resources-btn" type="button" class="secondary">Print resources</button>
+          </div>
+          <div class="resource-card-grid">
+            <article class="resource-card resource-card--lesson">
+              <h3>Run Club Session Plan</h3>
+              <p><strong>25-35 minutes:</strong> roll call, dynamic warm-up, scan/run block, short challenge, cooldown, and quick teacher notes.</p>
+              <ul>
+                <li>Use one active admin device for scans.</li>
+                <li>Set lap distance and duplicate cooldown before starting.</li>
+                <li>Finish the session before reviewing reports.</li>
+              </ul>
+            </article>
+            <article class="resource-card resource-card--lesson">
+              <h3>Interschool Athletics Rotation</h3>
+              <p><strong>Four stations:</strong> sprint starts, 400m pacing, jump/throw technique, and ball-game teamwork.</p>
+              <ul>
+                <li>Use year/division groups to keep rotations fair.</li>
+                <li>Record results only from admin screens.</li>
+                <li>Flag PBs and age champion points after review.</li>
+              </ul>
+            </article>
+            <article class="resource-card resource-card--lesson">
+              <h3>Cross Country Preparation</h3>
+              <p><strong>Focus:</strong> steady pacing, course awareness, breathing rhythm, and safe finish-line flow.</p>
+              <ul>
+                <li>Set course distance by year or division.</li>
+                <li>Use marshal notes before the first trial.</li>
+                <li>Check participation gaps after each session.</li>
+              </ul>
+            </article>
+            <article class="resource-card resource-card--safety">
+              <h3>Privacy And Safety Reminders</h3>
+              <p><strong>Before real data:</strong> complete Priority 0. Keep demo names during testing and share student information only through approved school processes.</p>
+              <ul>
+                <li>Students do not self-report outside activity.</li>
+                <li>Kiosk access stays behind admin login.</li>
+                <li>Export only the reports you actually need.</li>
+              </ul>
+            </article>
+          </div>
+        </div>
+
+        <div class="card" id="lesson-plan-section">
+          <h2>Lesson Plan Starters</h2>
+          <div class="resource-card-grid">
+            <article class="resource-card resource-card--printable">
+              <h3>Speed Tune-Up</h3>
+              <p>Warm-up jog, A-skips, wall drives, three 30m accelerations, one relaxed 75m, cooldown walk.</p>
+              <p><strong>Best for:</strong> 50m, 75m, 100m, and 200m prep.</p>
+            </article>
+            <article class="resource-card resource-card--printable">
+              <h3>Middle-Distance Builder</h3>
+              <p>Easy lap, pacing talk, two steady 200m efforts, one controlled 400m effort, recovery walk.</p>
+              <p><strong>Best for:</strong> 400m, cross country, and run club endurance.</p>
+            </article>
+            <article class="resource-card resource-card--printable">
+              <h3>Field Event Circuit</h3>
+              <p>Long jump take-off markers, standing throw practice, safe retrieval routine, three measured attempts.</p>
+              <p><strong>Best for:</strong> long jump and distance throws.</p>
+            </article>
+            <article class="resource-card resource-card--printable">
+              <h3>Barcode And Device Setup</h3>
+              <p>Print ID cards, test one barcode per class, name each scanner device, confirm camera permission, then run a demo scan.</p>
+              <p><strong>Best for:</strong> new iPads, phones, and Bluetooth scanners.</p>
+            </article>
+          </div>
         </div>
       </div>
 
@@ -455,6 +724,8 @@
             <button id="export-class-summary-csv-btn" type="button" class="secondary">Export class summary</button>
             <button id="export-medal-summary-csv-btn" type="button" class="secondary">Export medal summary</button>
             <button id="export-certificate-csv-btn" type="button" class="secondary">Export certificates</button>
+            <button id="export-carnival-results-csv-btn" type="button" class="secondary">Export carnival results</button>
+            <button id="export-cross-country-csv-btn" type="button" class="secondary">Export cross country</button>
             <button id="print-report-btn" type="button" class="secondary">Print report</button>
           </div>
           <pre id="reports-result" hidden></pre>
@@ -470,6 +741,43 @@
           <p style="color:#555;font-size:0.9rem;">Quick summary panels for school, division, year group, and class progress.</p>
           <div id="summary-dashboard-panels"></div>
           <div id="admin-analytics-panels" style="margin-top:1rem;"></div>
+        </div>
+
+        <div class="card" id="multi-school-report-card">
+          <h2>Multi-School Reporting</h2>
+          <p style="color:#555;font-size:0.9rem;">Use this when a roster includes multiple school or campus names. This is a local reporting view only; production school-scoped permissions still belong in Priority 0.</p>
+          <div style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:end;">
+            <label style="margin:0;">School filter
+              <select id="multi-school-filter">
+                <option value="">All schools</option>
+              </select>
+            </label>
+            <button id="export-multi-school-csv-btn" type="button" class="secondary">Export multi-school CSV</button>
+          </div>
+          <div id="multi-school-summary-list" style="margin-top:1rem;"></div>
+        </div>
+
+        <div class="card" id="branding-settings-card">
+          <h2>Theme And Branding</h2>
+          <p style="color:#555;font-size:0.9rem;">Adjust the local demo theme for review screens. Keep colours high contrast and close to school branding before sharing.</p>
+          <form id="branding-settings-form" class="compact-form">
+            <div class="form-grid">
+              <label>App title
+                <input type="text" id="branding-app-title" placeholder="Gwynne Park Run Club" />
+              </label>
+              <label>School blue
+                <input type="color" id="branding-school-blue" value="#003880" />
+              </label>
+              <label>Uniform gold
+                <input type="color" id="branding-uniform-gold" value="#c99722" />
+              </label>
+            </div>
+            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+              <button id="save-branding-btn" type="submit">Save branding</button>
+              <button id="reset-branding-btn" type="button" class="secondary">Reset school defaults</button>
+            </div>
+          </form>
+          <pre id="branding-settings-result" hidden></pre>
         </div>
 
         <div class="card">
@@ -585,6 +893,19 @@
           <a id="download-template" href="#" style="font-size:0.85rem;margin-top:0.5rem;display:inline-block;">&#11015; Download CSV template</a>
         </div>
 
+        <div class="card" id="compass-import-card">
+          <h2>Authorised Compass CSV Import</h2>
+          <p style="color:#555;font-size:0.9rem;">Upload a class-list CSV exported by authorised school staff. This does not connect to the Compass API; API sync should only happen later with school or department approval and credentials.</p>
+          <p><strong>Accepted columns:</strong> <code>Preferred Name, Surname, Year Level, Home Group, School</code> or the standard roster columns.</p>
+          <form id="compass-import-form">
+            <label>Compass CSV file <input type="file" id="compass-csv-file" accept=".csv" /></label>
+            <button type="submit">Import authorised Compass CSV</button>
+          </form>
+          <pre id="compass-import-result" hidden></pre>
+          <div id="compass-import-summary" class="import-summary" hidden></div>
+          <a id="download-compass-template" href="#" style="font-size:0.85rem;margin-top:0.5rem;display:inline-block;">&#11015; Download Compass CSV template</a>
+        </div>
+
         <!-- BARCODE CARD PRINT -->
         <div class="card">
           <h2>&#128203; Print Barcode / QR ID Cards</h2>
@@ -602,18 +923,91 @@
         </div>
       </div>
 
+      <!-- HELP TAB -->
+      <div class="tab-panel" id="tab-help">
+        <div class="card admin-help-card" id="help-privacy-gate">
+          <h2>Go-Live Privacy Gate</h2>
+          <p>Do not enter real student data until Priority 0 is complete. Use demo names only while testing layouts, scanning, training, reports, and interschool workflows.</p>
+          <ul class="help-checklist">
+            <li>Keep `DEMO` access for testing only.</li>
+            <li>Before launch, add real staff login, role permissions, consent controls, and audit logs.</li>
+            <li>Export or clear demo data before using real student information.</li>
+          </ul>
+        </div>
+
+        <div class="card admin-help-card backend-readiness-card" id="backend-readiness-card">
+          <h2>Backend Storage Gate</h2>
+          <div id="backend-readiness-summary" class="backend-readiness-summary backend-readiness-blocked">
+            <strong>Checking backend readiness...</strong>
+          </div>
+          <p style="color:#555;font-size:0.9rem;">This gate must show ready before real student names, barcodes, guardian links, training records, scans, or reports are entered.</p>
+          <ul id="backend-readiness-blockers" class="help-checklist"></ul>
+        </div>
+
+        <div class="card admin-help-card" id="help-quick-start">
+          <h2>Quick Start</h2>
+          <ol class="help-checklist">
+            <li>Set school name, lap distance, years, classes, and award thresholds in Reports &gt; Onboarding Wizard.</li>
+            <li>Add students manually or import the roster CSV from the Import tab.</li>
+            <li>Print barcode / QR cards and test each scanner before the first run session.</li>
+            <li>Run sessions on one logged-in admin device, or use Kiosk only from an admin login.</li>
+            <li>Review reports and exports before sharing results with families.</li>
+          </ol>
+        </div>
+
+        <div class="card admin-help-card" id="help-device-setup">
+          <h2>Device Setup</h2>
+          <div class="help-note-grid">
+            <div>
+              <strong>Phones and iPads</strong>
+              <p>Use the installable PWA shell where possible. Camera scanning needs browser camera permission and good light on the barcode.</p>
+            </div>
+            <div>
+              <strong>Bluetooth scanners</strong>
+              <p>Pair the scanner as keyboard input, tap the barcode field, then scan. Set a duplicate cooldown before the session starts.</p>
+            </div>
+            <div>
+              <strong>Kiosk</strong>
+              <p>Kiosk is admin-only. Exit returns to the home page, and offline batches should be reviewed before merging.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="card admin-help-card" id="help-workflow-notes">
+          <h2>Workflow Notes</h2>
+          <div class="help-note-grid">
+            <div>
+              <strong>Students</strong>
+              <p>Add, edit, delete, and print student IDs from the Students tab. Students do not log their own activity.</p>
+            </div>
+            <div>
+              <strong>Training</strong>
+              <p>Assign teacher-directed training tasks. The portal tracks link opens and reviewed status, not student-entered activity claims.</p>
+            </div>
+            <div>
+              <strong>Interschool</strong>
+              <p>Use Interschool Athletics Mode for sprints, jumps, throws, ball games, Cross Country, PBs, age champions, and house points.</p>
+            </div>
+            <div>
+              <strong>Reports</strong>
+              <p>Use reports for audit trails, progress summaries, certificates, carnival exports, and cross country exports.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </main>
 
     <footer class="site-footer">
       <p>Gwynne Park Run Club &copy; 2026 &middot; <a href="privacy-policy.html">Privacy Policy</a></p>
     </footer>
 
-    <script src="backend.js?v=9"></script>
+    <script src="backend.js?v=14"></script>
     <script src="scanning.js"></script>
-    <script src="goals.js"></script>
-    <script src="admin-goals.js"></script>
+    <script src="goals.js?v=4"></script>
+    <script src="admin-goals.js?v=4"></script>
     <script src="assets/qrcode-generator.js"></script>
-    <script src="admin-dashboard.js?v=7"></script>
+    <script src="admin-dashboard.js?v=21"></script>
     <script src="pwa.js"></script>
   </body>
 </html>

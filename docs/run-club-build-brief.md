@@ -55,6 +55,7 @@ Recommended additions before production:
 - `scan_logs` or `ingest_logs` for duplicates, rejected scans, and device
   troubleshooting.
 - `student_runner_access` or secure portal token records.
+- Access model decision: staff/coaches are invite-only; students are passwordless through barcode, QR, or non-guessable access code; parents can search by child name but must confirm with a guardian code/link before the full profile opens. See `docs/access-model-decision.md`.
 - Audit tables for manual adjustments and deleted laps.
 
 ## Business Rules

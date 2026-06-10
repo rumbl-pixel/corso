@@ -1,4 +1,4 @@
-var CACHE_NAME = 'gwynne-park-run-club-v12';
+var CACHE_NAME = 'gwynne-park-run-club-v39';
 var CORE_ASSETS = [
   './',
   './index.html',
@@ -60,6 +60,23 @@ self.addEventListener('fetch', function (event) {
   if (event.request.method !== 'GET') { return; }
   var requestUrl = new URL(event.request.url);
   if (requestUrl.origin !== self.location.origin) { return; }
+
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request).then(function (response) {
+        var copy = response.clone();
+        caches.open(CACHE_NAME).then(function (cache) {
+          cache.put(event.request, copy);
+        });
+        return response;
+      }).catch(function () {
+        return caches.match(event.request).then(function (cached) {
+          return cached || caches.match('./index.html');
+        });
+      })
+    );
+    return;
+  }
 
   event.respondWith(
     caches.match(event.request).then(function (cached) {

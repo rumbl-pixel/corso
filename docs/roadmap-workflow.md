@@ -16,13 +16,13 @@ This workflow keeps the Gwynne Park Run Club roadmap clear enough that we can te
 
 - `Priority 0` is reserved for privacy, security, data ownership, and production readiness. It can be planned now, but most implementation should happen after the product shape is stable and before live student data is entered.
 - `Priority 1` is the operational MVP. This is complete and should stay stable unless a bug is found.
-- `Priority 2` is the next build lane. These items improve day-to-day usefulness without requiring the full production backend first, unless noted.
+- `Priority 2` is complete and should stay stable unless a bug is found.
 - `Priority 3` is backend and sync. These items move the platform from single-browser demo storage to real multi-device use.
 - `Priority 4` is reporting and admin power tools.
 - `Priority 5` is parent/student experience.
 - `Priority 6` is competitions and challenges.
-- `Priority 7` is Sports Carnival and Cross Country.
-- `Priority 8` is polish, onboarding, and long-term enhancements.
+- `Priority 7` is Interschool Athletics and Cross Country. This lane is complete.
+- `Priority 8` is the next polish, onboarding, and long-term enhancements lane.
 
 ## Completion Rule
 

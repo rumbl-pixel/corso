@@ -15,9 +15,48 @@
   });
 
   // --- Storage keys ---
-  var K = { students:'rc_students', activity:'rc_activity', sessions:'rc_sessions', events:'rc_events', challenges:'rc_challenges', timedRuns:'rc_timed', customAwards:'rc_custom_awards', scanAudit:'rc_scan_audit', scannerSettings:'rc_scanner_settings', offlineQueue:'rc_offline_queue', programSettings:'rc_program_settings', training:'rc_training', trainingClicks:'rc_training_clicks', adjustments:'rc_adjustments' };
+  var K = { students:'rc_students', activity:'rc_activity', sessions:'rc_sessions', events:'rc_events', challenges:'rc_challenges', timedRuns:'rc_timed', customAwards:'rc_custom_awards', scanAudit:'rc_scan_audit', scannerSettings:'rc_scanner_settings', offlineQueue:'rc_offline_queue', programSettings:'rc_program_settings', training:'rc_training', trainingClicks:'rc_training_clicks', trainingCompletions:'rc_training_completions', adjustments:'rc_adjustments' };
   var GUARDIAN_LINKS_KEY = 'rc_guardian_links';
   var GUARDIAN_ACCESS_LOG_KEY = 'rc_guardian_access_log';
+  var MILESTONE_NOTIFICATIONS_KEY = 'rc_milestone_notifications';
+  var CHALLENGE_NOTIFICATIONS_KEY = 'rc_challenge_notifications';
+  var CROSS_COUNTRY_COURSES_KEY = 'rc_cross_country_courses';
+  var ATHLETICS_RESULTS_KEY = 'rc_athletics_results';
+  var BUILDER_WORKOUTS_KEY = 'rc_builder_workouts';
+  var THEME_SETTINGS_KEY = 'rc_theme_settings';
+
+  var ATHLETICS_EVENT_OPTIONS = [
+    {id:'xc',name:'Cross Country',category:'cross-country',measure:'time',points:true},
+    {id:'sprint-50',name:'50m Sprint',category:'sprint',measure:'time',points:true},
+    {id:'sprint-75',name:'75m Sprint',category:'sprint',measure:'time',points:true},
+    {id:'sprint-100',name:'100m Sprint',category:'sprint',measure:'time',points:true},
+    {id:'sprint-200',name:'200m',category:'sprint',measure:'time',points:true},
+    {id:'middle-400',name:'400m',category:'distance',measure:'time',points:true},
+    {id:'middle-800',name:'800m',category:'distance',measure:'time',points:true},
+    {id:'long-jump',name:'Long Jump',category:'jump',measure:'distance',points:true},
+    {id:'high-jump',name:'High Jump',category:'jump',measure:'distance',points:true},
+    {id:'triple-jump',name:'Triple Jump',category:'jump',measure:'distance',points:true},
+    {id:'distance-throw',name:'Distance Throw',category:'throw',measure:'distance',points:true},
+    {id:'shot-put',name:'Shot Put',category:'throw',measure:'distance',points:true},
+    {id:'discus',name:'Discus',category:'throw',measure:'distance',points:true},
+    {id:'turbo-jav',name:'Javelin / Turbo Jav / Teeball Throw',category:'throw',measure:'distance',points:true},
+    {id:'tunnel-ball',name:'Tunnel Ball',category:'ball-game',measure:'points',points:true},
+    {id:'leader-ball',name:'Leader Ball',category:'ball-game',measure:'points',points:true},
+    {id:'pass-ball',name:'Pass Ball',category:'ball-game',measure:'points',points:true},
+    {id:'flag-relay',name:'Flag Relay',category:'relay',measure:'time',points:true},
+    {id:'baton-relay',name:'Baton Relay',category:'relay',measure:'time',points:true}
+  ];
+
+  var TRAINING_LIBRARY_COMPONENTS = [
+    {id:'warmup-mobility',title:'Mobility Warm-up',minutes:5,focus:'Prep',detail:'Ankles, hips, shoulders, gentle skipping'},
+    {id:'sprint-starts',title:'Sprint Starts',minutes:8,focus:'Sprints',detail:'3-point starts, reaction cue, 6 x 10m'},
+    {id:'stride-outs',title:'Stride Outs',minutes:8,focus:'Middle distance',detail:'6 x relaxed 60m build-ups'},
+    {id:'tempo-loop',title:'Tempo Loop',minutes:12,focus:'Cross country',detail:'Steady loop, talk-test pace'},
+    {id:'hill-drives',title:'Hill Drives',minutes:10,focus:'Power',detail:'Short controlled hill efforts'},
+    {id:'jump-popups',title:'Jump Pop-ups',minutes:8,focus:'Jumps',detail:'Landing shapes and take-off rhythm'},
+    {id:'throw-steps',title:'Throw Steps',minutes:8,focus:'Throws',detail:'Safe stance, step-through, release target'},
+    {id:'cooldown-reflect',title:'Cooldown Reflection',minutes:5,focus:'Recovery',detail:'Walk, stretch, one goal note'}
+  ];
 
   function load(key, def) { try { var r=localStorage.getItem(key); return r?JSON.parse(r):def; } catch{return def;} }
   function save(key,val) { localStorage.setItem(key,JSON.stringify(val)); }
@@ -26,6 +65,13 @@
   function cleanThresholds(value){ var list=Array.isArray(value)?value:String(value||'').split(','); list=list.map(function(item){return Number(item);}).filter(function(item){return isFinite(item)&&item>0;}).map(function(item){return Math.round(item);}).sort(function(a,b){return a-b;}); return list.length?Array.from(new Set(list)):[5,10,25,50,100,200,500]; }
   function programSettings(){ var settings=window.RunClubScan&&window.RunClubScan.programSettings?window.RunClubScan.programSettings():load(K.programSettings,{schoolName:'Gwynne Park Schools',lapDistanceKm:0.25,defaultSessionType:'Run Club',activeYears:['Year 1','Year 2','Year 3','Year 4','Year 5','Year 6'],classNames:['1A','2A','3A','4C','5B','6A'],awardThresholds:[5,10,25,50,100,200,500]}); var lapDistanceKm=Number(settings.lapDistanceKm); if(!isFinite(lapDistanceKm)||lapDistanceKm<=0){lapDistanceKm=0.25;} return {schoolName:String(settings.schoolName||'Gwynne Park Schools'),lapDistanceKm:lapDistanceKm,defaultSessionType:String(settings.defaultSessionType||'Run Club'),activeYears:cleanList(settings.activeYears,['Year 1','Year 2','Year 3','Year 4','Year 5','Year 6']),classNames:cleanList(settings.classNames,['1A','2A','3A','4C','5B','6A']),awardThresholds:cleanThresholds(settings.awardThresholds)}; }
   function saveProgramSettings(partial){ save(K.programSettings,Object.assign({},programSettings(),partial)); }
+  function themeSettings(){ return Object.assign({appTitle:'Gwynne Park Run Club',schoolBlue:'#003880',uniformGold:'#c99722'},load(THEME_SETTINGS_KEY,{})); }
+  function applyThemeSettings(){
+    var settings=themeSettings();
+    document.documentElement.style.setProperty('--school-blue',settings.schoolBlue);
+    document.documentElement.style.setProperty('--uniform-gold',settings.uniformGold);
+    document.querySelectorAll('.brand h1').forEach(function(el){el.textContent=settings.appTitle;});
+  }
   function duplicateWindowMs(){ return scannerSettings().duplicateCooldownSeconds*1000; }
   function scannerId(){ var settings=scannerSettings(); return settings.deviceName+(settings.deviceLocation?' - '+settings.deviceLocation:''); }
 
@@ -45,6 +91,80 @@
 
   function getStudents() { return load(K.students, defaultStudents()); }
   function saveStudents(s) { save(K.students,s); }
+  function liveRosterGuard(){
+    var backend=window.RunClubBackend;
+    var readiness=backend&&backend.backendReadiness?backend.backendReadiness():{liveDataMode:false,realDataAllowed:false};
+    if(!readiness.liveDataMode){return {ok:true,live:false};}
+    if(backend&&backend.requiresLiveBackend){
+      var guard=backend.requiresLiveBackend();
+      if(guard.ok){return {ok:true,live:true};}
+      return {ok:false,live:true,message:guard.message||'Local roster save blocked until the live backend is ready.'};
+    }
+    return {ok:false,live:true,message:'Local roster save blocked until the live backend adapter is available.'};
+  }
+  function saveStudentsWithBackend(students, changedStudent){
+    var guard=liveRosterGuard();
+    if(!guard.ok){return Promise.resolve({ok:false,blocked:true,error:guard.message||'Local roster save blocked.'});}
+    if(guard.live&&changedStudent&&window.RunClubBackend&&window.RunClubBackend.backendDataAccess){
+      return window.RunClubBackend.backendDataAccess.upsertStudent(changedStudent).then(function(result){
+        if(!result.ok){return result;}
+        saveStudents(students);
+        return result;
+      });
+    }
+    saveStudents(students);
+    return Promise.resolve({ok:true,local:true});
+  }
+  function deleteStudentWithBackend(students, student){
+    var guard=liveRosterGuard();
+    if(!guard.ok){return Promise.resolve({ok:false,blocked:true,error:guard.message||'Local roster save blocked.'});}
+    if(guard.live&&student&&window.RunClubBackend&&window.RunClubBackend.backendDataAccess){
+      return window.RunClubBackend.backendDataAccess.deleteStudent(student).then(function(result){
+        if(!result.ok){return result;}
+        saveStudents(students);
+        return result;
+      });
+    }
+    saveStudents(students);
+    return Promise.resolve({ok:true,local:true});
+  }
+  function importStudentsWithBackend(students, importedStudents){
+    var guard=liveRosterGuard();
+    if(!guard.ok){return Promise.resolve({ok:false,blocked:true,error:guard.message||'Local roster import blocked.'});}
+    if(guard.live&&window.RunClubBackend&&window.RunClubBackend.backendDataAccess&&window.RunClubBackend.backendDataAccess.upsertStudentsBatch){
+      return window.RunClubBackend.backendDataAccess.upsertStudentsBatch(importedStudents||[]).then(function(result){
+        if(!result.ok){return result;}
+        saveStudents(students);
+        return result;
+      });
+    }
+    saveStudents(students);
+    return Promise.resolve({ok:true,local:true});
+  }
+  function isUuid(value){
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value||'');
+  }
+  function saveManualAdjustmentWithBackend(students, student, record){
+    var guard=liveRosterGuard();
+    if(!guard.ok){return Promise.resolve({ok:false,blocked:true,error:guard.message||'Local manual adjustment blocked.'});}
+    if(guard.live&&window.RunClubBackend&&window.RunClubBackend.backendDataAccess&&window.RunClubBackend.backendDataAccess.recordManualAdjustment){
+      return window.RunClubBackend.backendDataAccess.recordManualAdjustment({
+        student_id:isUuid(student.id)?student.id:null,
+        barcode:student.barcode||student.id,
+        delta_laps:record.delta_laps,
+        reason:record.reason,
+        staff:record.staff,
+        lap_distance_km:programSettings().lapDistanceKm,
+        metadata:{source_screen:'admin-dashboard',local_record_id:record.id,laps_after:record.laps_after}
+      }).then(function(result){
+        if(!result.ok){return result;}
+        saveStudents(students);
+        return result;
+      });
+    }
+    saveStudents(students);
+    return Promise.resolve({ok:true,local:true});
+  }
   function lapsTokm(l) { return l*programSettings().lapDistanceKm; }
   function minutesToKm(m) { return m/20; } // Marathon Kids: 20 min = 1 km
   function totalKm(s) { return lapsTokm(s.laps)+minutesToKm(s.minutes||0); }
@@ -75,6 +195,38 @@
 
   // --- Helpers ---
   function showResult(el,payload) { el.hidden=false; el.textContent=JSON.stringify(payload,null,2); }
+
+  function recordMilestoneNotification(student, milestone, source) {
+    var rows = load(MILESTONE_NOTIFICATIONS_KEY, []);
+    var record = {
+      id: 'milestone-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+      student_id: student.id,
+      student_name: student.name,
+      barcode: student.barcode || student.id,
+      milestone: milestone,
+      laps: student.laps,
+      km: student.km,
+      source: source || 'admin-dashboard',
+      created_at: new Date().toISOString()
+    };
+    rows.push(record);
+    save(MILESTONE_NOTIFICATIONS_KEY, rows.slice(-500));
+    return record;
+  }
+
+  function renderMilestoneNotification(record) {
+    var el = document.getElementById('milestone-notification');
+    if (!el) { return; }
+    if (!record) {
+      el.hidden = true;
+      el.innerHTML = '';
+      return;
+    }
+    el.hidden = false;
+    el.innerHTML = '<strong>Milestone reached: ' + escapeHtml(record.student_name) + '</strong>' +
+      '<span>' + escapeHtml(record.milestone) + ' • ' + record.laps + ' total laps • ' + Number(record.km || 0).toFixed(2) + ' km</span>' +
+      '<p>Print or celebrate this from the Awards section when ready.</p>';
+  }
 
   function escapeHtml(value) {
     return String(value == null ? '' : value).replace(/[&<>"']/g, function (ch) {
@@ -184,12 +336,14 @@
   var tabPanels = document.querySelectorAll('.tab-panel');
   tabBtns.forEach(function(btn) {
     btn.addEventListener('click', function() {
-      tabBtns.forEach(function(b){b.classList.remove('active');});
+      tabBtns.forEach(function(b){b.classList.remove('active');b.setAttribute('aria-selected','false');});
       tabPanels.forEach(function(p){p.classList.remove('active');});
       btn.classList.add('active');
+      btn.setAttribute('aria-selected','true');
       document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
     });
   });
+  applyThemeSettings();
 
   // === SCANNER ===
   var scanInput=document.getElementById('scan-input');
@@ -241,25 +395,62 @@
   });
   renderScannerSettings();
 
+  function startRunSessionWithBackend(session){
+    var guard=liveRosterGuard();
+    if(!guard.ok){return Promise.resolve({ok:false,blocked:true,error:guard.message||'Local run session blocked.'});}
+    if(guard.live&&window.RunClubBackend&&window.RunClubBackend.backendDataAccess&&window.RunClubBackend.backendDataAccess.createRunSession){
+      return window.RunClubBackend.backendDataAccess.createRunSession({
+        session_type:session.type,
+        notes:session.notes,
+        lap_distance_km:session.lap_distance_km
+      }).then(function(result){
+        if(!result.ok){return result;}
+        var row=Array.isArray(result.data)?result.data[0]:result.data;
+        if(row&&row.id){session.id=row.id;session.backend_id=row.id;}
+        return result;
+      });
+    }
+    return Promise.resolve({ok:true,local:true});
+  }
+
+  function finishRunSessionWithBackend(session){
+    var guard=liveRosterGuard();
+    if(!guard.ok){return Promise.resolve({ok:false,blocked:true,error:guard.message||'Local run session blocked.'});}
+    if(guard.live&&window.RunClubBackend&&window.RunClubBackend.backendDataAccess&&window.RunClubBackend.backendDataAccess.finishRunSession){
+      return window.RunClubBackend.backendDataAccess.finishRunSession({
+        id:session.backend_id||session.id,
+        finished_at:session.finished_at
+      });
+    }
+    return Promise.resolve({ok:true,local:true});
+  }
+
   document.getElementById('start-session-btn').addEventListener('click', function(){
-    currentSession={id:'session-'+Date.now(),date:new Date().toISOString().slice(0,10),type:sessionTypeEl.value||programSettings().defaultSessionType,notes:sessionNotesEl.value.trim(),device:scannerId(),lap_distance_km:programSettings().lapDistanceKm,scans:[]};
+    var session={id:'session-'+Date.now(),date:new Date().toISOString().slice(0,10),type:sessionTypeEl.value||programSettings().defaultSessionType,notes:sessionNotesEl.value.trim(),device:scannerId(),lap_distance_km:programSettings().lapDistanceKm,scans:[]};
+    startRunSessionWithBackend(session).then(function(result){
+      if(!result.ok){showResult(scanResultEl,{success:false,error:result.error||result.reason||'Local run session blocked.'});return;}
+      currentSession=session;
     sessionScans=[];
     sessionStateEl.style.background='#e6f0ff'; sessionStateEl.style.borderColor='#0c5aa8';
     sessionStateEl.textContent='Session OPEN - '+currentSession.type+' - '+currentSession.date+' - '+currentSession.device;
     scanInput.focus();
+    });
   });
 
   document.getElementById('finish-session-btn').addEventListener('click', function(){
     if(!currentSession){return;}
     currentSession.scans=sessionScans;
     currentSession.finished_at=new Date().toISOString();
-    var sessions=load(K.sessions,[]);
-    sessions.push(currentSession);
-    save(K.sessions,sessions);
-    sessionStateEl.style.background='#f0fff4'; sessionStateEl.style.borderColor='#c6f0d4';
-    sessionStateEl.textContent='Session closed – '+sessionScans.length+' scans saved.';
-    currentSession=null; sessionScans=[];
-    renderSessionLog([]);
+    finishRunSessionWithBackend(currentSession).then(function(result){
+      if(!result.ok){showResult(scanResultEl,{success:false,error:result.error||result.reason||'Local run session blocked.'});return;}
+      var sessions=load(K.sessions,[]);
+      sessions.push(currentSession);
+      save(K.sessions,sessions);
+      sessionStateEl.style.background='#f0fff4'; sessionStateEl.style.borderColor='#c6f0d4';
+      sessionStateEl.textContent='Session closed – '+sessionScans.length+' scans saved.';
+      currentSession=null; sessionScans=[];
+      renderSessionLog([]);
+    });
   });
 
   var autoTimer=null;
@@ -274,7 +465,12 @@
       sessionScans.push(scan);
       lastAdminScan={student_id:result.student.id,name:result.student.name,barcode:barcode};
       undoAdminScanBtn.hidden=false;
-      showResult(scanResultEl,{success:true,message:'Lap logged ✓',student:{id:result.student.id,name:result.student.name,total_laps:result.student.laps,km:result.student.km.toFixed(2)}});
+      if(result.milestone){
+        renderMilestoneNotification(recordMilestoneNotification(result.student,result.milestone,'admin-dashboard'));
+      } else {
+        renderMilestoneNotification(null);
+      }
+      showResult(scanResultEl,{success:true,message:'Lap logged ✓',milestone:result.milestone||null,student:{id:result.student.id,name:result.student.name,total_laps:result.student.laps,km:result.student.km.toFixed(2)}});
       renderSessionLog(sessionScans);
       renderStudentList();
       renderLeaderboard();
@@ -517,6 +713,12 @@
   var editStudentLastEl=document.getElementById('edit-student-last');
   var editStudentYearEl=document.getElementById('edit-student-year');
   var editStudentClassEl=document.getElementById('edit-student-class');
+  var editStudentHouseEl=document.getElementById('edit-student-house');
+  var editStudentTeamEl=document.getElementById('edit-student-team');
+  var editStudentPseudonymEl=document.getElementById('edit-student-pseudonym');
+  var editStudentConsentStatusEl=document.getElementById('edit-student-consent-status');
+  var editStudentHidePublicNameEl=document.getElementById('edit-student-hide-public-name');
+  var editStudentShareCertificatesEl=document.getElementById('edit-student-share-certificates');
   var progressStudentEl=document.getElementById('progress-student');
   var progressTermEl=document.getElementById('progress-term');
   var studentProgressSummaryEl=document.getElementById('student-progress-summary');
@@ -535,12 +737,14 @@
     renderLeaderboard();
     populateActivityStudents();
     populateTimedStudents();
+    populateAthleticsResultStudents();
     renderMedals();
     renderCertificates();
     renderSchoolSummary();
     renderReportSummaries();
     renderSummaryDashboards();
     renderAdminAnalytics();
+    renderMultiSchoolReports();
     populateFullHistoryStudents();
     populateClassReportSelect();
     populateAdjustmentStudents();
@@ -549,6 +753,11 @@
     renderAdjustmentLedger();
     renderStudentProgress();
     renderTrainingStatus();
+    renderPBTracking();
+    renderAgeChampionScoring();
+    renderHousePoints();
+    renderChallengeProgress();
+    renderChallengeAwards();
   }
 
   function renderBarcodeConfirmation(student){
@@ -558,16 +767,54 @@
       barcodeCardHtml(student);
   }
 
+  function studentProfileUrl(student){
+    return 'student-profile.html?student=' + encodeURIComponent(student.barcode || student.id);
+  }
+
+  function privacyDisplayName(student){
+    if(!student){return 'Student';}
+    var pseudonym=String(student.pseudonym||student.preferred_name||'').trim();
+    if(pseudonym){return pseudonym;}
+    if(student.hide_public_name||student.consent_status==='declined'){
+      return 'Runner ' + String(student.barcode||student.id||'').slice(-4);
+    }
+    return student.name;
+  }
+
+  function studentConsentStatus(student){
+    var status=String(student.consent_status||'pending').toLowerCase();
+    if(status==='granted'){return 'Consent granted';}
+    if(status==='declined'){return 'Consent declined';}
+    return 'Consent pending';
+  }
+
   function renderStudentList(){
     var students=getStudents();
     var q=(studentSearchEl.value||'').toLowerCase();
-    if(q) students=students.filter(function(s){return (s.name+s.id+s.year+s.cls).toLowerCase().includes(q);});
+    if(q) students=students.filter(function(s){return (s.name+s.id+s.year+s.cls+(s.house||'')+(s.team||'')).toLowerCase().includes(q);});
     studentListEl.innerHTML='';
     students.forEach(function(s){
       var li=document.createElement('li');
       li.style.display='flex'; li.style.justifyContent='space-between'; li.style.alignItems='center'; li.style.gap='8px';
       var label=document.createElement('span');
-      label.textContent=s.name+' ('+s.barcode+') – '+s.year+', '+s.cls+' – '+s.laps+' laps / '+lapsTokm(s.laps).toFixed(2)+' km';
+      var profileLink=document.createElement('a');
+      profileLink.className='student-name-link';
+      profileLink.href=studentProfileUrl(s);
+      profileLink.textContent=s.name;
+      label.appendChild(profileLink);
+      label.appendChild(document.createTextNode(' ('+s.barcode+') – '+s.year+', '+s.cls+(s.house?' • '+s.house:'')+(s.team?' • Team '+s.team:'')+' – '+s.laps+' laps / '+lapsTokm(s.laps).toFixed(2)+' km'));
+      var privacyBadge=document.createElement('span');
+      privacyBadge.className='privacy-badge';
+      privacyBadge.textContent=studentConsentStatus(s);
+      label.appendChild(document.createTextNode(' '));
+      label.appendChild(privacyBadge);
+      if((s.pseudonym||s.hide_public_name||s.consent_status==='declined')&&privacyDisplayName(s)!==s.name){
+        var publicNameBadge=document.createElement('span');
+        publicNameBadge.className='privacy-badge privacy-badge--public';
+        publicNameBadge.textContent='Public: '+privacyDisplayName(s);
+        label.appendChild(document.createTextNode(' '));
+        label.appendChild(publicNameBadge);
+      }
       var goalsBtn=document.createElement('button');
       goalsBtn.textContent='🎯 Goals';
       goalsBtn.className='link-btn';
@@ -804,9 +1051,16 @@
   var trainingStudentListEl=document.getElementById('training-student-list');
   var trainingResultEl=document.getElementById('training-result');
   var trainingStatusListEl=document.getElementById('training-status-list');
+  var trainingLibraryListEl=document.getElementById('training-library-list');
+  var workoutBuilderDropzoneEl=document.getElementById('workout-builder-dropzone');
+  var workoutBuilderTitleEl=document.getElementById('workout-builder-title');
+  var workoutBuilderUrlEl=document.getElementById('workout-builder-url');
+  var builderWorkout=[];
 
   function trainingAssignments(){ return load(K.training,[]); }
   function trainingClicks(){ return load(K.trainingClicks,[]); }
+  function trainingCompletions(){ return load(K.trainingCompletions,[]); }
+  function builderWorkouts(){ return load(BUILDER_WORKOUTS_KEY,[]); }
 
   function normalizeTrainingUrl(url){
     var value=String(url||'').trim();
@@ -855,6 +1109,10 @@
     return trainingClicks().filter(function(click){return click.assignment_id===assignmentId&&click.student_id===studentId;}).sort(function(a,b){return String(b.opened_at).localeCompare(String(a.opened_at));})[0]||null;
   }
 
+  function trainingCompletionFor(assignmentId,studentId){
+    return trainingCompletions().filter(function(row){return row.assignment_id===assignmentId&&row.student_id===studentId;}).sort(function(a,b){return String(b.completed_at).localeCompare(String(a.completed_at));})[0]||null;
+  }
+
   function renderTrainingStatus(){
     if(!trainingStatusListEl){return;}
     var assignments=trainingAssignments();
@@ -864,14 +1122,69 @@
       var rows=(task.assigned_student_ids||[]).map(function(studentId){
         var student=students.find(function(s){return s.id===studentId;});
         var click=trainingClickFor(task.id,studentId);
-        return '<tr><td>'+escapeHtml(student?student.name:studentId)+'</td><td>'+escapeHtml(student?student.year:'')+'</td><td>'+escapeHtml(student?student.cls:'')+'</td><td>'+(click?'Opened':'Not opened')+'</td><td>'+escapeHtml(click?new Date(click.opened_at).toLocaleString():'')+'</td></tr>';
+        var completion=trainingCompletionFor(task.id,studentId);
+        return '<tr><td>'+escapeHtml(student?student.name:studentId)+'</td><td>'+escapeHtml(student?student.year:'')+'</td><td>'+escapeHtml(student?student.cls:'')+'</td><td>'+(completion?'Reviewed':click?'Opened':'Not opened')+'</td><td>'+escapeHtml(click?new Date(click.opened_at).toLocaleString():'')+'</td><td>'+escapeHtml(completion?new Date(completion.completed_at).toLocaleString():'')+'</td></tr>';
       }).join('');
       return '<div class="training-assignment">'+
         '<div class="training-assignment-head"><div><strong>'+escapeHtml(task.title)+'</strong><br><span>'+escapeHtml(task.notes||'No notes')+'</span></div><a href="'+escapeAttr(task.url)+'" target="_blank" rel="noopener">Open task</a></div>'+
         '<div class="training-meta">'+(task.due_date?'Due '+escapeHtml(task.due_date)+' • ':'')+(task.assigned_student_ids||[]).length+' student(s)</div>'+
-        '<table class="training-status-table"><thead><tr><th>Student</th><th>Year</th><th>Class</th><th>Status</th><th>Last opened</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+        '<table class="training-status-table"><thead><tr><th>Student</th><th>Year</th><th>Class</th><th>Status</th><th>Last opened</th><th>Reviewed</th></tr></thead><tbody>'+rows+'</tbody></table>'+
       '</div>';
     }).join('');
+  }
+
+  function renderWorkoutBuilderDropzone(){
+    if(!workoutBuilderDropzoneEl){return;}
+    if(!builderWorkout.length){
+      workoutBuilderDropzoneEl.innerHTML='<p style="color:#888;font-size:0.85rem;">Drag drills here or click a drill to add it.</p>';
+      return;
+    }
+    var total=builderWorkout.reduce(function(sum,item){return sum+Number(item.minutes||0);},0);
+    workoutBuilderDropzoneEl.innerHTML='<ol class="workout-builder-list">'+builderWorkout.map(function(item,index){
+      return '<li><strong>'+escapeHtml(item.title)+'</strong> <span>'+item.minutes+' min - '+escapeHtml(item.focus)+'</span><button type="button" class="link-btn remove-builder-drill" data-index="'+index+'">Remove</button></li>';
+    }).join('')+'</ol><p class="training-meta">Total: '+total+' minutes</p>';
+    document.querySelectorAll('.remove-builder-drill').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        builderWorkout.splice(Number(btn.dataset.index),1);
+        renderWorkoutBuilderDropzone();
+      });
+    });
+  }
+
+  function addBuilderComponent(componentId){
+    var item=TRAINING_LIBRARY_COMPONENTS.find(function(component){return component.id===componentId;});
+    if(!item){return;}
+    builderWorkout.push(Object.assign({},item));
+    renderWorkoutBuilderDropzone();
+  }
+
+  function renderTrainingLibraryBuilder(){
+    if(!trainingLibraryListEl||!workoutBuilderDropzoneEl){return;}
+    trainingLibraryListEl.innerHTML=TRAINING_LIBRARY_COMPONENTS.map(function(item){
+      return '<button type="button" class="training-library-chip" draggable="true" data-component-id="'+escapeAttr(item.id)+'">'+
+        '<strong>'+escapeHtml(item.title)+'</strong><span>'+item.minutes+' min - '+escapeHtml(item.focus)+'</span><small>'+escapeHtml(item.detail)+'</small></button>';
+    }).join('');
+    document.querySelectorAll('.training-library-chip').forEach(function(chip){
+      chip.addEventListener('click',function(){addBuilderComponent(chip.dataset.componentId);});
+      chip.addEventListener('dragstart',function(e){e.dataTransfer.setData('text/plain',chip.dataset.componentId);});
+    });
+    workoutBuilderDropzoneEl.addEventListener('dragover',function(e){e.preventDefault();});
+    workoutBuilderDropzoneEl.addEventListener('drop',function(e){e.preventDefault();addBuilderComponent(e.dataTransfer.getData('text/plain'));});
+    renderWorkoutBuilderDropzone();
+  }
+
+  function createTrainingAssignmentFromBuilder(){
+    if(!builderWorkout.length){showResult(trainingResultEl,{success:false,error:'Add at least one drill to the workout builder.'});return;}
+    var title=workoutBuilderTitleEl.value.trim()||builderWorkout.map(function(item){return item.title;}).slice(0,2).join(' + ');
+    var total=builderWorkout.reduce(function(sum,item){return sum+Number(item.minutes||0);},0);
+    var planText=builderWorkout.map(function(item,index){return (index+1)+'. '+item.title+' ('+item.minutes+' min): '+item.detail;}).join(' | ');
+    trainingTitleEl.value=title;
+    trainingUrlEl.value=workoutBuilderUrlEl.value.trim()||'in-app://training-builder/'+Date.now();
+    trainingNotesEl.value=total+' min plan: '+planText;
+    var saved=builderWorkouts();
+    saved.push({id:'builder-workout-'+Date.now(),title:title,total_minutes:total,components:builderWorkout.slice(),created_at:new Date().toISOString(),created_by:session.email});
+    save(BUILDER_WORKOUTS_KEY,saved);
+    showResult(trainingResultEl,{success:true,message:'Workout copied into the assignment form. Select students, then assign training.',title:title,total_minutes:total});
   }
 
   if(trainingFormEl){
@@ -881,6 +1194,13 @@
     });
     populateTrainingStudents();
     renderTrainingStatus();
+    renderTrainingLibraryBuilder();
+    document.getElementById('assign-builder-workout-btn').addEventListener('click',createTrainingAssignmentFromBuilder);
+  }
+
+  var printProgramResourcesBtn=document.getElementById('print-program-resources-btn');
+  if(printProgramResourcesBtn){
+    printProgramResourcesBtn.addEventListener('click',printProgramResources);
   }
 
   function openStudentEditor(studentId){
@@ -891,6 +1211,12 @@
     editStudentLastEl.value=student.last||'';
     editStudentYearEl.value=student.year||'Year 1';
     editStudentClassEl.value=student.cls||'';
+    editStudentHouseEl.value=student.house||'';
+    editStudentTeamEl.value=student.team||'';
+    editStudentPseudonymEl.value=student.pseudonym||student.preferred_name||'';
+    editStudentConsentStatusEl.value=student.consent_status||'pending';
+    editStudentHidePublicNameEl.checked=!!student.hide_public_name;
+    editStudentShareCertificatesEl.checked=!!student.share_certificates_publicly;
     studentEditorModalEl.hidden=false;
     editStudentFirstEl.focus();
   }
@@ -905,14 +1231,17 @@
     var student=students.find(function(s){return s.id===studentId;});
     if(!student){return;}
     if(!confirm('Remove '+student.name+' from the roster? Their past exported reports will not be changed.')){return;}
-    saveStudents(students.filter(function(s){return s.id!==studentId;}));
-    try {
-      var allGoals=JSON.parse(localStorage.getItem('rc_goals')||'{}');
-      delete allGoals[studentId];
-      localStorage.setItem('rc_goals',JSON.stringify(allGoals));
-    } catch(e) {}
-    refreshStudentViews();
-    showResult(addStudentResultEl,{success:true,message:'Student removed.',student:{name:student.name,barcode:student.barcode}});
+    var remaining=students.filter(function(s){return s.id!==studentId;});
+    deleteStudentWithBackend(remaining,student).then(function(result){
+      if(!result.ok){showResult(addStudentResultEl,{success:false,error:result.error||result.reason||'Local roster save blocked.'});return;}
+      try {
+        var allGoals=JSON.parse(localStorage.getItem('rc_goals')||'{}');
+        delete allGoals[studentId];
+        localStorage.setItem('rc_goals',JSON.stringify(allGoals));
+      } catch(e) {}
+      refreshStudentViews();
+      showResult(addStudentResultEl,{success:true,message:'Student removed.',student:{name:student.name,barcode:student.barcode}});
+    });
   }
 
   editStudentFormEl.addEventListener('submit',function(e){
@@ -922,18 +1251,26 @@
     var last=editStudentLastEl.value.trim();
     var year=editStudentYearEl.value;
     var cls=editStudentClassEl.value.trim().toUpperCase();
+    var house=editStudentHouseEl.value.trim();
+    var team=editStudentTeamEl.value.trim();
+    var pseudonym=editStudentPseudonymEl.value.trim();
+    var consentStatus=editStudentConsentStatusEl.value||'pending';
+    var hidePublicName=editStudentHidePublicNameEl.checked;
+    var shareCertificatesPublicly=editStudentShareCertificatesEl.checked;
     if(!studentId||!first||!last||!year||!cls){return;}
     var students=getStudents();
     var updated=null;
     students=students.map(function(s){
       if(s.id!==studentId){return s;}
-      updated=Object.assign({},s,{first:first,last:last,name:first+' '+last,year:year,cls:cls});
+      updated=Object.assign({},s,{first:first,last:last,name:first+' '+last,year:year,cls:cls,house:house,team:team,pseudonym:pseudonym,preferred_name:pseudonym,consent_status:consentStatus,hide_public_name:hidePublicName,share_certificates_publicly:shareCertificatesPublicly});
       return updated;
     });
-    saveStudents(students);
-    closeStudentEditor();
-    refreshStudentViews();
-    if(updated){showResult(addStudentResultEl,{success:true,message:'Student updated.',student:{name:updated.name,year:updated.year,cls:updated.cls,barcode:updated.barcode}});}
+    saveStudentsWithBackend(students,updated).then(function(result){
+      if(!result.ok){showResult(addStudentResultEl,{success:false,error:result.error||result.reason||'Local roster save blocked.'});return;}
+      closeStudentEditor();
+      refreshStudentViews();
+      if(updated){showResult(addStudentResultEl,{success:true,message:'Student updated.',student:{name:updated.name,year:updated.year,cls:updated.cls,barcode:updated.barcode}});}
+    });
   });
 
   document.getElementById('close-student-editor-btn').addEventListener('click',closeStudentEditor);
@@ -948,24 +1285,278 @@
     var last=document.getElementById('new-student-last').value.trim();
     var year=document.getElementById('new-student-year').value;
     var cls=document.getElementById('new-student-class').value.trim().toUpperCase();
+    var house=document.getElementById('new-student-house').value.trim();
+    var team=document.getElementById('new-student-team').value.trim();
     if(!first||!last||!year||!cls){showResult(addStudentResultEl,{success:false,error:'Enter first name, last name, year and class.'});return;}
     var students=getStudents();
     var id=generateBarcodeId(first,last,students);
-    var student={id:id,barcode:id,first:first,last:last,name:first+' '+last,year:year,cls:cls,laps:0,minutes:0,events:[]};
+    var student={id:id,barcode:id,first:first,last:last,name:first+' '+last,year:year,cls:cls,house:house,team:team,pseudonym:'',preferred_name:'',consent_status:'pending',hide_public_name:false,share_certificates_publicly:false,laps:0,minutes:0,events:[]};
     students.push(student);
-    saveStudents(students);
-    addStudentFormEl.reset();
-    refreshStudentViews();
-    addStudentResultEl.hidden=true;
-    renderBarcodeConfirmation(student);
-    printStudentBarcodeCard(student);
+    saveStudentsWithBackend(students,student).then(function(result){
+      if(!result.ok){showResult(addStudentResultEl,{success:false,error:result.error||result.reason||'Local roster save blocked.'});return;}
+      addStudentFormEl.reset();
+      refreshStudentViews();
+      addStudentResultEl.hidden=true;
+      renderBarcodeConfirmation(student);
+      printStudentBarcodeCard(student);
+    });
   });
 
-  var sportsCarnivalModeEl=document.getElementById('sports-carnival-mode');
-  sportsCarnivalModeEl.checked=window.RunClubGoals.isSportsCarnivalMode();
-  sportsCarnivalModeEl.addEventListener('change',function(){
-    window.RunClubGoals.setSportsCarnivalMode(sportsCarnivalModeEl.checked);
+  var interschoolAthleticsModeEl=document.getElementById('interschool-athletics-mode');
+  var interschoolAthleticsEventsEl=document.getElementById('interschool-athletics-events');
+  var crossCountryCourseFormEl=document.getElementById('cross-country-course-form');
+  var crossCountryCourseNameEl=document.getElementById('cross-country-course-name');
+  var crossCountryYearEl=document.getElementById('cross-country-year');
+  var crossCountryDistanceEl=document.getElementById('cross-country-distance');
+  var crossCountryNotesEl=document.getElementById('cross-country-notes');
+  var crossCountryResultEl=document.getElementById('cross-country-result');
+  var crossCountryCourseListEl=document.getElementById('cross-country-course-list');
+
+  function renderInterschoolAthleticsEvents(){
+    if(!interschoolAthleticsEventsEl){return;}
+    var events=window.RunClubGoals.INTERSCHOOL_ATHLETICS_EVENTS||[];
+    var groups={};
+    events.forEach(function(event){
+      if(!groups[event.group]){groups[event.group]=[];}
+      groups[event.group].push(event);
+    });
+    interschoolAthleticsEventsEl.innerHTML=Object.keys(groups).map(function(group){
+      return '<div class="athletics-event-group"><strong>'+escapeHtml(group)+'</strong><div>'+groups[group].map(function(event){
+        return '<span class="athletics-event-chip">'+escapeHtml(event.name)+' <small>'+escapeHtml(event.years)+'</small></span>';
+      }).join('')+'</div></div>';
+    }).join('');
+  }
+
+  interschoolAthleticsModeEl.checked=window.RunClubGoals.isInterschoolAthleticsMode();
+  interschoolAthleticsModeEl.addEventListener('change',function(){
+    window.RunClubGoals.setInterschoolAthleticsMode(interschoolAthleticsModeEl.checked);
   });
+  renderInterschoolAthleticsEvents();
+
+  function crossCountryCourses(){
+    return load(CROSS_COUNTRY_COURSES_KEY,[]);
+  }
+
+  function saveCrossCountryCourses(courses){
+    save(CROSS_COUNTRY_COURSES_KEY,courses);
+  }
+
+  function deleteCrossCountryCourse(courseId){
+    var course=crossCountryCourses().find(function(row){return row.id===courseId;});
+    if(!course){return;}
+    if(!confirm('Remove '+course.name+' from Cross Country courses?')){return;}
+    saveCrossCountryCourses(crossCountryCourses().filter(function(row){return row.id!==courseId;}));
+    showResult(crossCountryResultEl,{success:true,message:'Cross Country course removed.',course:course.name});
+    renderCrossCountryCourses();
+  }
+
+  function renderCrossCountryCourses(){
+    if(!crossCountryCourseListEl){return;}
+    var courses=crossCountryCourses();
+    if(!courses.length){
+      crossCountryCourseListEl.innerHTML='<p style="color:#888;font-size:0.85rem;">No Cross Country courses saved yet.</p>';
+      return;
+    }
+    crossCountryCourseListEl.innerHTML=courses.slice().reverse().map(function(course){
+      return '<div class="training-card">'+
+        '<div class="training-card-head"><strong>'+escapeHtml(course.name)+'</strong><span class="training-status-pill">'+Number(course.distance_m).toLocaleString()+' m</span></div>'+
+        '<p>'+escapeHtml(course.year_group)+' course'+(course.notes?' - '+escapeHtml(course.notes):'')+'</p>'+
+        '<div class="training-actions"><button type="button" class="secondary delete-cross-country-course" data-course-id="'+escapeAttr(course.id)+'">Delete</button></div>'+
+      '</div>';
+    }).join('');
+    document.querySelectorAll('.delete-cross-country-course').forEach(function(btn){
+      btn.addEventListener('click',function(){deleteCrossCountryCourse(btn.dataset.courseId);});
+    });
+  }
+
+  function createCrossCountryCourse(e){
+    e.preventDefault();
+    var name=crossCountryCourseNameEl.value.trim();
+    var distance=Number(crossCountryDistanceEl.value);
+    if(!name||!isFinite(distance)||distance<=0){
+      showResult(crossCountryResultEl,{success:false,error:'Enter a course name and valid distance.'});
+      return;
+    }
+    var course={
+      id:'cross-country-'+Date.now(),
+      name:name,
+      year_group:crossCountryYearEl.value||'Whole school',
+      distance_m:Math.round(distance),
+      notes:crossCountryNotesEl.value.trim(),
+      created_at:new Date().toISOString(),
+      created_by:session.email
+    };
+    var courses=crossCountryCourses();
+    courses.push(course);
+    saveCrossCountryCourses(courses);
+    crossCountryCourseFormEl.reset();
+    showResult(crossCountryResultEl,{success:true,message:'Cross Country course saved.',course:course});
+    renderCrossCountryCourses();
+  }
+
+  if(crossCountryCourseFormEl){
+    crossCountryCourseFormEl.addEventListener('submit',createCrossCountryCourse);
+    renderCrossCountryCourses();
+  }
+
+  var athleticsResultFormEl=document.getElementById('athletics-result-form');
+  var athleticsResultStudentEl=document.getElementById('athletics-result-student');
+  var athleticsEventSelectEl=document.getElementById('athletics-event-select');
+  var athleticsResultValueEl=document.getElementById('athletics-result-value');
+  var athleticsResultHouseEl=document.getElementById('athletics-result-house');
+  var athleticsResultPlaceEl=document.getElementById('athletics-result-place');
+  var fieldAttempt1El=document.getElementById('field-attempt-1');
+  var fieldAttempt2El=document.getElementById('field-attempt-2');
+  var fieldAttempt3El=document.getElementById('field-attempt-3');
+  var athleticsResultOutputEl=document.getElementById('athletics-result-output');
+  var pbSummaryListEl=document.getElementById('pb-summary-list');
+  var ageChampionListEl=document.getElementById('age-champion-list');
+  var housePointsListEl=document.getElementById('house-points-list');
+
+  function athleticsResults(){ return load(ATHLETICS_RESULTS_KEY,[]); }
+  function saveAthleticsResults(rows){ save(ATHLETICS_RESULTS_KEY,rows); }
+  function athleticsEventById(eventId){ return ATHLETICS_EVENT_OPTIONS.find(function(event){return event.id===eventId;})||ATHLETICS_EVENT_OPTIONS[0]; }
+
+  function resultNumber(value){
+    var raw=String(value||'').trim();
+    if(raw.indexOf(':')>-1){
+      var parts=raw.split(':').map(function(part){return Number(part);});
+      if(parts.length===2&&isFinite(parts[0])&&isFinite(parts[1])){return parts[0]*60+parts[1];}
+      if(parts.length===3&&isFinite(parts[0])&&isFinite(parts[1])&&isFinite(parts[2])){return parts[0]*3600+parts[1]*60+parts[2];}
+    }
+    var numeric=Number(raw.replace(/[^\d.-]/g,''));
+    return isFinite(numeric)?numeric:null;
+  }
+
+  function resultDisplay(row){
+    if(row.measure==='time'){return row.result_value+' sec';}
+    if(row.measure==='distance'){return row.result_value+' m';}
+    return row.result_value+' pts';
+  }
+
+  function isBetterResult(a,b,measure){
+    if(!b){return true;}
+    if(measure==='time'){return Number(a)<Number(b);}
+    return Number(a)>Number(b);
+  }
+
+  function bestResultFor(studentId,eventId,excludeId){
+    var event=athleticsEventById(eventId);
+    var rows=athleticsResults().filter(function(row){return row.student_id===studentId&&row.event_id===eventId&&row.id!==excludeId;});
+    return rows.reduce(function(best,row){
+      return isBetterResult(row.result_number,best?best.result_number:null,event.measure)?row:best;
+    },null);
+  }
+
+  function isPersonalBest(result){
+    var previous=bestResultFor(result.student_id,result.event_id,result.id);
+    return isBetterResult(result.result_number,previous?previous.result_number:null,result.measure);
+  }
+
+  function housePointsForPlace(place){
+    return ({1:10,2:8,3:6,4:4,5:2,6:1})[Number(place)]||0;
+  }
+
+  function populateAthleticsResultStudents(){
+    if(!athleticsResultStudentEl){return;}
+    var selected=athleticsResultStudentEl.value;
+    athleticsResultStudentEl.innerHTML='';
+    getStudents().forEach(function(s){
+      var o=document.createElement('option');o.value=s.id;o.textContent=s.name+' ('+s.year+', '+s.cls+')';athleticsResultStudentEl.appendChild(o);
+    });
+    if(selected&&getStudents().some(function(s){return s.id===selected;})){athleticsResultStudentEl.value=selected;}
+  }
+
+  function populateAthleticsEvents(){
+    if(!athleticsEventSelectEl){return;}
+    athleticsEventSelectEl.innerHTML=ATHLETICS_EVENT_OPTIONS.map(function(event){
+      return '<option value="'+escapeAttr(event.id)+'">'+escapeHtml(event.name)+' - '+escapeHtml(event.category)+'</option>';
+    }).join('');
+  }
+
+  function createAthleticsResult(e){
+    e.preventDefault();
+    var student=getStudents().find(function(s){return s.id===athleticsResultStudentEl.value;});
+    var event=athleticsEventById(athleticsEventSelectEl.value);
+    var numeric=resultNumber(athleticsResultValueEl.value);
+    if(!student||numeric==null){showResult(athleticsResultOutputEl,{success:false,error:'Choose a student and enter a valid result.'});return;}
+    var attempts=[fieldAttempt1El.value,fieldAttempt2El.value,fieldAttempt3El.value].map(function(value){return String(value||'').trim();}).filter(Boolean);
+    var row={
+      id:'athletics-result-'+Date.now(),
+      student_id:student.id,
+      student_name:student.name,
+      year:student.year,
+      class_name:student.cls,
+      house:athleticsResultHouseEl.value.trim()||student.house||student.team||'Unassigned',
+      event_id:event.id,
+      event_name:event.name,
+      event_category:event.category,
+      measure:event.measure,
+      result_value:athleticsResultValueEl.value.trim(),
+      result_number:numeric,
+      attempts:attempts,
+      place:athleticsResultPlaceEl.value,
+      points:housePointsForPlace(athleticsResultPlaceEl.value),
+      date:new Date().toISOString().slice(0,10),
+      created_at:new Date().toISOString(),
+      created_by:session.email
+    };
+    row.personal_best=isPersonalBest(row);
+    var rows=athleticsResults();
+    rows.push(row);
+    saveAthleticsResults(rows);
+    showResult(athleticsResultOutputEl,{success:true,message:row.personal_best?'Result saved - new PB.':'Result saved.',result:row});
+    athleticsResultFormEl.reset();
+    populateAthleticsEvents();
+    renderPBTracking();
+    renderAgeChampionScoring();
+    renderHousePoints();
+  }
+
+  function renderPBTracking(){
+    if(!pbSummaryListEl){return;}
+    var rows=athleticsResults().filter(function(row){return row.personal_best;}).slice().reverse().slice(0,12);
+    if(!rows.length){pbSummaryListEl.innerHTML='<p style="color:#888;font-size:0.85rem;">No PBs recorded yet.</p>';return;}
+    pbSummaryListEl.innerHTML='<table class="progress-history-table"><thead><tr><th>Student</th><th>Event</th><th>PB</th></tr></thead><tbody>'+
+      rows.map(function(row){return '<tr><td>'+escapeHtml(row.student_name)+'</td><td>'+escapeHtml(row.event_name)+'</td><td>'+escapeHtml(resultDisplay(row))+'</td></tr>';}).join('')+
+      '</tbody></table>';
+  }
+
+  function renderAgeChampionScoring(){
+    if(!ageChampionListEl){return;}
+    var scores={};
+    athleticsResults().forEach(function(row){
+      var key=row.year+'|'+row.student_id;
+      if(!scores[key]){scores[key]={year:row.year,student:row.student_name,points:0,pbs:0};}
+      scores[key].points+=Number(row.points||0);
+      if(row.personal_best){scores[key].pbs+=1;}
+    });
+    var rows=Object.keys(scores).map(function(key){return scores[key];}).sort(function(a,b){return b.points-a.points||b.pbs-a.pbs;}).slice(0,12);
+    if(!rows.length){ageChampionListEl.innerHTML='<p style="color:#888;font-size:0.85rem;">No scoring results yet.</p>';return;}
+    ageChampionListEl.innerHTML='<table class="progress-history-table"><thead><tr><th>Year</th><th>Student</th><th>Points</th><th>PBs</th></tr></thead><tbody>'+
+      rows.map(function(row){return '<tr><td>'+escapeHtml(row.year)+'</td><td>'+escapeHtml(row.student)+'</td><td>'+row.points+'</td><td>'+row.pbs+'</td></tr>';}).join('')+
+      '</tbody></table>';
+  }
+
+  function renderHousePoints(){
+    if(!housePointsListEl){return;}
+    var points={};
+    athleticsResults().forEach(function(row){points[row.house]=(points[row.house]||0)+Number(row.points||0);});
+    var rows=Object.keys(points).map(function(house){return {house:house,points:points[house]};}).sort(function(a,b){return b.points-a.points;});
+    if(!rows.length){housePointsListEl.innerHTML='<p style="color:#888;font-size:0.85rem;">No house points recorded yet.</p>';return;}
+    housePointsListEl.innerHTML='<table class="progress-history-table"><thead><tr><th>House</th><th>Points</th></tr></thead><tbody>'+
+      rows.map(function(row){return '<tr><td>'+escapeHtml(row.house)+'</td><td>'+row.points+'</td></tr>';}).join('')+
+      '</tbody></table>';
+  }
+
+  if(athleticsResultFormEl){
+    populateAthleticsResultStudents();
+    populateAthleticsEvents();
+    athleticsResultFormEl.addEventListener('submit',createAthleticsResult);
+    renderPBTracking();
+    renderAgeChampionScoring();
+    renderHousePoints();
+  }
 
   // === LEADERBOARD ===
   var lbYearEl=document.getElementById('lb-year-filter');
@@ -1098,9 +1689,39 @@
   var medalSummaryEl=document.getElementById('medal-summary');
   var certificatesListEl=document.getElementById('certificates-list');
   var customAwardsListEl=document.getElementById('custom-awards-list');
+  var customMilestoneFormEl=document.getElementById('custom-milestone-form');
+  var customMilestoneThresholdsEl=document.getElementById('custom-milestone-thresholds');
+  var customMilestoneResultEl=document.getElementById('custom-milestone-result');
+  var customMilestonePreviewEl=document.getElementById('custom-milestone-preview');
   function milestoneThresholds(){ return programSettings().awardThresholds; }
   var MILESTONE_LABELS={5:'First 5 Laps',10:'10 Lap Club',25:'Quarter Century',50:'Half Century',100:'Century Club',200:'Double Century',500:'Elite Runner'};
   function milestoneLabel(laps){ return MILESTONE_LABELS[laps]||laps+' Lap Club'; }
+
+  function renderCustomMilestones(){
+    var thresholds=milestoneThresholds();
+    customMilestoneThresholdsEl.value=thresholds.join(', ');
+    customMilestonePreviewEl.innerHTML='<div class="setup-summary-grid">'+thresholds.map(function(value){
+      return '<div><strong>'+value+'</strong><span>'+escapeHtml(milestoneLabel(value))+'</span></div>';
+    }).join('')+'</div>';
+  }
+
+  function saveCustomMilestones(e){
+    if(e){e.preventDefault();}
+    var thresholds=cleanThresholds(customMilestoneThresholdsEl.value);
+    saveProgramSettings({awardThresholds:thresholds});
+    renderCustomMilestones();
+    renderOnboarding();
+    renderAwards();
+    showResult(customMilestoneResultEl,{success:true,message:'Custom milestone thresholds saved.',thresholds:thresholds});
+  }
+
+  function resetCustomMilestones(){
+    saveProgramSettings({awardThresholds:[5,10,25,50,100,200,500]});
+    renderCustomMilestones();
+    renderOnboarding();
+    renderAwards();
+    showResult(customMilestoneResultEl,{success:true,message:'Milestone thresholds reset to defaults.'});
+  }
 
   function renderAwards(){
     var students=getStudents();
@@ -1119,6 +1740,9 @@
     awardsDisplayEl.innerHTML=html||'<p style="color:#888;font-size:0.85rem;">No milestone awards yet. Start scanning!</p>';
   }
   renderAwards();
+  renderCustomMilestones();
+  customMilestoneFormEl.addEventListener('submit',saveCustomMilestones);
+  document.getElementById('reset-custom-milestones-btn').addEventListener('click',resetCustomMilestones);
 
   function renderMedals(){
     medalRulesEl.innerHTML=MEDAL_TIERS.filter(function(t){return t.name!=='Starter';}).map(function(t){
@@ -1193,28 +1817,116 @@
   // CHALLENGES
   var challengeResultEl=document.getElementById('challenge-result');
   var challengesListEl=document.getElementById('challenges-list');
+  var challengeNotificationListEl=document.getElementById('challenge-notification-list');
+  var challengeProgressSummaryEl=document.getElementById('challenge-progress-summary');
+  var challengeAwardListEl=document.getElementById('challenge-award-list');
+
+  function challengeRuleFromForm(){
+    var target=Number(document.getElementById('challenge-target').value);
+    return {
+      rule_type:document.getElementById('challenge-rule-type').value,
+      metric:document.getElementById('challenge-metric').value,
+      target:isFinite(target)&&target>0?target:null,
+      scope:document.getElementById('challenge-scope').value
+    };
+  }
+
+  function challengeRuleLabel(challenge){
+    var ruleType=challenge.rule_type||'total';
+    var metric=challenge.metric||'laps';
+    var target=challenge.target||'open';
+    var scope=challenge.scope||'school';
+    var ruleCopy=ruleType==='per-student'?'per student':ruleType==='top-group'?'top group wins':'total target';
+    return ruleCopy+' • '+target+' '+metric+' • '+scope;
+  }
+
+  function challengeProgressRows(){
+    var students=getStudents();
+    var schoolLaps=students.reduce(function(sum,s){return sum+(s.laps||0);},0);
+    var schoolKm=students.reduce(function(sum,s){return sum+totalKm(s);},0);
+    return load(K.challenges,[]).map(function(challenge){
+      var goalMatch=String(challenge.goal||'').match(/(\d+(?:\.\d+)?)/);
+      var target=Number(challenge.target)||(goalMatch?Number(goalMatch[1]):0);
+      var metric=challenge.metric||(/km/i.test(challenge.goal||'')?'km':'laps');
+      var current=metric==='km'?schoolKm:schoolLaps;
+      var percent=target?Math.min(100,Math.round((current/target)*100)):0;
+      return {name:challenge.name,goal:challenge.goal,metric:metric,current:current,target:target,percent:percent,rule:challengeRuleLabel(challenge)};
+    });
+  }
+
+  function renderChallengeProgress(){
+    if(!challengeProgressSummaryEl){return;}
+    var rows=challengeProgressRows();
+    if(!rows.length){challengeProgressSummaryEl.innerHTML='<p style="color:#888;font-size:0.85rem;">No challenge progress to show yet.</p>';return;}
+    challengeProgressSummaryEl.innerHTML='<h3 style="margin-bottom:0.5rem;">Challenge Progress</h3><div class="challenge-progress-list">'+rows.map(function(row){
+      var current=row.metric==='km'?row.current.toFixed(2)+' km':Math.round(row.current)+' laps';
+      var target=row.target?(row.metric==='km'?row.target+' km':row.target+' laps'):escapeHtml(row.goal);
+      return '<div class="challenge-progress-card"><div class="challenge-progress-head"><strong>'+escapeHtml(row.name)+'</strong><span>'+row.percent+'%</span></div><div class="training-meta">'+current+' of '+target+' • '+escapeHtml(row.rule)+'</div><div class="goal-bar"><div class="goal-bar-fill" style="width:'+row.percent+'%"></div></div></div>';
+    }).join('')+'</div>';
+  }
+
+  function challengeAwardRows(){
+    return challengeProgressRows().filter(function(row){return row.percent>=100;}).map(function(row){
+      return {challenge:row.name,award:'Challenge Complete',status:'Ready to celebrate',progress:row.percent+'%'};
+    });
+  }
+
+  function renderChallengeAwards(){
+    if(!challengeAwardListEl){return;}
+    var rows=challengeAwardRows();
+    if(!rows.length){challengeAwardListEl.innerHTML='<p style="color:#888;font-size:0.85rem;">No challenge awards ready yet.</p>';return;}
+    challengeAwardListEl.innerHTML='<h3 style="margin-bottom:0.5rem;">Challenge Awards Ready</h3><table class="training-status-table"><thead><tr><th>Challenge</th><th>Award</th><th>Status</th><th>Progress</th></tr></thead><tbody>'+rows.map(function(row){
+      return '<tr><td>'+escapeHtml(row.challenge)+'</td><td>'+escapeHtml(row.award)+'</td><td>'+escapeHtml(row.status)+'</td><td>'+escapeHtml(row.progress)+'</td></tr>';
+    }).join('')+'</tbody></table>';
+  }
+
+  function recordChallengeNotification(challenge){
+    var rows=load(CHALLENGE_NOTIFICATIONS_KEY,[]);
+    var record={id:'challenge-note-'+Date.now(),challenge_id:challenge.id,title:challenge.name,goal:challenge.goal,message:'New challenge ready to share: '+challenge.name,created_at:new Date().toISOString()};
+    rows.push(record);
+    save(CHALLENGE_NOTIFICATIONS_KEY,rows.slice(-200));
+    return record;
+  }
+
+  function renderChallengeNotifications(){
+    var rows=load(CHALLENGE_NOTIFICATIONS_KEY,[]).slice().reverse().slice(0,5);
+    if(!challengeNotificationListEl){return;}
+    if(!rows.length){challengeNotificationListEl.innerHTML='<p style="color:#888;font-size:0.85rem;">No challenge notifications yet.</p>';return;}
+    challengeNotificationListEl.innerHTML=rows.map(function(row){
+      return '<div class="notification-item"><strong>'+escapeHtml(row.title)+'</strong><span>'+escapeHtml(row.goal)+' • '+new Date(row.created_at).toLocaleDateString()+'</span><p>'+escapeHtml(row.message)+'</p></div>';
+    }).join('');
+  }
 
   function renderChallenges(){
     var challenges=load(K.challenges,[]);
     if(!challenges.length){challengesListEl.innerHTML='<p style="color:#888;font-size:0.85rem;">No challenges yet.</p>';return;}
     var html='<ul style="padding:0;list-style:none;margin:0;">';
     challenges.forEach(function(c){
-      html+='<li style="padding:0.4rem 0;border-bottom:1px solid #f0f0f0;font-size:0.85rem;"><strong>'+c.name+'</strong> – Goal: '+c.goal+'</li>';
+      html+='<li style="padding:0.4rem 0;border-bottom:1px solid #f0f0f0;font-size:0.85rem;"><strong>'+escapeHtml(c.name)+'</strong> – Goal: '+escapeHtml(c.goal)+'<br><span style="color:#64748b;">Rule: '+escapeHtml(challengeRuleLabel(c))+'</span></li>';
     });
     html+='</ul>';
     challengesListEl.innerHTML=html;
   }
   renderChallenges();
+  renderChallengeNotifications();
+  renderChallengeProgress();
+  renderChallengeAwards();
 
   document.getElementById('create-challenge-btn').addEventListener('click',function(){
     var name=document.getElementById('challenge-name').value.trim();
     var goal=document.getElementById('challenge-goal').value.trim();
+    var rule=challengeRuleFromForm();
     if(!name||!goal){showResult(challengeResultEl,{success:false,error:'Enter name and goal.'});return;}
     var challenges=load(K.challenges,[]);
-    challenges.push({id:'ch-'+Date.now(),name:name,goal:goal,created:new Date().toISOString().slice(0,10)});
+    var challenge=Object.assign({id:'ch-'+Date.now(),name:name,goal:goal,created:new Date().toISOString().slice(0,10)},rule);
+    challenges.push(challenge);
     save(K.challenges,challenges);
-    showResult(challengeResultEl,{success:true,message:'Challenge created: '+name});
+    var notification=recordChallengeNotification(challenge);
+    showResult(challengeResultEl,{success:true,message:'Challenge created: '+name,notification:notification.message});
     renderChallenges();
+    renderChallengeNotifications();
+    renderChallengeProgress();
+    renderChallengeAwards();
     document.getElementById('challenge-name').value=''; document.getElementById('challenge-goal').value='';
   });
 
@@ -1243,6 +1955,15 @@
   var onboardingAwardThresholdsEl=document.getElementById('onboarding-award-thresholds');
   var onboardingResultEl=document.getElementById('onboarding-result');
   var onboardingSummaryEl=document.getElementById('onboarding-summary');
+  var multiSchoolFilterEl=document.getElementById('multi-school-filter');
+  var multiSchoolSummaryListEl=document.getElementById('multi-school-summary-list');
+  var brandingFormEl=document.getElementById('branding-settings-form');
+  var brandingAppTitleEl=document.getElementById('branding-app-title');
+  var brandingSchoolBlueEl=document.getElementById('branding-school-blue');
+  var brandingUniformGoldEl=document.getElementById('branding-uniform-gold');
+  var brandingResultEl=document.getElementById('branding-settings-result');
+  var backendReadinessSummaryEl=document.getElementById('backend-readiness-summary');
+  var backendReadinessBlockersEl=document.getElementById('backend-readiness-blockers');
 
   function renderOnboarding(){
     var settings=programSettings();
@@ -1282,6 +2003,91 @@
     renderAwards();
     showResult(onboardingResultEl,{success:true,message:'Onboarding setup saved.',settings:settings});
   });
+
+  function schoolNameForStudent(student){
+    return String(student.school||student.school_name||programSettings().schoolName||'Gwynne Park Schools').trim()||'Gwynne Park Schools';
+  }
+
+  function multiSchoolSummaryRows(){
+    var groups={};
+    getStudents().forEach(function(student){
+      var school=schoolNameForStudent(student);
+      if(!groups[school]){groups[school]={school:school,students:0,laps:0,km:0,classes:{}};}
+      groups[school].students+=1;
+      groups[school].laps+=student.laps||0;
+      groups[school].km+=totalKm(student);
+      groups[school].classes[student.cls||'Unassigned']=true;
+    });
+    return Object.keys(groups).sort().map(function(key){
+      var row=groups[key];
+      return {school:row.school,students:row.students,classes:Object.keys(row.classes).length,laps:row.laps,km:+row.km.toFixed(2)};
+    });
+  }
+
+  function populateMultiSchoolFilter(){
+    var selected=multiSchoolFilterEl.value;
+    var schools=multiSchoolSummaryRows().map(function(row){return row.school;});
+    multiSchoolFilterEl.innerHTML='<option value="">All schools</option>'+schools.map(function(school){return '<option value="'+escapeAttr(school)+'">'+escapeHtml(school)+'</option>';}).join('');
+    if(schools.indexOf(selected)!==-1){multiSchoolFilterEl.value=selected;}
+  }
+
+  function renderMultiSchoolReports(){
+    populateMultiSchoolFilter();
+    var rows=multiSchoolSummaryRows();
+    if(multiSchoolFilterEl.value){rows=rows.filter(function(row){return row.school===multiSchoolFilterEl.value;});}
+    multiSchoolSummaryListEl.innerHTML=miniReportTable('School Scope Summary',rows,[{key:'school',label:'School'},{key:'students',label:'Students'},{key:'classes',label:'Classes'},{key:'laps',label:'Laps'},{key:'km',label:'Km'}]);
+  }
+
+  function exportMultiSchoolCsv(){
+    dlCsv('multi-school-summary-'+new Date().toISOString().slice(0,10)+'.csv',multiSchoolSummaryRows(),['school','students','classes','laps','km']);
+    showResult(reportsResultEl,{success:true,message:'Multi-school summary CSV exported.'});
+  }
+
+  function renderBrandingSettings(){
+    var settings=themeSettings();
+    brandingAppTitleEl.value=settings.appTitle;
+    brandingSchoolBlueEl.value=settings.schoolBlue;
+    brandingUniformGoldEl.value=settings.uniformGold;
+  }
+
+  function saveBrandingSettings(e){
+    e.preventDefault();
+    var settings={appTitle:brandingAppTitleEl.value.trim()||'Gwynne Park Run Club',schoolBlue:brandingSchoolBlueEl.value||'#003880',uniformGold:brandingUniformGoldEl.value||'#c99722'};
+    save(THEME_SETTINGS_KEY,settings);
+    applyThemeSettings();
+    renderBrandingSettings();
+    showResult(brandingResultEl,{success:true,message:'Theme and branding settings saved.',settings:settings});
+  }
+
+  function resetBrandingSettings(){
+    save(THEME_SETTINGS_KEY,{appTitle:'Gwynne Park Run Club',schoolBlue:'#003880',uniformGold:'#c99722'});
+    applyThemeSettings();
+    renderBrandingSettings();
+    showResult(brandingResultEl,{success:true,message:'Theme and branding reset to school defaults.'});
+  }
+
+  function backendBlockerLabel(blocker){
+    var labels={
+      'demo-mode-enabled':'Demo mode is still enabled.',
+      'sync-disabled':'Backend sync is switched off.',
+      'missing-school-id':'School scope ID has not been set.',
+      'missing-supabase-url':'Supabase project URL has not been set.',
+      'missing-supabase-anon-key':'Supabase anon key has not been set.'
+    };
+    return labels[blocker]||blocker;
+  }
+
+  function renderBackendReadiness(){
+    if(!backendReadinessSummaryEl||!backendReadinessBlockersEl){return;}
+    var readiness=window.RunClubBackend&&window.RunClubBackend.backendReadiness?window.RunClubBackend.backendReadiness():{ready:false,realDataAllowed:false,mode:'backend-adapter-missing',blockers:['backend-adapter-missing']};
+    var guard=window.RunClubBackend&&window.RunClubBackend.requiresLiveBackend?window.RunClubBackend.requiresLiveBackend():{ok:false,message:'Do not enter real student data until Priority 0 is complete.'};
+    var statusClass=readiness.realDataAllowed?'backend-readiness-ready':'backend-readiness-blocked';
+    var label=readiness.realDataAllowed?'Ready for live student data':'Blocked - demo/local storage only';
+    backendReadinessSummaryEl.className='backend-readiness-summary '+statusClass;
+    backendReadinessSummaryEl.innerHTML='<strong>'+escapeHtml(label)+'</strong><span>'+escapeHtml(readiness.mode||'unknown')+'</span><p>'+escapeHtml(guard.message)+'</p>';
+    var blockers=readiness.blockers&&readiness.blockers.length?readiness.blockers:['live-data-mode-disabled'];
+    backendReadinessBlockersEl.innerHTML=blockers.map(function(blocker){return '<li>'+escapeHtml(backendBlockerLabel(blocker))+'</li>';}).join('');
+  }
 
   function groupedSummary(groupField){
     var groups={};
@@ -1472,6 +2278,17 @@
     win.document.close(); win.focus(); win.print();
   }
 
+  function printProgramResources(){
+    var hub=document.getElementById('program-resource-hub');
+    var lessons=document.getElementById('lesson-plan-section');
+    if(!hub||!lessons){return;}
+    var hubClone=hub.cloneNode(true);
+    var lessonsClone=lessons.cloneNode(true);
+    var printButton=hubClone.querySelector('#print-program-resources-btn');
+    if(printButton){printButton.remove();}
+    printWindow('Program Resources','<h1>Gwynne Park Run Club - Program Resources</h1>'+hubClone.innerHTML+lessonsClone.innerHTML);
+  }
+
   function reportRowsTable(rows,cols){
     return '<table><thead><tr>'+cols.map(function(c){return '<th>'+escapeHtml(c.label)+'</th>';}).join('')+'</tr></thead><tbody>'+
       rows.map(function(row){return '<tr>'+cols.map(function(c){return '<td>'+escapeHtml(row[c.key])+'</td>';}).join('')+'</tr>';}).join('')+
@@ -1528,6 +2345,35 @@
     attendanceSummaryListEl.innerHTML=miniReportTable('Session Attendance',sessionAttendanceRows(),[{key:'date',label:'Date'},{key:'session',label:'Session'},{key:'students',label:'Students'},{key:'scans',label:'Scans'},{key:'participation',label:'Participation'}]);
   }
 
+  function athleticsExportRows(filterCategory){
+    return athleticsResults().filter(function(row){return !filterCategory||row.event_category===filterCategory;}).map(function(row){
+      return {
+        date:row.date,
+        student:row.student_name,
+        year:row.year,
+        class:row.class_name,
+        house:row.house,
+        event:row.event_name,
+        category:row.event_category,
+        result:resultDisplay(row),
+        place:row.place||'',
+        points:row.points||0,
+        personal_best:row.personal_best?'yes':'no',
+        attempts:(row.attempts||[]).join(' | ')
+      };
+    });
+  }
+
+  function exportCarnivalResultsCsv(){
+    dlCsv('carnival-results-'+new Date().toISOString().slice(0,10)+'.csv',athleticsExportRows(null),['date','student','year','class','house','event','category','result','place','points','personal_best','attempts']);
+    showResult(reportsResultEl,{success:true,message:'Carnival results CSV exported.'});
+  }
+
+  function exportCrossCountryCsv(){
+    dlCsv('cross-country-results-'+new Date().toISOString().slice(0,10)+'.csv',athleticsExportRows('cross-country'),['date','student','year','class','house','event','category','result','place','points','personal_best','attempts']);
+    showResult(reportsResultEl,{success:true,message:'Cross country results CSV exported.'});
+  }
+
   function populateAdjustmentStudents(){
     var selected=adjustmentStudentEl.value;
     adjustmentStudentEl.innerHTML='';
@@ -1549,14 +2395,16 @@
     if(!student){showResult(adjustmentResultEl,{success:false,error:'Student not found.'});return;}
     var delta=type==='remove'?-amount:amount;
     student.laps=Math.max(0,(student.laps||0)+delta);
-    saveStudents(students);
     var rows=load(K.adjustments,[]);
     var record={id:'adj-'+Date.now(),time:new Date().toISOString(),student_id:student.id,student_name:student.name,delta_laps:delta,reason:reason,staff:session.email||'admin',laps_after:student.laps};
-    rows.push(record);
-    save(K.adjustments,rows);
-    document.getElementById('adjustment-reason').value='';
-    showResult(adjustmentResultEl,{success:true,message:'Manual adjustment saved.',record:record});
-    refreshStudentViews();
+    saveManualAdjustmentWithBackend(students,student,record).then(function(result){
+      if(!result.ok){showResult(adjustmentResultEl,{success:false,error:result.error||result.reason||'Local manual adjustment blocked.'});return;}
+      rows.push(record);
+      save(K.adjustments,rows);
+      document.getElementById('adjustment-reason').value='';
+      showResult(adjustmentResultEl,{success:true,message:'Manual adjustment saved.',record:record});
+      refreshStudentViews();
+    });
   }
 
   function renderAdjustmentLedger(){
@@ -1633,6 +2481,9 @@
   renderReportSummaries();
   renderSummaryDashboards();
   renderAdminAnalytics();
+  renderMultiSchoolReports();
+  renderBrandingSettings();
+  renderBackendReadiness();
   populateFullHistoryStudents();
   populateClassReportSelect();
   populateAdjustmentStudents();
@@ -1649,6 +2500,9 @@
       events:load(K.events,[]),
       challenges:load(K.challenges,[]),
       timed_runs:load(K.timedRuns,[]),
+      athletics_results:athleticsResults(),
+      cross_country_courses:crossCountryCourses(),
+      builder_workouts:builderWorkouts(),
       sessions:load(K.sessions,[]),
       scan_audit:load(K.scanAudit,[]),
       scanner_settings:scannerSettings(),
@@ -1693,6 +2547,8 @@
     dlCsv('certificate-readiness-'+new Date().toISOString().slice(0,10)+'.csv',certificateRows(),['student','year','class','milestone','km','total_km']);
     showResult(reportsResultEl,{success:true,message:'Certificate readiness CSV exported.'});
   });
+  document.getElementById('export-carnival-results-csv-btn').addEventListener('click',exportCarnivalResultsCsv);
+  document.getElementById('export-cross-country-csv-btn').addEventListener('click',exportCrossCountryCsv);
 
   fullHistoryStudentEl.addEventListener('change',renderFullStudentHistory);
   document.getElementById('refresh-full-history-btn').addEventListener('click',renderFullStudentHistory);
@@ -1709,6 +2565,10 @@
     dlCsv('session-attendance-'+new Date().toISOString().slice(0,10)+'.csv',sessionAttendanceRows(),['date','session','students','scans','participation']);
     showResult(reportsResultEl,{success:true,message:'Attendance CSV exported.'});
   });
+  multiSchoolFilterEl.addEventListener('change',renderMultiSchoolReports);
+  document.getElementById('export-multi-school-csv-btn').addEventListener('click',exportMultiSchoolCsv);
+  brandingFormEl.addEventListener('submit',saveBrandingSettings);
+  document.getElementById('reset-branding-btn').addEventListener('click',resetBrandingSettings);
   adjustmentFormEl.addEventListener('submit',createManualAdjustment);
   document.getElementById('download-admin-templates-btn').addEventListener('click',downloadAdminTemplates);
 
@@ -1717,6 +2577,8 @@
   // === IMPORT ===
   var importResultEl=document.getElementById('import-result');
   var importSummaryEl=document.getElementById('import-summary');
+  var compassImportResultEl=document.getElementById('compass-import-result');
+  var compassImportSummaryEl=document.getElementById('compass-import-summary');
 
   function normalizeImportCell(value){
     return String(value||'').trim().replace(/\s+/g,' ');
@@ -1756,6 +2618,85 @@
       }).join('')+'</ul></details>':'<p class="success-message">No duplicates or invalid rows found.</p>');
   }
 
+  function privacyDefaults(){
+    return {pseudonym:'',preferred_name:'',consent_status:'pending',hide_public_name:false,share_certificates_publicly:false};
+  }
+
+  function compassStudentFromRow(headers,cols){
+    function at(names){
+      for(var i=0;i<names.length;i++){
+        var idx=headers.indexOf(names[i]);
+        if(idx>=0){return normalizeImportCell(cols[idx]);}
+      }
+      return '';
+    }
+    var first=at(['preferredname','firstname','first']);
+    var last=at(['surname','lastname','last']);
+    var year=at(['yearlevel','yeargroup','year']);
+    var cls=at(['homegroup','classname','class']);
+    var school=at(['school','campus','schoolname']);
+    return {first:first,last:last,year:year,cls:cls.toUpperCase(),school:school||programSettings().schoolName};
+  }
+
+  function importCompassCsv(e){
+    e.preventDefault();
+    var file=document.getElementById('compass-csv-file').files[0];
+    if(!file){showResult(compassImportResultEl,{success:false,error:'Select an authorised Compass CSV file.'});return;}
+    var reader=new FileReader();
+    reader.onload=function(ev){
+      var lines=ev.target.result.split('\n').map(function(l){return l.trim();}).filter(Boolean);
+      if(!lines.length){showResult(compassImportResultEl,{success:false,error:'Empty file.'});return;}
+      var headers=parseCsvLine(lines[0]).map(function(h){return h.toLowerCase().replace(/\s+/g,'');});
+      var students=getStudents();
+      var existingKeys={};
+      students.forEach(function(s){existingKeys[rosterDuplicateKey(s.first,s.last,s.year,s.cls)]=true;});
+      var added=0; var duplicates=0; var invalid=0; var skippedDetails=[];
+      var importedStudents=[];
+      lines.slice(1).forEach(function(line,index){
+        var rowNumber=index+2;
+        var mapped=compassStudentFromRow(headers,parseCsvLine(line));
+        var name=mapped.first+' '+mapped.last;
+        if(!mapped.first||!mapped.last||!mapped.year||!mapped.cls){
+          invalid++;
+          skippedDetails.push({row:rowNumber,name:name.trim(),reason:'Missing preferred name, surname, year level, or home group'});
+          return;
+        }
+        var key=rosterDuplicateKey(mapped.first,mapped.last,mapped.year,mapped.cls);
+        if(existingKeys[key]){
+          duplicates++;
+          skippedDetails.push({row:rowNumber,name:name,reason:'Already exists in roster'});
+          return;
+        }
+        var id=generateBarcodeId(mapped.first,mapped.last,students);
+        var importedStudent=Object.assign({id:id,barcode:id,first:mapped.first,last:mapped.last,name:name,year:mapped.year,cls:mapped.cls,school:mapped.school,laps:0,minutes:0,events:[]},privacyDefaults());
+        students.push(importedStudent);
+        importedStudents.push(importedStudent);
+        existingKeys[key]=true;
+        added++;
+      });
+      var summary={success:true,added:added,duplicates:duplicates,invalid:invalid,total:students.length,skipped_details:skippedDetails};
+      importStudentsWithBackend(students,importedStudents).then(function(result){
+        if(!result.ok){showResult(compassImportResultEl,{success:false,error:result.error||result.reason||'Local roster import blocked.'});return;}
+        refreshStudentViews();
+        showResult(compassImportResultEl,summary);
+        compassImportResultEl.hidden=true;
+        compassImportSummaryEl.hidden=false;
+        compassImportSummaryEl.innerHTML=importSummaryEl.innerHTML;
+        renderImportSummary(summary);
+        compassImportSummaryEl.innerHTML=importSummaryEl.innerHTML;
+        importSummaryEl.hidden=true;
+      });
+    };
+    reader.readAsText(file);
+  }
+
+  function downloadCompassTemplate(e){
+    e.preventDefault();
+    dlCsv('compass-class-list-template.csv',[
+      {'Preferred Name':'James',Surname:'Smith','Year Level':'Year 5','Home Group':'5B',School:'Gwynne Park Schools'}
+    ],['Preferred Name','Surname','Year Level','Home Group','School']);
+  }
+
   document.getElementById('import-form').addEventListener('submit',function(e){
     e.preventDefault();
     var file=document.getElementById('csv-file').files[0];
@@ -1773,6 +2714,7 @@
       students.forEach(function(s){existingKeys[rosterDuplicateKey(s.first,s.last,s.year,s.cls)]=true;});
       var fileKeys={};
       var added=0; var duplicates=0; var invalid=0; var skippedDetails=[];
+      var importedStudents=[];
       lines.slice(1).forEach(function(line,index){
         var rowNumber=index+2;
         var cols=parseCsvLine(line);
@@ -1795,17 +2737,21 @@
           return;
         }
         var id=generateBarcodeId(first,last,students);
-        students.push({id:id,barcode:id,first:first,last:last,name:name,year:year,cls:cls,laps:0,minutes:0,events:[]});
+        var importedStudent=Object.assign({id:id,barcode:id,first:first,last:last,name:name,year:year,cls:cls,school:programSettings().schoolName,laps:0,minutes:0,events:[]},privacyDefaults());
+        students.push(importedStudent);
+        importedStudents.push(importedStudent);
         existingKeys[key]=true;
         fileKeys[key]=true;
         added++;
       });
-      saveStudents(students);
-      refreshStudentViews();
       var summary={success:true,added:added,duplicates:duplicates,invalid:invalid,total:students.length,skipped_details:skippedDetails};
-      showResult(importResultEl,summary);
-      importResultEl.hidden=true;
-      renderImportSummary(summary);
+      importStudentsWithBackend(students,importedStudents).then(function(result){
+        if(!result.ok){showResult(importResultEl,{success:false,error:result.error||result.reason||'Local roster import blocked.'});return;}
+        refreshStudentViews();
+        showResult(importResultEl,summary);
+        importResultEl.hidden=true;
+        renderImportSummary(summary);
+      });
     };
     reader.readAsText(file);
   });
@@ -1818,6 +2764,8 @@
     var u=URL.createObjectURL(b); var a=document.createElement('a');
     a.href=u; a.download='roster-template.csv'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(u);
   });
+  document.getElementById('compass-import-form').addEventListener('submit',importCompassCsv);
+  document.getElementById('download-compass-template').addEventListener('click',downloadCompassTemplate);
 
   // Barcode cards print
   document.getElementById('print-barcodes-btn').addEventListener('click',function(){
