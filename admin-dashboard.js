@@ -1999,11 +1999,13 @@
   function populateAthleticsResultStudents(){
     if(!athleticsResultStudentEl){return;}
     var selected=athleticsResultStudentEl.value;
+    var event=athleticsEventById(athleticsEventSelectEl&&athleticsEventSelectEl.value);
+    var eligible=getStudents().filter(function(student){return studentEligibleForAthleticsEvent(student,event,'');});
     athleticsResultStudentEl.innerHTML='';
-    getStudents().forEach(function(s){
+    eligible.forEach(function(s){
       var o=document.createElement('option');o.value=s.id;o.textContent=s.name+' ('+s.year+', '+s.cls+')';athleticsResultStudentEl.appendChild(o);
     });
-    if(selected&&getStudents().some(function(s){return s.id===selected;})){athleticsResultStudentEl.value=selected;}
+    if(selected&&eligible.some(function(s){return s.id===selected;})){athleticsResultStudentEl.value=selected;}
   }
 
   function populateAthleticsEvents(){
@@ -2019,6 +2021,7 @@
     var event=athleticsEventById(athleticsEventSelectEl.value);
     var numeric=resultNumber(athleticsResultValueEl.value);
     if(!student||numeric==null){showResult(athleticsResultOutputEl,{success:false,error:'Choose a student and enter a valid result.'});return;}
+    if(!studentEligibleForAthleticsEvent(student,event,'')){showResult(athleticsResultOutputEl,{success:false,error:student.name+' is not eligible for '+event.name+'. Choose a student from the correct division.'});return;}
     var attempts=[fieldAttempt1El.value,fieldAttempt2El.value,fieldAttempt3El.value].map(function(value){return String(value||'').trim();}).filter(Boolean);
     var row={
       id:'athletics-result-'+Date.now(),
@@ -2089,8 +2092,9 @@
   }
 
   if(athleticsResultFormEl){
-    populateAthleticsResultStudents();
     populateAthleticsEvents();
+    populateAthleticsResultStudents();
+    if(athleticsEventSelectEl){athleticsEventSelectEl.addEventListener('change',populateAthleticsResultStudents);}
     athleticsResultFormEl.addEventListener('submit',createAthleticsResult);
     renderPBTracking();
     renderAgeChampionScoring();
