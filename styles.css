@@ -1404,6 +1404,66 @@ html[data-theme="dark"] .collected-badge-empty {
   margin: 0.2rem;
 }
 
+.medal-badge {
+  border-width: 1px;
+  border-style: solid;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.62), 0 3px 8px rgba(7,20,38,0.08);
+  font-weight: 800;
+}
+
+.medal-badge--starter {
+  border-color: rgba(23,90,151,0.34);
+  background: linear-gradient(180deg, #eaf4ff, #cfe8ff);
+  color: #0b3f73;
+}
+
+.medal-badge--bronze {
+  border-color: rgba(146,74,24,0.38);
+  background: linear-gradient(180deg, #ffe8cf, #d99158);
+  color: #562b10;
+}
+
+.medal-badge--silver {
+  border-color: rgba(100,116,139,0.40);
+  background: linear-gradient(180deg, #f8fafc, #b9c4d1);
+  color: #263449;
+}
+
+.medal-badge--gold {
+  border-color: rgba(201,151,34,0.48);
+  background: linear-gradient(180deg, #fff4bf, #e5ad2d);
+  color: #4f3100;
+}
+
+.medal-badge--platinum {
+  border-color: rgba(139,92,246,0.40);
+  background: linear-gradient(180deg, #f1eaff, #c7b5ff);
+  color: #3f1d83;
+}
+
+.medal-summary-box {
+  position: relative;
+  overflow: hidden;
+}
+
+.medal-summary-box::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.16;
+  pointer-events: none;
+}
+
+.medal-summary-box .stat-value {
+  position: relative;
+}
+
+.medal-summary-box--starter::before { background: #0c5aa8; }
+.medal-summary-box--bronze::before { background: #b45309; }
+.medal-summary-box--silver::before { background: #64748b; }
+.medal-summary-box--gold::before { background: #c99722; }
+.medal-summary-box--platinum::before { background: #8b5cf6; }
+
 html[data-theme="dark"] #tab-awards .card > p,
 html[data-theme="dark"] #tab-awards p[style*="color:#555"],
 html[data-theme="dark"] #tab-awards p[style*="color:#888"],
@@ -1428,6 +1488,50 @@ html[data-theme="dark"] #tab-awards .award-badge {
     linear-gradient(180deg, rgba(242,216,145,0.20), rgba(201,151,34,0.12)),
     rgba(255,255,255,0.08);
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.12);
+}
+
+html[data-theme="dark"] .medal-badge,
+html[data-theme="dark"] #tab-awards .medal-badge {
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), 0 7px 16px rgba(0,0,0,0.22);
+}
+
+html[data-theme="dark"] .medal-badge--starter,
+html[data-theme="dark"] #tab-awards .medal-badge--starter {
+  border-color: rgba(116,184,255,0.52) !important;
+  background: linear-gradient(180deg, rgba(45,128,214,0.86), rgba(13,64,118,0.92));
+  color: #f5fbff !important;
+}
+
+html[data-theme="dark"] .medal-badge--bronze,
+html[data-theme="dark"] #tab-awards .medal-badge--bronze {
+  border-color: rgba(246,173,105,0.58) !important;
+  background: linear-gradient(180deg, rgba(194,108,45,0.90), rgba(107,55,23,0.94));
+  color: #fff7ed !important;
+}
+
+html[data-theme="dark"] .medal-badge--silver,
+html[data-theme="dark"] #tab-awards .medal-badge--silver {
+  border-color: rgba(226,232,240,0.58) !important;
+  background: linear-gradient(180deg, rgba(203,213,225,0.90), rgba(71,85,105,0.95));
+  color: #f8fafc !important;
+}
+
+html[data-theme="dark"] .medal-badge--gold,
+html[data-theme="dark"] #tab-awards .medal-badge--gold {
+  border-color: rgba(250,204,21,0.62) !important;
+  background: linear-gradient(180deg, rgba(234,179,8,0.92), rgba(133,77,14,0.96));
+  color: #fffbea !important;
+}
+
+html[data-theme="dark"] .medal-badge--platinum,
+html[data-theme="dark"] #tab-awards .medal-badge--platinum {
+  border-color: rgba(196,181,253,0.64) !important;
+  background: linear-gradient(180deg, rgba(167,139,250,0.92), rgba(91,33,182,0.96));
+  color: #fbf8ff !important;
+}
+
+html[data-theme="dark"] #tab-awards .medal-summary-box {
+  background: rgba(7,20,38,0.44);
 }
 
 html[data-theme="dark"] #tab-awards #custom-awards-list li,
