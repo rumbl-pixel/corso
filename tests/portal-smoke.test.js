@@ -407,7 +407,7 @@ assert(/training-status-list/.test(adminDashboardHtml), 'admin training tab shou
 assert(/role="tablist"/.test(adminDashboardHtml), 'admin tabs should expose a tablist role');
 assert(/aria-selected="true"/.test(adminDashboardHtml), 'admin active tab should expose selected state');
 assert(/aria-controls="tab-scanner"/.test(adminDashboardHtml), 'admin tabs should reference tab panels');
-assert(/admin-dashboard\.js\?v=38/.test(adminDashboardHtml), 'admin dashboard should request the current Coach Tools dashboard script');
+assert(/admin-dashboard\.js\?v=39/.test(adminDashboardHtml), 'admin dashboard should request the current Coach Tools dashboard script');
 assert(/backend\.js\?v=21/.test(adminDashboardHtml), 'admin dashboard should load the backend adapter before app scripts');
 
 const adminDashboardJs = read('admin-dashboard.js');
@@ -470,7 +470,12 @@ assert(/renderAthleticsModeState/.test(adminDashboardJs), 'admin dashboard shoul
 assert(/ATHLETICS_TEAM_SELECTIONS_KEY/.test(adminDashboardJs), 'admin dashboard should persist interschool event team selections separately from results');
 assert(/openAthleticsTeamModal/.test(adminDashboardJs), 'admin athletics event pills should open the team selector modal');
 assert(/divisionForStudent/.test(adminDashboardJs), 'admin athletics team selector should determine Junior, Intermediate, and Senior divisions');
+assert(/athleticsEventDivisionById/.test(adminDashboardJs), 'admin athletics event selectors should use explicit event divisions');
 assert(/studentEligibleForAthleticsEvent/.test(adminDashboardJs), 'admin athletics team selector should filter students by event division');
+assert(/requiredDivision=division\|\|athleticsEventDivisionById/.test(adminDashboardJs), 'admin athletics team selector should enforce event division even without a dropdown value');
+assert(/id:'junior-50m'[\s\S]*division:'Junior'/.test(adminDashboardJs), 'Junior 50m should be locked to Junior students');
+assert(/id:'intermediate-75m'[\s\S]*division:'Intermediate'/.test(adminDashboardJs), 'Intermediate 75m should be locked to Intermediate students');
+assert(/id:'senior-100m'[\s\S]*division:'Senior'/.test(adminDashboardJs), 'Senior 100m should be locked to Senior students');
 assert(/athleticsTeamSelectionKey/.test(adminDashboardJs), 'admin athletics team selector should store ball game teams by division');
 assert(/renderAthleticsTeamOverview/.test(adminDashboardJs), 'admin athletics mode should render selected player team lists');
 assert(/athletics-team-event-tag--leader/.test(adminDashboardJs), 'admin athletics team overview should mark leading athletes by event');
@@ -820,12 +825,12 @@ const privacyPolicyHtml = read('privacy-policy.html');
 assert(/Access boundaries/.test(privacyPolicyHtml), 'privacy policy should explain access boundaries');
 assert(/Parents can see only their own linked child or children/.test(privacyPolicyHtml), 'privacy policy should describe parent-only child access');
 assert(/advertising trackers/.test(privacyPolicyHtml), 'privacy policy should rule out advertising trackers');
-assert(/admin-dashboard\.js\?v=38/.test(adminDashboardHtml), 'admin dashboard should request the current Coach Tools dashboard script');
+assert(/admin-dashboard\.js\?v=39/.test(adminDashboardHtml), 'admin dashboard should request the current Coach Tools dashboard script');
 assert(/goals\.js\?v=5/.test(adminDashboardHtml), 'admin dashboard should request a fresh goals script after interschool goals changes');
 assert(/admin-goals\.js\?v=5/.test(adminDashboardHtml), 'admin dashboard should request a fresh admin goals script after interschool goals changes');
 assert(/goals\.js\?v=5/.test(studentProfileHtml), 'student profile should request a fresh goals script');
 assert(/goals\.js\?v=5/.test(studentHtml), 'student login should request a fresh goals script');
-assert(/gwynne-park-run-club-v92/.test(serviceWorker), 'service worker cache should be bumped for support link update');
+assert(/gwynne-park-run-club-v93/.test(serviceWorker), 'service worker cache should be bumped for support link update');
 assert(/backend\.js/.test(serviceWorker), 'service worker should cache the backend adapter');
 assert(/interschool-team\.html/.test(serviceWorker) && /interschool-team\.js/.test(serviceWorker), 'service worker should cache the dedicated interschool team page');
 assertFile('tests/backend-live-style.test.js');
