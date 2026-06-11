@@ -150,6 +150,7 @@ assert(!/id="submit-btn"[^>]*hidden/.test(studentHtml), 'student login page shou
 const studentProfileHtml = read('student-profile.html');
 assert(!/id="student-form"|id="submit-btn"/.test(studentProfileHtml), 'student profile page should not show the login form or sign-in button');
 assert(/medal-progress/.test(studentProfileHtml), 'student profile page should show read-only medal progress');
+assert(/collected-badges/.test(studentProfileHtml), 'student profile should include a collected badge shelf');
 assert(/student-barcode-card/.test(studentProfileHtml), 'student profile page should show the student barcode card area');
 assert(/print-student-barcode-btn/.test(studentProfileHtml), 'student profile page should let students print a credit-card-sized barcode card');
 assert(/assets\/qrcode-generator\.js/.test(studentProfileHtml), 'student profile should load the local QR generator');
@@ -196,6 +197,8 @@ assert(/studentTermReportRows/.test(studentJs), 'student portal should build ter
 assert(/printStudentTermReport/.test(studentJs), 'student portal should print term progress reports');
 assert(/awardDisplayRows/.test(studentJs), 'student portal should build richer award display rows');
 assert(/award-card-grid/.test(studentJs), 'student portal should render awards as polished award cards');
+assert(/collectedBadgeRows/.test(studentJs), 'student portal should build collected badge rows');
+assert(/collected-badge-shelf/.test(studentJs), 'student portal should render earned awards as collected badges');
 assert(/timelineKind/.test(studentJs), 'student portal should label timeline event types');
 assert(/recordTrainingClick/.test(studentJs), 'student portal should record when a student opens assigned training');
 assert(/recordTrainingEventWithBackend/.test(studentJs), 'student portal should guard training events before storing student progress');
@@ -210,7 +213,7 @@ assert(/GOAL_REFLECTIONS_KEY/.test(studentJs), 'student portal should store goal
 assert(/recordGoalReflection/.test(studentJs), 'student portal should save goal reflections');
 assert(/renderGoalReflections/.test(studentJs), 'student portal should render goal reflections');
 assert(!/rc_selfreports/.test(studentJs), 'student reflections should not reuse self-reported activity storage');
-assert(/student\.js\?v=17/.test(studentProfileHtml) && /student\.js\?v=17/.test(studentHtml), 'student pages should request the current admin-aware student script');
+assert(/student\.js\?v=18/.test(studentProfileHtml) && /student\.js\?v=18/.test(studentHtml), 'student pages should request the current collected-badges student script');
 
 const homeHtml = read('index.html');
 assert(!/href="kiosk\.html"|Scanner kiosk/.test(homeHtml), 'public home page should not link directly to the admin-only kiosk');
@@ -707,6 +710,8 @@ assert(/offline-scan-table[\s\S]*min-width:\s*560px/.test(styles), 'offline scan
 assert(/@media \(max-width: 480px\)[\s\S]*offline-scan-table[\s\S]*min-width:\s*0/.test(styles), 'offline scan tables should compact on narrow mobile screens');
 assert(/report-mini table[\s\S]*min-width:\s*420px/.test(styles), 'report summary tables should keep readable column widths');
 assert(/award-card-grid/.test(styles) && /award-card--earned/.test(styles), 'styles should include polished award card layouts');
+assert(/collected-badge-shelf/.test(styles) && /collected-badge-empty/.test(styles), 'styles should include collected badge shelf layouts');
+assert(/html\[data-theme="dark"\] \.collected-badge[\s\S]*rgba\(242,216,145,0\.18\)/.test(styles), 'dark mode should keep collected badges readable');
 assert(/@media \(max-width: 900px\)[\s\S]*\.header-inner[\s\S]*flex-direction:\s*row[\s\S]*\.tabs[\s\S]*flex-wrap:\s*wrap/.test(styles), 'tablet layouts should keep the thin header while wrapping admin tabs');
 assert(/@media \(max-width: 640px\)[\s\S]*\.tab-btn[\s\S]*flex:\s*1 1 calc\(50% - 0\.4rem\)/.test(styles), 'mobile admin tabs should fit into balanced two-column rows');
 assert(/@media \(max-width: 640px\)[\s\S]*\.content[\s\S]*padding:\s*0\.75rem[\s\S]*\.card[\s\S]*padding:\s*1rem/.test(styles), 'mobile layouts should tighten content and card spacing');
@@ -727,8 +732,8 @@ assert(/privacy-badge/.test(styles), 'styles should include privacy badge stylin
 assert(/skip-link/.test(styles), 'styles should include skip-link focus styling');
 assert(/:focus-visible/.test(styles), 'styles should include visible keyboard focus styles');
 assert(/multi-school-report-card/.test(styles), 'styles should include multi-school report styling');
-assert(/styles\.css\?v=56/.test(leaderboardHtml), 'leaderboard page should request the current stylesheet version');
-assert(/styles\.css\?v=56/.test(interschoolTeamHtml), 'interschool team page should request the current stylesheet');
+assert(/styles\.css\?v=57/.test(leaderboardHtml), 'leaderboard page should request the current stylesheet version');
+assert(/styles\.css\?v=57/.test(interschoolTeamHtml), 'interschool team page should request the current stylesheet');
 assert(/theme\.js\?v=8/.test(studentProfileHtml), 'student profile should load the shared light/dark theme switch');
 assert(/data-theme="dark"/.test(styles), 'site styles should define dark theme overrides');
 assert(/html\[data-theme="dark"\] \.privacy-badge--public[\s\S]*color:\s*#fff3c4/.test(styles), 'dark mode should keep public-name privacy badges readable');
@@ -778,7 +783,7 @@ assert(/goals\.js\?v=4/.test(adminDashboardHtml), 'admin dashboard should reques
 assert(/admin-goals\.js\?v=4/.test(adminDashboardHtml), 'admin dashboard should request a fresh admin goals script after interschool goals changes');
 assert(/goals\.js\?v=4/.test(studentProfileHtml), 'student profile should request a fresh goals script');
 assert(/goals\.js\?v=4/.test(studentHtml), 'student login should request a fresh goals script');
-assert(/gwynne-park-run-club-v84/.test(serviceWorker), 'service worker cache should be bumped for support link update');
+assert(/gwynne-park-run-club-v85/.test(serviceWorker), 'service worker cache should be bumped for support link update');
 assert(/backend\.js/.test(serviceWorker), 'service worker should cache the backend adapter');
 assert(/interschool-team\.html/.test(serviceWorker) && /interschool-team\.js/.test(serviceWorker), 'service worker should cache the dedicated interschool team page');
 assertFile('tests/backend-live-style.test.js');
