@@ -26,6 +26,7 @@
   var CROSS_COUNTRY_COURSES_KEY = 'rc_cross_country_courses';
   var ATHLETICS_RESULTS_KEY = 'rc_athletics_results';
   var ATHLETICS_TEAM_SELECTIONS_KEY = 'rc_athletics_team_selections';
+  var ATHLETICS_CONSENT_SELECTIONS_KEY = 'rc_athletics_consent_selections';
   var CROSS_COUNTRY_VISIBLE_KEY = 'rc_cross_country_visible';
   var BUILDER_WORKOUTS_KEY = 'rc_builder_workouts';
   var THEME_SETTINGS_KEY = 'rc_theme_settings';
@@ -1548,6 +1549,15 @@
     save(ATHLETICS_TEAM_SELECTIONS_KEY,rows);
   }
 
+  function athleticsConsentSelections(){
+    var rows=load(ATHLETICS_CONSENT_SELECTIONS_KEY,[]);
+    return Array.isArray(rows)?rows:[];
+  }
+
+  function saveAthleticsConsentSelections(rows){
+    save(ATHLETICS_CONSENT_SELECTIONS_KEY,Array.from(new Set(rows)));
+  }
+
   function athleticsSelectedCountForEvent(eventId,event){
     var selections=athleticsTeamSelections();
     if(isBallGameEvent(event)){
@@ -1747,6 +1757,10 @@
     var studentMap={};
     students.forEach(function(student){studentMap[student.id]=student;});
     var leaders=eventBestRows();
+    var consentSelectionIds=athleticsConsentSelections();
+    var consentRows=consentSelectionIds.map(function(studentId){return studentMap[studentId];}).filter(Boolean).sort(function(a,b){
+      return String(a.year||'').localeCompare(String(b.year||''))||String(a.cls||'').localeCompare(String(b.cls||''))||String(a.name||'').localeCompare(String(b.name||''));
+    });
     var byStudent={};
     Object.keys(selections).forEach(function(key){
       var detail=eventFromSelectionKey(key);
@@ -1758,11 +1772,15 @@
       });
     });
     var rows=Object.keys(byStudent).map(function(id){return byStudent[id];}).sort(function(a,b){return a.student.name.localeCompare(b.student.name);});
-    if(!rows.length){
-      overview.innerHTML='<p class="empty-note">No interschool team selections saved yet. Open an event below and tick students into their team.</p>';
+    if(!rows.length&&!consentRows.length){
+      overview.innerHTML='<p class="empty-note">No interschool team selections saved yet. Open the consent checklist or an event below and tick students into their team.</p>';
       return;
     }
-    overview.innerHTML='<div class="athletics-team-overview-grid">'+rows.map(function(row){
+    var consentTable=consentRows.length?'<div class="athletics-consent-saved-list"><h3>Saved athletics consent list</h3><table class="progress-history-table"><thead><tr><th>Student</th><th>Division</th><th>Year</th><th>Class</th><th>Consent</th></tr></thead><tbody>'+consentRows.map(function(student){
+      var granted=String(student.consent_status||'pending').toLowerCase()==='granted';
+      return '<tr><td>'+escapeHtml(student.name)+'</td><td>'+escapeHtml(divisionForStudent(student))+'</td><td>'+escapeHtml(student.year||'')+'</td><td>'+escapeHtml(student.cls||'')+'</td><td><span class="'+(granted?'privacy-badge privacy-badge--granted':'privacy-badge')+'">'+(granted?'Put through':'Not yet')+'</span></td></tr>';
+    }).join('')+'</tbody></table></div>':'';
+    var eventCards=rows.length?'<div class="athletics-team-overview-grid">'+rows.map(function(row){
       return '<article class="athletics-team-overview-card">'+
         '<strong>'+escapeHtml(row.student.name)+'</strong>'+
         '<span>'+escapeHtml(row.student.year+' · '+row.student.cls+' · '+divisionForStudent(row.student))+'</span>'+
@@ -1775,7 +1793,8 @@
           return '<span>'+escapeHtml(label)+': '+(item.pb?escapeHtml(resultDisplay(item.pb)):'No result yet')+(item.leader?' · leading':'')+'</span>';
         }).join('')+'</div>'+
       '</article>';
-    }).join('')+'</div>';
+    }).join('')+'</div>':'';
+    overview.innerHTML=consentTable+eventCards;
   }
 
   function renderAthleticsConsentSummary(){
@@ -1808,6 +1827,8 @@
 
   function renderAthleticsConsentList(){
     if(!athleticsConsentListEl){return;}
+    var selectedMap={};
+    athleticsConsentSelections().forEach(function(id){selectedMap[id]=true;});
     var students=getStudents().slice().sort(function(a,b){
       return String(a.year||'').localeCompare(String(b.year||''))||String(a.cls||'').localeCompare(String(b.cls||''))||String(a.name||'').localeCompare(String(b.name||''));
     });
@@ -1815,13 +1836,11 @@
       var granted=String(student.consent_status||'pending').toLowerCase()==='granted';
       var meta=[student.id,student.year,student.cls,divisionForStudent(student)].filter(Boolean).join(' · ');
       return '<label class="athletics-consent-option">'+
-        '<input type="checkbox" class="athletics-consent-check" data-student-id="'+escapeAttr(student.id)+'"'+(granted?' checked':'')+' />'+
+        '<input type="checkbox" class="athletics-consent-select-check" data-student-id="'+escapeAttr(student.id)+'"'+(selectedMap[student.id]?' checked':'')+' />'+
         '<span><strong>'+escapeHtml(student.name)+'</strong><small>'+escapeHtml(meta)+'</small></span>'+
+        '<span class="athletics-consent-status-toggle"><input type="checkbox" class="athletics-consent-check" data-student-id="'+escapeAttr(student.id)+'"'+(granted?' checked':'')+' /> Consent received</span>'+
       '</label>';
     }).join('');
-    Array.prototype.forEach.call(athleticsConsentListEl.querySelectorAll('.athletics-consent-check'),function(input){
-      input.addEventListener('change',function(){setStudentAthleticsConsent(input.dataset.studentId,input.checked);});
-    });
   }
 
   function openAthleticsConsentModal(trigger){
@@ -1831,6 +1850,22 @@
 
   function closeAthleticsConsentModal(){
     closeAdminModal(athleticsConsentModalEl);
+  }
+
+  function saveAthleticsConsentChecklist(){
+    var selected=Array.prototype.map.call(document.querySelectorAll('.athletics-consent-select-check:checked'),function(input){return input.dataset.studentId;});
+    var received={};
+    Array.prototype.forEach.call(document.querySelectorAll('.athletics-consent-check'),function(input){received[input.dataset.studentId]=input.checked;});
+    var students=getStudents().map(function(student){
+      if(!Object.prototype.hasOwnProperty.call(received,student.id)){return student;}
+      return Object.assign({},student,{consent_status:received[student.id]?'granted':'pending'});
+    });
+    saveStudents(students);
+    saveAthleticsConsentSelections(selected);
+    renderAthleticsConsentSummary();
+    renderAthleticsConsentList();
+    renderAthleticsTeamOverview();
+    closeAthleticsConsentModal();
   }
 
   function setStudentAthleticsConsent(studentId,granted){
@@ -1884,6 +1919,8 @@
     if(e.target===athleticsEventModalEl){closeAthleticsTeamModal();}
   });
   document.getElementById('close-athletics-consent-modal-btn').addEventListener('click',closeAthleticsConsentModal);
+  document.getElementById('cancel-athletics-consent-modal-btn').addEventListener('click',closeAthleticsConsentModal);
+  document.getElementById('save-athletics-consent-list-btn').addEventListener('click',saveAthleticsConsentChecklist);
   athleticsConsentModalEl.addEventListener('click',function(e){
     if(e.target===athleticsConsentModalEl){closeAthleticsConsentModal();}
   });
