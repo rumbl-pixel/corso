@@ -892,16 +892,6 @@ html[data-theme="dark"] .step p {
     linear-gradient(135deg, rgba(7,20,38,0.88), rgba(18,54,93,0.72));
   border: 1px solid color-mix(in srgb, var(--white-trim-soft) 72%, var(--uniform-gold) 28%);
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 12px 24px rgba(7,20,38,0.12);
-  transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease, background 0.16s ease;
-}
-
-.impl-item:hover {
-  background:
-    linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.045)),
-    linear-gradient(135deg, rgba(7,20,38,0.94), rgba(23,90,151,0.78));
-  border-color: color-mix(in srgb, var(--uniform-gold) 44%, var(--white-trim-soft) 56%);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.14), 0 14px 28px rgba(7,20,38,0.16);
-  transform: translateY(-1px);
 }
 
 .impl-item strong { display: block; margin-bottom: 0.25rem; font-size: 0.92rem; color: #f5f9ff; }
