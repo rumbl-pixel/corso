@@ -1547,11 +1547,17 @@
   }
 
   function divisionsForEvent(event){
+    if(event&&event.division){return [event.division];}
     var years=String(event&&event.years||'All');
     if(/Junior/i.test(years)&&!/Intermediate|Senior/i.test(years)){return ['Junior'];}
     if(/Intermediate/i.test(years)&&!/Junior|Senior/i.test(years)){return ['Intermediate'];}
     if(/Senior/i.test(years)&&!/Junior|Intermediate/i.test(years)){return ['Senior'];}
     return ['Junior','Intermediate','Senior'];
+  }
+
+  function athleticsEventDivisionById(eventId){
+    var event=athleticsEventById(eventId);
+    return event&&event.division?event.division:'';
   }
 
   function isBallGameEvent(event){
@@ -1577,7 +1583,8 @@
 
   function studentEligibleForAthleticsEvent(student,event,division){
     var studentDivision=divisionForStudent(student);
-    if(division){return studentDivision===division;}
+    var requiredDivision=division||athleticsEventDivisionById(event&&event.id);
+    if(requiredDivision){return studentDivision===requiredDivision;}
     return divisionsForEvent(event).indexOf(studentDivision)!==-1;
   }
 
@@ -1644,7 +1651,8 @@
       id:eventId,
       name:goalEvent?goalEvent.name:athleticsEventById(eventId).name,
       group:goalEvent?goalEvent.group:athleticsEventById(eventId).category,
-      years:goalEvent?goalEvent.years:'All'
+      years:goalEvent?goalEvent.years:'All',
+      division:athleticsEventDivisionById(eventId)
     };
     var divisionLabel=document.getElementById('athletics-division-filter-label');
     var divisionSelect=document.getElementById('athletics-division-filter');
