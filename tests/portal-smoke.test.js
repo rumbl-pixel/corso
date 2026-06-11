@@ -402,7 +402,7 @@ assert(/training-status-list/.test(adminDashboardHtml), 'admin training tab shou
 assert(/role="tablist"/.test(adminDashboardHtml), 'admin tabs should expose a tablist role');
 assert(/aria-selected="true"/.test(adminDashboardHtml), 'admin active tab should expose selected state');
 assert(/aria-controls="tab-scanner"/.test(adminDashboardHtml), 'admin tabs should reference tab panels');
-assert(/admin-dashboard\.js\?v=35/.test(adminDashboardHtml), 'admin dashboard should request the current Coach Tools dashboard script');
+assert(/admin-dashboard\.js\?v=36/.test(adminDashboardHtml), 'admin dashboard should request the current Coach Tools dashboard script');
 assert(/backend\.js\?v=21/.test(adminDashboardHtml), 'admin dashboard should load the backend adapter before app scripts');
 
 const adminDashboardJs = read('admin-dashboard.js');
@@ -411,6 +411,7 @@ assert(/from=admin/.test(adminDashboardJs), 'admin student profile links should 
 assert(/session-state--open/.test(adminDashboardJs), 'admin dashboard should mark open sessions with a theme-aware status class');
 assert(/session-state--closed/.test(adminDashboardJs), 'admin dashboard should mark closed sessions with a theme-aware status class');
 assert(/MEDAL_TIERS/.test(adminDashboardJs), 'admin dashboard should calculate medal tiers');
+assert(/medal-badge--/.test(adminDashboardJs), 'admin leaderboard medals should render semantic tier badge classes');
 assert(/renderOfflineQueue/.test(adminDashboardJs), 'admin dashboard should render offline queue batches');
 assert(/scannerSettings/.test(adminDashboardJs), 'admin dashboard should persist scanner settings');
 assert(/programSettings/.test(adminDashboardJs), 'admin dashboard should persist program settings');
@@ -745,8 +746,8 @@ assert(/privacy-badge/.test(styles), 'styles should include privacy badge stylin
 assert(/skip-link/.test(styles), 'styles should include skip-link focus styling');
 assert(/:focus-visible/.test(styles), 'styles should include visible keyboard focus styles');
 assert(/multi-school-report-card/.test(styles), 'styles should include multi-school report styling');
-assert(/styles\.css\?v=59/.test(leaderboardHtml), 'leaderboard page should request the current stylesheet version');
-assert(/styles\.css\?v=59/.test(interschoolTeamHtml), 'interschool team page should request the current stylesheet');
+assert(/styles\.css\?v=60/.test(leaderboardHtml), 'leaderboard page should request the current stylesheet version');
+assert(/styles\.css\?v=60/.test(interschoolTeamHtml), 'interschool team page should request the current stylesheet');
 assert(/theme\.js\?v=8/.test(studentProfileHtml), 'student profile should load the shared light/dark theme switch');
 assert(/data-theme="dark"/.test(styles), 'site styles should define dark theme overrides');
 assert(/html\[data-theme="dark"\] \.privacy-badge--public[\s\S]*color:\s*#fff3c4/.test(styles), 'dark mode should keep public-name privacy badges readable');
@@ -755,6 +756,8 @@ assert(/html\[data-theme="dark"\] #student-list \.student-name-link:hover,[\s\S]
 assert(/html\[data-theme="dark"\] \.athletics-event-chip[\s\S]*rgba\(255,248,221,0\.98\)[\s\S]*color:\s*#071426/.test(styles), 'dark mode should keep athletics event chips readable on dark cards');
 assert(/html\[data-theme="dark"\] #tab-awards \.award-badge[\s\S]*color:\s*#f7fbff !important/.test(styles), 'dark mode should keep admin Awards badges readable');
 assert(/html\[data-theme="dark"\] #tab-awards #certificates-list th[\s\S]*background:\s*rgba\(242,216,145,0\.14\) !important/.test(styles), 'dark mode should keep admin Awards certificate tables readable');
+assert(/\.medal-badge--bronze[\s\S]*\.medal-badge--silver[\s\S]*\.medal-badge--gold/.test(styles), 'styles should define polished medal badge tier colours');
+assert(/html\[data-theme="dark"\] \.medal-badge--bronze[\s\S]*html\[data-theme="dark"\] #tab-awards \.medal-badge--gold/.test(styles), 'dark mode should keep leaderboard medal badges readable');
 assert(/theme-toggle/.test(styles), 'site styles should include the top light/dark mode switch');
 assert(/html\[data-theme="dark"\]\s+\.barcode-card-preview[\s\S]*background:\s*#fff[\s\S]*color:\s*#102a43/.test(styles), 'dark mode should keep printable barcode card text readable on the white card');
 assert(/html\[data-theme="dark"\]\s+\.barcode-card-preview strong,[\s\S]*\.barcode-card-name,[\s\S]*\.barcode-code[\s\S]*color:\s*#0b1f38/.test(styles), 'dark mode should force barcode card name and code to dark ink');
@@ -796,12 +799,12 @@ const privacyPolicyHtml = read('privacy-policy.html');
 assert(/Access boundaries/.test(privacyPolicyHtml), 'privacy policy should explain access boundaries');
 assert(/Parents can see only their own linked child or children/.test(privacyPolicyHtml), 'privacy policy should describe parent-only child access');
 assert(/advertising trackers/.test(privacyPolicyHtml), 'privacy policy should rule out advertising trackers');
-assert(/admin-dashboard\.js\?v=35/.test(adminDashboardHtml), 'admin dashboard should request the current Coach Tools dashboard script');
+assert(/admin-dashboard\.js\?v=36/.test(adminDashboardHtml), 'admin dashboard should request the current Coach Tools dashboard script');
 assert(/goals\.js\?v=4/.test(adminDashboardHtml), 'admin dashboard should request a fresh goals script after interschool goals changes');
 assert(/admin-goals\.js\?v=4/.test(adminDashboardHtml), 'admin dashboard should request a fresh admin goals script after interschool goals changes');
 assert(/goals\.js\?v=4/.test(studentProfileHtml), 'student profile should request a fresh goals script');
 assert(/goals\.js\?v=4/.test(studentHtml), 'student login should request a fresh goals script');
-assert(/gwynne-park-run-club-v87/.test(serviceWorker), 'service worker cache should be bumped for support link update');
+assert(/gwynne-park-run-club-v88/.test(serviceWorker), 'service worker cache should be bumped for support link update');
 assert(/backend\.js/.test(serviceWorker), 'service worker should cache the backend adapter');
 assert(/interschool-team\.html/.test(serviceWorker) && /interschool-team\.js/.test(serviceWorker), 'service worker should cache the dedicated interschool team page');
 assertFile('tests/backend-live-style.test.js');

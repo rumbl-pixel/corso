@@ -194,7 +194,7 @@
 
   function medalBadge(student) {
     var medal=medalFor(student);
-    return '<span class="award-badge" style="border-color:'+medal.color+';color:'+medal.color+';">'+medal.name+'</span>';
+    return '<span class="award-badge medal-badge medal-badge--'+medal.name.toLowerCase()+'">'+medal.name+'</span>';
   }
 
   // --- Helpers ---
@@ -2101,13 +2101,13 @@
 
   function renderMedals(){
     medalRulesEl.innerHTML=MEDAL_TIERS.filter(function(t){return t.name!=='Starter';}).map(function(t){
-      return '<span class="award-badge" style="border-color:'+t.color+';color:'+t.color+';">'+t.name+' • '+t.km+' km</span>';
+      return '<span class="award-badge medal-badge medal-badge--'+t.name.toLowerCase()+'">'+t.name+' • '+t.km+' km</span>';
     }).join('');
     var counts={};
     MEDAL_TIERS.forEach(function(t){counts[t.name]=0;});
     getStudents().forEach(function(s){counts[medalFor(s).name]+=1;});
     medalSummaryEl.innerHTML='<div style="display:flex;gap:0.75rem;flex-wrap:wrap;">'+MEDAL_TIERS.map(function(t){
-      return '<div class="stat-box"><div class="stat-value" style="color:'+t.color+';">'+counts[t.name]+'</div><div class="stat-label">'+t.name+'</div></div>';
+      return '<div class="stat-box medal-summary-box medal-summary-box--'+t.name.toLowerCase()+'"><div class="stat-value">'+counts[t.name]+'</div><div class="stat-label">'+t.name+'</div></div>';
     }).join('')+'</div>';
   }
   renderMedals();
