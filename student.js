@@ -322,6 +322,29 @@
     return rows;
   }
 
+  function collectedBadgeRows(student) {
+    return Scan.MILESTONES.filter(function (m) { return student.laps >= m; }).map(function (m) {
+      return {
+        title: MILESTONE_LABELS[m] || (m + ' laps'),
+        laps: m,
+        detail: m + ' lap badge'
+      };
+    });
+  }
+
+  function collectedBadgesHtml(rows) {
+    if (!rows.length) {
+      return '<div class="collected-badge-empty"><strong>No badges collected yet</strong><span>Your first badge unlocks at 5 laps.</span></div>';
+    }
+    return '<div class="collected-badge-shelf" aria-label="Collected award badges">' + rows.map(function (row) {
+      return '<div class="collected-badge" title="' + escapeHtml(row.detail) + '">' +
+        '<span class="collected-badge-icon">&#127942;</span>' +
+        '<strong>' + escapeHtml(row.title) + '</strong>' +
+        '<small>' + row.laps + ' laps</small>' +
+      '</div>';
+    }).join('') + '</div>';
+  }
+
   function awardCardsHtml(rows) {
     if (!rows.length) {
       return '<p style="color:#888;font-size:0.85rem;">Keep running to earn your first award at 5 laps!</p>';
@@ -352,6 +375,10 @@
       '<div class="stat-box"><div class="stat-value">#' + classRank + '</div><div class="stat-label">Class rank</div></div>';
 
     var awardsEl = document.getElementById('athlete-awards');
+    var collectedBadgesEl = document.getElementById('collected-badges');
+    if (collectedBadgesEl) {
+      collectedBadgesEl.innerHTML = collectedBadgesHtml(collectedBadgeRows(s));
+    }
     awardsEl.innerHTML = awardCardsHtml(awardDisplayRows(s));
 
     document.getElementById('result-card').hidden = false;
