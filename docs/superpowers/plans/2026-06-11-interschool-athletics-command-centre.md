@@ -521,37 +521,37 @@ Expected: PASS.
 Replace:
 
 ```text
-styles.css?v=67
+styles.css?v=68
 ```
 
 with:
 
 ```text
-styles.css?v=68
+styles.css?v=69
 ```
 
 If `admin-dashboard.js` changed, replace:
 
 ```text
-admin-dashboard.js?v=45
+admin-dashboard.js?v=46
 ```
 
 with:
 
 ```text
-admin-dashboard.js?v=46
+admin-dashboard.js?v=47
 ```
 
 Replace the service worker cache:
 
 ```js
-var CACHE_NAME = 'gwynne-park-run-club-v99';
+var CACHE_NAME = 'gwynne-park-run-club-v100';
 ```
 
 with:
 
 ```js
-var CACHE_NAME = 'gwynne-park-run-club-v100';
+var CACHE_NAME = 'gwynne-park-run-club-v101';
 ```
 
 Update matching test assertions.
@@ -562,7 +562,7 @@ Run:
 
 ```powershell
 npm test
-rg -n "styles\\.css\\?v=67|admin-dashboard\\.js\\?v=45|gwynne-park-run-club-v99" -S .
+rg -n "styles\\.css\\?v=68|admin-dashboard\\.js\\?v=46|gwynne-park-run-club-v100" -S .
 ```
 
 Expected: tests pass and stale scan returns no matches.
