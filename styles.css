@@ -1846,7 +1846,7 @@ html[data-theme="dark"] .privacy-badge--declined {
 
 .athletics-consent-option {
   display: grid;
-  grid-template-columns: 22px minmax(0, 1fr);
+  grid-template-columns: 22px minmax(0, 1fr) auto;
   align-items: center;
   gap: 0.45rem;
   min-height: 34px;
@@ -1854,6 +1854,30 @@ html[data-theme="dark"] .privacy-badge--declined {
   border-bottom: 1px solid rgba(7,20,38,0.10);
   border-radius: 0;
   background: transparent;
+}
+
+.athletics-consent-status-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.athletics-consent-status-toggle input {
+  width: 15px;
+  height: 15px;
+}
+
+.athletics-consent-saved-list {
+  margin-bottom: 1rem;
+}
+
+.athletics-consent-saved-list h3 {
+  margin: 0 0 0.55rem;
+  color: var(--obsidian-navy-3);
 }
 
 .athletics-consent-option input {
@@ -1908,6 +1932,10 @@ html[data-theme="dark"] .athletics-consent-option strong {
 html[data-theme="dark"] .athletics-consent-option {
   background: transparent;
   border-color: rgba(255,255,255,0.10);
+}
+
+html[data-theme="dark"] .athletics-consent-saved-list h3 {
+  color: #f5f9ff;
 }
 
 html[data-theme="dark"] .athletics-consent-option:has(input:checked) {
