@@ -1395,6 +1395,97 @@ html[data-theme="dark"] .athletics-consent-summary {
   border-color: rgba(255,255,255,0.14);
 }
 
+.athletics-mode-shell {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.05)),
+    var(--surface-tint);
+  padding: 1rem;
+}
+
+.athletics-mode-shell--active {
+  border-color: rgba(201,151,34,0.46);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.28), 0 16px 32px rgba(7,20,38,0.13);
+}
+
+.athletics-mode-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  cursor: pointer;
+  margin: 0;
+}
+
+.athletics-mode-toggle input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.athletics-mode-slider {
+  position: relative;
+  width: 62px;
+  height: 34px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.28);
+  background: rgba(7,20,38,0.72);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.18);
+  transition: background 180ms ease, border-color 180ms ease;
+}
+
+.athletics-mode-slider::after {
+  content: "";
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #f5f9ff;
+  box-shadow: 0 6px 14px rgba(7,20,38,0.26);
+  transition: transform 180ms ease, background 180ms ease;
+}
+
+.athletics-mode-toggle input:checked + .athletics-mode-slider {
+  background: linear-gradient(135deg, #c99722, #f2d891);
+  border-color: rgba(255,248,221,0.9);
+}
+
+.athletics-mode-toggle input:checked + .athletics-mode-slider::after {
+  transform: translateX(28px);
+  background: #071426;
+}
+
+.athletics-mode-label {
+  display: grid;
+  gap: 0.12rem;
+}
+
+.athletics-mode-label strong {
+  color: var(--obsidian-navy-3);
+}
+
+.athletics-mode-label small {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.athletics-mode-panel {
+  margin-top: 1rem;
+  animation: revealIn 220ms ease both;
+}
+
+html[data-theme="dark"] .athletics-mode-shell {
+  background: rgba(7,20,38,0.58);
+  border-color: rgba(255,255,255,0.14);
+}
+
+html[data-theme="dark"] .athletics-mode-label strong {
+  color: #edf4ff;
+}
+
 .danger-link {
   color: var(--danger);
 }
@@ -2141,6 +2232,15 @@ html[data-theme="dark"] .reflection-item p {
     grid-template-columns: 1fr;
   }
 
+  .interschool-team-hero {
+    flex-direction: column;
+  }
+
+  .team-page-actions {
+    justify-content: flex-start;
+    width: 100%;
+  }
+
   #student-list li {
     align-items: flex-start !important;
     flex-direction: column;
@@ -2504,6 +2604,16 @@ html[data-theme="dark"] .reflection-item p {
   color: var(--obsidian-navy-2);
   font-size: 0.8rem;
   margin: 0.18rem;
+  font-weight: 800;
+  text-decoration: none;
+  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+}
+
+.athletics-event-chip:hover,
+.athletics-event-chip:focus-visible {
+  transform: translateY(-1px);
+  border-color: rgba(201,151,34,0.62);
+  box-shadow: 0 10px 20px rgba(7,20,38,0.14);
 }
 
 .athletics-event-chip small {
@@ -2520,6 +2630,32 @@ html[data-theme="dark"] .athletics-event-chip {
 
 html[data-theme="dark"] .athletics-event-chip small {
   color: #52657f;
+}
+
+.interschool-team-hero {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.team-page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+#team-student-list,
+#team-follow-up-list,
+#team-results-list {
+  overflow-x: auto;
+}
+
+#team-student-list table,
+#team-follow-up-list table,
+#team-results-list table {
+  min-width: 560px;
 }
 
 /* --- Admin goals modal --- */

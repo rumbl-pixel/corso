@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gwynne Park Run Club - Interschool Team</title>
+    <link rel="stylesheet" href="styles.css?v=50" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <meta name="theme-color" content="#0c5aa8" />
+    <link rel="apple-touch-icon" href="assets/app-icon-192.png" />
+    <script src="config.js"></script>
+    <script src="theme.js?v=8"></script>
+  </head>
+  <body class="page page-interschool-team">
+    <a class="skip-link" href="#main-content">Skip to main content</a>
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand brand-home-link" href="index.html" aria-label="Back to Gwynne Park Run Club home page">
+          <img class="brand-logo" src="assets/gwynne-park-logo.png" alt="Gwynne Park Schools" />
+          <h1>Gwynne Park Run Club</h1>
+        </a>
+        <nav class="main-nav">
+          <a href="index.html">Home</a>
+          <a href="admin-dashboard.html?tab=students">Admin</a>
+          <a href="leaderboard.html">Leaderboards</a>
+          <a href="student.html">Student</a>
+          <a href="parent.html">Parent</a>
+        </nav>
+      </div>
+      <p class="tagline">Interschool team planner by event.</p>
+    </header>
+
+    <main id="main-content" class="content">
+      <section class="card interschool-team-hero">
+        <div>
+          <p class="eyebrow">Interschool Athletics Mode</p>
+          <h2 id="team-event-title">Loading event...</h2>
+          <p id="team-event-summary" class="muted-copy"></p>
+        </div>
+        <div class="team-page-actions">
+          <a class="secondary" href="admin-dashboard.html?tab=students">Back to athletics mode</a>
+          <a class="btn-primary" href="admin-dashboard.html?tab=events">Record or update results</a>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Team Snapshot</h2>
+        <div id="team-event-stats" class="setup-summary-grid"></div>
+      </section>
+
+      <section class="card">
+        <h2>Students Competing / Eligible</h2>
+        <p class="muted-copy">This currently shows students who match the event year band and have athletics consent approved. Later we can add explicit team selection checkboxes.</p>
+        <div id="team-student-list"></div>
+      </section>
+
+      <section class="card">
+        <h2>Follow Up</h2>
+        <p class="muted-copy">Students in the event year band who still need consent or note follow-up.</p>
+        <div id="team-follow-up-list"></div>
+      </section>
+
+      <section class="card">
+        <h2>Recorded Results</h2>
+        <div id="team-results-list"></div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>Gwynne Park Run Club &copy; 2026 &middot; <a href="privacy-policy.html">Privacy Policy</a></p>
+      <a class="feature-suggestion-btn" href="mailto:support@gwynneparkrunclub.com.au?subject=Gwynne%20Park%20Run%20Club%20Feature%20Suggestion">Feature Suggestion</a>
+    </footer>
+
+    <script src="scanning.js"></script>
+    <script src="goals.js?v=4"></script>
+    <script src="interschool-team.js?v=1"></script>
+    <script src="pwa.js"></script>
+  </body>
+</html>
