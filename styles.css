@@ -1332,6 +1332,31 @@ html[data-theme="dark"] .athletics-event-group {
   color: var(--uniform-gold-dark);
 }
 
+html[data-theme="dark"] #student-list .student-name-link,
+html[data-theme="dark"] #student-list .link-btn {
+  color: #9fc7f7;
+  text-decoration-color: rgba(159,199,247,0.62);
+}
+
+html[data-theme="dark"] #student-list .student-name-link:hover,
+html[data-theme="dark"] #student-list .student-name-link:focus,
+html[data-theme="dark"] #student-list .link-btn:hover,
+html[data-theme="dark"] #student-list .link-btn:focus-visible {
+  color: #f2d891;
+  text-decoration-color: rgba(242,216,145,0.82);
+}
+
+html[data-theme="dark"] #student-list .danger-link {
+  color: #f0aaa6;
+  text-decoration-color: rgba(240,170,166,0.66);
+}
+
+html[data-theme="dark"] #student-list .danger-link:hover,
+html[data-theme="dark"] #student-list .danger-link:focus-visible {
+  color: #ffd1ce;
+  text-decoration-color: rgba(255,209,206,0.86);
+}
+
 .privacy-badge {
   display: inline-flex;
   align-items: center;
