@@ -271,7 +271,7 @@ assert(/athletics-mode-toggle/.test(adminDashboardHtml), 'admin athletics mode s
 assert(/athletics-mode-panel/.test(adminDashboardHtml), 'admin athletics mode should expand the event planner only when enabled');
 assert(/interschool-athletics-events/.test(adminDashboardHtml), 'admin dashboard should show the interschool athletics event catalogue');
 assert(/athletics-event-modal/.test(adminDashboardHtml), 'admin dashboard should open interschool event teams in a modal');
-assert(/athletics-team-search/.test(adminDashboardHtml), 'admin interschool team modal should include a school-wide opted-in student search');
+assert(/athletics-team-search/.test(adminDashboardHtml), 'admin interschool team modal should include a school-wide student search');
 assert(/athletics-division-filter/.test(adminDashboardHtml), 'admin interschool ball-game modal should include a division selector');
 assert(/athletics-team-student-list/.test(adminDashboardHtml), 'admin interschool team modal should render checkbox student selection');
 assert(/save-athletics-team-btn/.test(adminDashboardHtml), 'admin interschool team modal should save selected athletes');
@@ -309,7 +309,7 @@ assert(/edit-student-medical-reviewed/.test(adminDashboardHtml), 'admin student 
 assert(/edit-student-house/.test(adminDashboardHtml), 'admin student editor should optionally edit house');
 assert(/edit-student-team/.test(adminDashboardHtml), 'admin student editor should optionally edit team');
 assert(/edit-student-pseudonym/.test(adminDashboardHtml), 'admin student editor should support privacy pseudonyms');
-assert(/edit-student-consent-status/.test(adminDashboardHtml), 'admin student editor should track consent status');
+assert(!/edit-student-consent-status/.test(adminDashboardHtml), 'admin student editor should not duplicate the athletics consent checklist');
 assert(/edit-student-hide-public-name/.test(adminDashboardHtml), 'admin student editor should hide names from public lists');
 assert(/edit-student-share-certificates/.test(adminDashboardHtml), 'admin student editor should control public certificate sharing');
 assert(/guardian-link-list/.test(adminDashboardHtml), 'admin students area should include guardian link management');
@@ -407,7 +407,7 @@ assert(/training-status-list/.test(adminDashboardHtml), 'admin training tab shou
 assert(/role="tablist"/.test(adminDashboardHtml), 'admin tabs should expose a tablist role');
 assert(/aria-selected="true"/.test(adminDashboardHtml), 'admin active tab should expose selected state');
 assert(/aria-controls="tab-scanner"/.test(adminDashboardHtml), 'admin tabs should reference tab panels');
-assert(/admin-dashboard\.js\?v=37/.test(adminDashboardHtml), 'admin dashboard should request the current Coach Tools dashboard script');
+assert(/admin-dashboard\.js\?v=38/.test(adminDashboardHtml), 'admin dashboard should request the current Coach Tools dashboard script');
 assert(/backend\.js\?v=21/.test(adminDashboardHtml), 'admin dashboard should load the backend adapter before app scripts');
 
 const adminDashboardJs = read('admin-dashboard.js');
@@ -474,7 +474,8 @@ assert(/studentEligibleForAthleticsEvent/.test(adminDashboardJs), 'admin athleti
 assert(/athleticsTeamSelectionKey/.test(adminDashboardJs), 'admin athletics team selector should store ball game teams by division');
 assert(/renderAthleticsTeamOverview/.test(adminDashboardJs), 'admin athletics mode should render selected player team lists');
 assert(/athletics-team-event-tag--leader/.test(adminDashboardJs), 'admin athletics team overview should mark leading athletes by event');
-assert(/studentOptedIntoAthletics/.test(adminDashboardJs), 'admin athletics team selector should limit selection to opted-in students');
+assert(!/studentOptedIntoAthletics/.test(adminDashboardJs), 'admin athletics event selectors should not duplicate consent filtering');
+assert(/setStudentAthleticsConsent/.test(adminDashboardJs), 'admin athletics mode should save consent from the main checklist');
 assert(/athletics-team-student-check/.test(adminDashboardJs), 'admin athletics team selector should use checkbox selection');
 assert(!/interschool-team\.html\?event=/.test(adminDashboardJs), 'admin athletics event pills should not navigate away from the dashboard');
 assert(/CROSS_COUNTRY_COURSES_KEY/.test(adminDashboardJs), 'admin dashboard should store Cross Country courses');
@@ -502,9 +503,9 @@ assert(/studentProfileUrl/.test(adminDashboardJs), 'admin dashboard should build
 assert(/student-name-link/.test(adminDashboardJs), 'admin student names should render as clickable profile links');
 assert(/privacyDisplayName/.test(adminDashboardJs), 'admin dashboard should calculate privacy-aware display names');
 assert(/studentConsentStatus/.test(adminDashboardJs), 'admin dashboard should calculate consent labels');
-assert(/athletics-consent-summary/.test(adminDashboardHtml), 'admin athletics mode should include a consent summary');
-assert(/Athletics carnival consent/.test(adminDashboardHtml), 'admin student editor should label consent as athletics carnival consent');
-assert(/renderAthleticsConsentSummary/.test(adminDashboardJs), 'admin athletics mode should render athletics consent status');
+assert(/athletics-consent-summary/.test(adminDashboardHtml), 'admin athletics mode should include the main consent checklist surface');
+assert(/athletics-consent-check/.test(adminDashboardJs), 'admin athletics mode should render a checkbox consent list');
+assert(/renderAthleticsConsentSummary/.test(adminDashboardJs), 'admin athletics mode should render athletics consent checklist status');
 assert(/editStudentPseudonymEl/.test(adminDashboardJs), 'admin dashboard should wire pseudonym editing');
 assert(/hide_public_name/.test(adminDashboardJs), 'admin dashboard should persist public-name hiding');
 assert(/share_certificates_publicly/.test(adminDashboardJs), 'admin dashboard should persist certificate sharing controls');
@@ -762,8 +763,8 @@ assert(/privacy-badge/.test(styles), 'styles should include privacy badge stylin
 assert(/skip-link/.test(styles), 'styles should include skip-link focus styling');
 assert(/:focus-visible/.test(styles), 'styles should include visible keyboard focus styles');
 assert(/multi-school-report-card/.test(styles), 'styles should include multi-school report styling');
-assert(/styles\.css\?v=63/.test(leaderboardHtml), 'leaderboard page should request the current stylesheet version');
-assert(/styles\.css\?v=63/.test(interschoolTeamHtml), 'interschool team page should request the current stylesheet');
+assert(/styles\.css\?v=64/.test(leaderboardHtml), 'leaderboard page should request the current stylesheet version');
+assert(/styles\.css\?v=64/.test(interschoolTeamHtml), 'interschool team page should request the current stylesheet');
 assert(/theme\.js\?v=8/.test(studentProfileHtml), 'student profile should load the shared light/dark theme switch');
 assert(/data-theme="dark"/.test(styles), 'site styles should define dark theme overrides');
 assert(/html\[data-theme="dark"\] \.privacy-badge--public[\s\S]*color:\s*#fff3c4/.test(styles), 'dark mode should keep public-name privacy badges readable');
@@ -819,12 +820,12 @@ const privacyPolicyHtml = read('privacy-policy.html');
 assert(/Access boundaries/.test(privacyPolicyHtml), 'privacy policy should explain access boundaries');
 assert(/Parents can see only their own linked child or children/.test(privacyPolicyHtml), 'privacy policy should describe parent-only child access');
 assert(/advertising trackers/.test(privacyPolicyHtml), 'privacy policy should rule out advertising trackers');
-assert(/admin-dashboard\.js\?v=37/.test(adminDashboardHtml), 'admin dashboard should request the current Coach Tools dashboard script');
+assert(/admin-dashboard\.js\?v=38/.test(adminDashboardHtml), 'admin dashboard should request the current Coach Tools dashboard script');
 assert(/goals\.js\?v=5/.test(adminDashboardHtml), 'admin dashboard should request a fresh goals script after interschool goals changes');
 assert(/admin-goals\.js\?v=5/.test(adminDashboardHtml), 'admin dashboard should request a fresh admin goals script after interschool goals changes');
 assert(/goals\.js\?v=5/.test(studentProfileHtml), 'student profile should request a fresh goals script');
 assert(/goals\.js\?v=5/.test(studentHtml), 'student login should request a fresh goals script');
-assert(/gwynne-park-run-club-v91/.test(serviceWorker), 'service worker cache should be bumped for support link update');
+assert(/gwynne-park-run-club-v92/.test(serviceWorker), 'service worker cache should be bumped for support link update');
 assert(/backend\.js/.test(serviceWorker), 'service worker should cache the backend adapter');
 assert(/interschool-team\.html/.test(serviceWorker) && /interschool-team\.js/.test(serviceWorker), 'service worker should cache the dedicated interschool team page');
 assertFile('tests/backend-live-style.test.js');

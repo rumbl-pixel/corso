@@ -1813,6 +1813,70 @@ html[data-theme="dark"] .privacy-badge--declined {
   gap: 0.45rem;
 }
 
+.athletics-consent-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.65rem;
+}
+
+.athletics-consent-head strong,
+.athletics-consent-head span {
+  display: block;
+}
+
+.athletics-consent-head strong {
+  color: var(--obsidian-navy-3);
+}
+
+.athletics-consent-head span {
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+.athletics-consent-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.athletics-consent-option {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.58rem 0.68rem;
+  border: 1px solid rgba(7,20,38,0.12);
+  border-radius: 8px;
+  background: rgba(255,255,255,0.64);
+}
+
+.athletics-consent-option input {
+  width: 18px;
+  height: 18px;
+}
+
+.athletics-consent-option span,
+.athletics-consent-option strong,
+.athletics-consent-option small {
+  display: block;
+}
+
+.athletics-consent-option strong {
+  color: var(--obsidian-navy-3);
+}
+
+.athletics-consent-option small {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.athletics-consent-option:has(input:checked) {
+  border-color: rgba(201,151,34,0.56);
+  background: rgba(255,248,221,0.82);
+}
+
 .athletics-consent-summary p {
   margin: 0.6rem 0 0;
   color: var(--muted);
@@ -1822,6 +1886,21 @@ html[data-theme="dark"] .privacy-badge--declined {
 html[data-theme="dark"] .athletics-consent-summary {
   background: rgba(255,255,255,0.06);
   border-color: rgba(255,255,255,0.14);
+}
+
+html[data-theme="dark"] .athletics-consent-head strong,
+html[data-theme="dark"] .athletics-consent-option strong {
+  color: #f5f9ff;
+}
+
+html[data-theme="dark"] .athletics-consent-option {
+  background: rgba(255,255,255,0.07);
+  border-color: rgba(255,255,255,0.14);
+}
+
+html[data-theme="dark"] .athletics-consent-option:has(input:checked) {
+  background: rgba(201,151,34,0.16);
+  border-color: rgba(242,216,145,0.52);
 }
 
 .athletics-mode-shell {
