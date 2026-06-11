@@ -762,7 +762,8 @@ assert(/Feature Suggestion/.test(adminDashboardHtml), 'admin dashboard footer sh
 assert(/privacy-pledge/.test(adminDashboardHtml), 'admin dashboard footer should include the no-ads privacy pledge');
 assert(/No ads\. No tracking\. Parents see their own child only\. Students see their own profile only\. Schools see their own students only\./.test(adminDashboardHtml), 'privacy pledge should state the core access boundaries');
 assert(/donate-coffee-btn/.test(adminDashboardHtml), 'admin dashboard footer should include a low-key support the project button');
-assert(/mailto:support@gwynneparkrunclub\.com\.au\?subject=Support%20development/.test(adminDashboardHtml), 'donate button should use a privacy-safe mailto placeholder');
+assert(/href="https:\/\/buymeacoffee\.com\/jmancini"/.test(adminDashboardHtml), 'support button should link to the Buy Me a Coffee page');
+assert(/target="_blank"/.test(adminDashboardHtml) && /rel="noopener"/.test(adminDashboardHtml), 'external support link should open safely');
 assert(/feature-suggestion-btn/.test(styles), 'site footer should style the feature suggestion button');
 assert(/donate-coffee-btn/.test(styles), 'site footer should style the support the project button');
 assert(/\.privacy-pledge[\s\S]*max-width:\s*760px/.test(styles), 'privacy pledge should be styled as readable footer text');
@@ -777,7 +778,7 @@ assert(/goals\.js\?v=4/.test(adminDashboardHtml), 'admin dashboard should reques
 assert(/admin-goals\.js\?v=4/.test(adminDashboardHtml), 'admin dashboard should request a fresh admin goals script after interschool goals changes');
 assert(/goals\.js\?v=4/.test(studentProfileHtml), 'student profile should request a fresh goals script');
 assert(/goals\.js\?v=4/.test(studentHtml), 'student login should request a fresh goals script');
-assert(/gwynne-park-run-club-v82/.test(serviceWorker), 'service worker cache should be bumped for Interschool Athletics tidy-up');
+assert(/gwynne-park-run-club-v83/.test(serviceWorker), 'service worker cache should be bumped for support link update');
 assert(/backend\.js/.test(serviceWorker), 'service worker should cache the backend adapter');
 assert(/interschool-team\.html/.test(serviceWorker) && /interschool-team\.js/.test(serviceWorker), 'service worker should cache the dedicated interschool team page');
 assertFile('tests/backend-live-style.test.js');
