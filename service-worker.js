@@ -1,4 +1,4 @@
-var CACHE_NAME = 'gwynne-park-run-club-v75';
+var CACHE_NAME = 'gwynne-park-run-club-v76';
 var CORE_ASSETS = [
   './',
   './index.html',
@@ -8,6 +8,7 @@ var CORE_ASSETS = [
   './student-profile.html',
   './parent.html',
   './leaderboard.html',
+  './interschool-team.html',
   './privacy-policy.html',
   './kiosk.html',
   './styles.css',
@@ -18,6 +19,7 @@ var CORE_ASSETS = [
   './admin-dashboard.js',
   './admin-goals.js',
   './goals.js',
+  './interschool-team.js',
   './kiosk.js',
   './leaderboard.js',
   './parent.js',

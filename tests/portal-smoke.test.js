@@ -24,6 +24,8 @@ assertFile('DESIGN.md');
 assertFile('parent.html');
 assertFile('parent.js');
 assertFile('leaderboard.html');
+assertFile('interschool-team.html');
+assertFile('interschool-team.js');
 assertFile('manifest.webmanifest');
 assertFile('service-worker.js');
 assertFile('pwa.js');
@@ -37,6 +39,7 @@ const brandFiles = [
   'student.html',
   'student-profile.html',
   'leaderboard.html',
+  'interschool-team.html',
   'parent.html',
   'privacy-policy.html',
   'kiosk.html',
@@ -58,6 +61,7 @@ const pwaPages = [
   'student.html',
   'student-profile.html',
   'leaderboard.html',
+  'interschool-team.html',
   'parent.html',
   'privacy-policy.html',
   'kiosk.html'
@@ -237,6 +241,7 @@ assert(/backendDataAccess\.recordLapScan/.test(scanningJs), 'shared scanning sho
 assert(/Local scan write blocked/.test(scanningJs), 'shared scanning should block live-mode local-only scan writes when backend is not ready');
 
 const adminDashboardHtml = read('admin-dashboard.html');
+const interschoolTeamHtml = read('interschool-team.html');
 assert(/assets\/gwynne-park-logo\.png/.test(adminDashboardHtml), 'admin dashboard should use the official Gwynne Park logo image');
 const dashboardBrandLink = adminDashboardHtml.match(/<a[^>]*brand-home-link[^>]*>/);
 assert(dashboardBrandLink && /href="index\.html"/.test(dashboardBrandLink[0]), 'admin dashboard logo/banner should link back to the home page');
@@ -257,6 +262,8 @@ assert(/print-leaderboard-btn/.test(adminDashboardHtml), 'admin leaderboard shou
 assert(/medal-rules/.test(adminDashboardHtml), 'admin awards area should show medal tier rules');
 assert(/certificates-list/.test(adminDashboardHtml), 'admin awards area should include a certificates list');
 assert(/interschool-athletics-mode/.test(adminDashboardHtml), 'admin dashboard should include an Interschool Athletics Mode checkbox');
+assert(/athletics-mode-toggle/.test(adminDashboardHtml), 'admin athletics mode should use a pill toggle control');
+assert(/athletics-mode-panel/.test(adminDashboardHtml), 'admin athletics mode should expand the event planner only when enabled');
 assert(/interschool-athletics-events/.test(adminDashboardHtml), 'admin dashboard should show the interschool athletics event catalogue');
 assert(/cross-country-course-form/.test(adminDashboardHtml), 'admin dashboard should include a Cross Country course form');
 assert(/cross-country-distance/.test(adminDashboardHtml), 'admin dashboard should collect Cross Country course distances');
@@ -382,7 +389,7 @@ assert(/training-status-list/.test(adminDashboardHtml), 'admin training tab shou
 assert(/role="tablist"/.test(adminDashboardHtml), 'admin tabs should expose a tablist role');
 assert(/aria-selected="true"/.test(adminDashboardHtml), 'admin active tab should expose selected state');
 assert(/aria-controls="tab-scanner"/.test(adminDashboardHtml), 'admin tabs should reference tab panels');
-assert(/admin-dashboard\.js\?v=32/.test(adminDashboardHtml), 'admin dashboard should request the current Coach Tools skeleton dashboard script');
+assert(/admin-dashboard\.js\?v=33/.test(adminDashboardHtml), 'admin dashboard should request the current Interschool Athletics tidy-up dashboard script');
 assert(/backend\.js\?v=21/.test(adminDashboardHtml), 'admin dashboard should load the backend adapter before app scripts');
 
 const adminDashboardJs = read('admin-dashboard.js');
@@ -440,6 +447,8 @@ assert(/printLeaderboardPoster/.test(adminDashboardJs), 'admin dashboard should 
 assert(/renderCertificates/.test(adminDashboardJs), 'admin dashboard should render certificate readiness');
 assert(/setInterschoolAthleticsMode/.test(adminDashboardJs), 'admin dashboard should persist Interschool Athletics Mode setting');
 assert(/renderInterschoolAthleticsEvents/.test(adminDashboardJs), 'admin dashboard should render interschool athletics events');
+assert(/renderAthleticsModeState/.test(adminDashboardJs), 'admin dashboard should expand and collapse Interschool Athletics Mode state');
+assert(/interschool-team\.html\?event=/.test(adminDashboardJs), 'admin athletics event pills should link to the dedicated interschool team page');
 assert(/CROSS_COUNTRY_COURSES_KEY/.test(adminDashboardJs), 'admin dashboard should store Cross Country courses');
 assert(/crossCountryCourses/.test(adminDashboardJs), 'admin dashboard should read saved Cross Country courses');
 assert(/createCrossCountryCourse/.test(adminDashboardJs), 'admin dashboard should create Cross Country courses');
@@ -555,6 +564,16 @@ assert(/Local medical notes blocked/.test(adminDashboardJs), 'admin dashboard sh
 assert(/saveActivityCreditWithBackend/.test(adminDashboardJs), 'admin dashboard should guard activity credits before changing student totals');
 assert(/backendDataAccess\.recordActivityCredit/.test(adminDashboardJs), 'admin dashboard should route activity credits through the backend when live-ready');
 assert(/Local activity credit blocked/.test(adminDashboardJs), 'admin dashboard should block local-only activity credits in live data mode');
+
+const interschoolTeamJs = read('interschool-team.js');
+assert(/team-event-title/.test(interschoolTeamHtml), 'interschool team page should render an event title');
+assert(/team-student-list/.test(interschoolTeamHtml), 'interschool team page should show students competing or eligible');
+assert(/team-follow-up-list/.test(interschoolTeamHtml), 'interschool team page should show consent follow-up students');
+assert(/team-results-list/.test(interschoolTeamHtml), 'interschool team page should show recorded results');
+assert(/EVENT_OPTIONS/.test(interschoolTeamJs), 'interschool team script should define event options');
+assert(/eventMatchesStudent/.test(interschoolTeamJs), 'interschool team script should filter students by event year band');
+assert(/studentConsent/.test(interschoolTeamJs), 'interschool team script should respect athletics consent status');
+assert(/rc_athletics_results/.test(interschoolTeamJs), 'interschool team script should read saved athletics results');
 
 assert(/programSettings/.test(scanningJs), 'shared scanning should expose program settings');
 assert(/lapDistanceKm/.test(scanningJs), 'shared scanning should use configurable lap distance');
@@ -700,7 +719,8 @@ assert(/privacy-badge/.test(styles), 'styles should include privacy badge stylin
 assert(/skip-link/.test(styles), 'styles should include skip-link focus styling');
 assert(/:focus-visible/.test(styles), 'styles should include visible keyboard focus styles');
 assert(/multi-school-report-card/.test(styles), 'styles should include multi-school report styling');
-assert(/styles\.css\?v=49/.test(leaderboardHtml), 'leaderboard page should request the Coach Tools skeleton stylesheet version');
+assert(/styles\.css\?v=50/.test(leaderboardHtml), 'leaderboard page should request the Interschool Athletics tidy-up stylesheet version');
+assert(/styles\.css\?v=50/.test(interschoolTeamHtml), 'interschool team page should request the current stylesheet');
 assert(/theme\.js\?v=8/.test(studentProfileHtml), 'student profile should load the shared light/dark theme switch');
 assert(/data-theme="dark"/.test(styles), 'site styles should define dark theme overrides');
 assert(/html\[data-theme="dark"\] \.privacy-badge--public[\s\S]*color:\s*#fff3c4/.test(styles), 'dark mode should keep public-name privacy badges readable');
@@ -711,6 +731,10 @@ assert(/html\[data-theme="dark"\]\s+\.barcode-card-preview strong,[\s\S]*\.barco
 assert(/html\[data-theme="dark"\]\s+\[style\*="color:#555"\]/.test(styles), 'dark mode should correct older inline helper text colours');
 assert(/\.future-skeleton-grid/.test(styles), 'site styles should include future coach skeleton grid styling');
 assert(/html\[data-theme="dark"\] \.future-skeleton-card[\s\S]*rgba\(7,20,38,0\.66\)/.test(styles), 'future coach skeleton cards should stay readable in dark mode');
+assert(/\.athletics-mode-toggle/.test(styles), 'styles should include the Interschool Athletics pill toggle');
+assert(/\.athletics-mode-panel/.test(styles), 'styles should include the expandable athletics mode panel');
+assert(/\.athletics-event-chip:hover/.test(styles), 'athletics event chips should behave like interactive links');
+assert(/\.interschool-team-hero/.test(styles), 'styles should include the dedicated interschool team page layout');
 const themeJs = read('theme.js');
 assert(/gp_run_club_theme/.test(themeJs), 'theme switch should persist the selected mode locally');
 assert(/data-theme-toggle/.test(themeJs), 'theme switch should inject a header toggle control');
@@ -724,13 +748,14 @@ assert(/feature-suggestion-btn/.test(adminDashboardHtml), 'admin dashboard foote
 assert(/Feature Suggestion/.test(adminDashboardHtml), 'admin dashboard footer should label the feature suggestion button clearly');
 assert(/feature-suggestion-btn/.test(styles), 'site footer should style the feature suggestion button');
 assert(/\.feature-suggestion-btn[\s\S]*rgba\(255,248,221,0\.98\)[\s\S]*rgba\(242,216,145,0\.86\)/.test(styles), 'feature suggestion button should use a pale gold base colour');
-assert(/admin-dashboard\.js\?v=32/.test(adminDashboardHtml), 'admin dashboard should request the current Coach Tools skeleton dashboard script');
+assert(/admin-dashboard\.js\?v=33/.test(adminDashboardHtml), 'admin dashboard should request the current Interschool Athletics tidy-up dashboard script');
 assert(/goals\.js\?v=4/.test(adminDashboardHtml), 'admin dashboard should request a fresh goals script after interschool goals changes');
 assert(/admin-goals\.js\?v=4/.test(adminDashboardHtml), 'admin dashboard should request a fresh admin goals script after interschool goals changes');
 assert(/goals\.js\?v=4/.test(studentProfileHtml), 'student profile should request a fresh goals script');
 assert(/goals\.js\?v=4/.test(studentHtml), 'student login should request a fresh goals script');
-assert(/gwynne-park-run-club-v75/.test(serviceWorker), 'service worker cache should be bumped for Coach Tools skeletons');
+assert(/gwynne-park-run-club-v76/.test(serviceWorker), 'service worker cache should be bumped for Interschool Athletics tidy-up');
 assert(/backend\.js/.test(serviceWorker), 'service worker should cache the backend adapter');
+assert(/interschool-team\.html/.test(serviceWorker) && /interschool-team\.js/.test(serviceWorker), 'service worker should cache the dedicated interschool team page');
 assertFile('tests/backend-live-style.test.js');
 assertFile('tests/scanning-live-mode.test.js');
 assertFile('scripts/supabase-live-style-check.js');

@@ -1457,6 +1457,9 @@
   });
 
   var interschoolAthleticsModeEl=document.getElementById('interschool-athletics-mode');
+  var athleticsModeShellEl=document.getElementById('athletics-mode-shell');
+  var athleticsModePanelEl=document.getElementById('athletics-mode-panel');
+  var athleticsModeStateEl=document.getElementById('athletics-mode-state');
   var interschoolAthleticsEventsEl=document.getElementById('interschool-athletics-events');
   var athleticsConsentSummaryEl=document.getElementById('athletics-consent-summary');
   var crossCountryCourseFormEl=document.getElementById('cross-country-course-form');
@@ -1477,9 +1480,24 @@
     });
     interschoolAthleticsEventsEl.innerHTML=Object.keys(groups).map(function(group){
       return '<div class="athletics-event-group"><strong>'+escapeHtml(group)+'</strong><div>'+groups[group].map(function(event){
-        return '<span class="athletics-event-chip">'+escapeHtml(event.name)+' <small>'+escapeHtml(event.years)+'</small></span>';
+        var eventId=athleticsEventIdForName(event.name);
+        return '<a class="athletics-event-chip" href="interschool-team.html?event='+encodeURIComponent(eventId)+'">'+escapeHtml(event.name)+' <small>'+escapeHtml(event.years)+'</small></a>';
       }).join('')+'</div></div>';
     }).join('');
+  }
+
+  function athleticsEventIdForName(name){
+    var normal=String(name||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+    var mapped={
+      '50m':'sprint-50',
+      '75m':'sprint-75',
+      '100m':'sprint-100',
+      '200m':'sprint-200',
+      '400m':'middle-400',
+      '800m':'middle-800',
+      'javelin-turbo-jav-teeball-throw':'turbo-jav'
+    };
+    return mapped[normal]||normal;
   }
 
   function renderAthleticsConsentSummary(){
@@ -1505,12 +1523,23 @@
   }
 
   interschoolAthleticsModeEl.checked=window.RunClubGoals.isInterschoolAthleticsMode();
+  function renderAthleticsModeState(){
+    var enabled=!!interschoolAthleticsModeEl.checked;
+    if(athleticsModeShellEl){athleticsModeShellEl.classList.toggle('athletics-mode-shell--active',enabled);}
+    if(athleticsModePanelEl){athleticsModePanelEl.hidden=!enabled;}
+    if(athleticsModeStateEl){athleticsModeStateEl.textContent=enabled?'On - Team planner open':'Off - Run Club goals only';}
+    if(enabled){
+      renderInterschoolAthleticsEvents();
+      renderAthleticsConsentSummary();
+    }
+  }
   interschoolAthleticsModeEl.addEventListener('change',function(){
     window.RunClubGoals.setInterschoolAthleticsMode(interschoolAthleticsModeEl.checked);
-    renderAthleticsConsentSummary();
+    renderAthleticsModeState();
   });
   renderInterschoolAthleticsEvents();
   renderAthleticsConsentSummary();
+  renderAthleticsModeState();
 
   function crossCountryCourses(){
     return load(CROSS_COUNTRY_COURSES_KEY,[]);
