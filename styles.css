@@ -2278,12 +2278,27 @@ html[data-theme="dark"] .reflection-item p {
 }
 .site-footer a { color: var(--muted); }
 
-.site-footer .feature-suggestion-btn {
+.site-footer .privacy-pledge {
+  max-width: 760px;
+  margin: 0.45rem auto 0;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.site-footer .footer-actions {
+  display: flex;
+  justify-content: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+  margin-top: 0.75rem;
+}
+
+.site-footer .feature-suggestion-btn,
+.site-footer .donate-coffee-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-height: 40px;
-  margin-top: 0.65rem;
   padding: 0.45rem 1rem;
   border: 1px solid color-mix(in srgb, var(--uniform-gold) 54%, rgba(255,255,255,0.58) 46%);
   border-radius: 999px;
@@ -2296,7 +2311,13 @@ html[data-theme="dark"] .reflection-item p {
   transition: background 0.16s ease, border-color 0.16s ease, transform 0.16s ease, box-shadow 0.16s ease;
 }
 
-.site-footer .feature-suggestion-btn:hover {
+.site-footer .donate-coffee-btn {
+  background:
+    linear-gradient(180deg, rgba(255,252,232,0.98), rgba(235,205,121,0.9));
+}
+
+.site-footer .feature-suggestion-btn:hover,
+.site-footer .donate-coffee-btn:hover {
   background:
     linear-gradient(180deg, rgba(255,239,184,1), rgba(225,188,84,0.92));
   border-color: color-mix(in srgb, var(--uniform-gold) 72%, rgba(255,255,255,0.35) 28%);
@@ -2304,6 +2325,19 @@ html[data-theme="dark"] .reflection-item p {
   text-decoration: none;
   transform: translateY(-1px);
   box-shadow: 0 12px 26px rgba(7,20,38,0.12), inset 0 1px 0 rgba(255,255,255,0.64);
+}
+
+html[data-theme="dark"] .site-footer .feature-suggestion-btn,
+html[data-theme="dark"] .site-footer .donate-coffee-btn {
+  color: #071426;
+  box-shadow: 0 12px 28px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.72);
+}
+
+@media (max-width: 640px) {
+  .site-footer .feature-suggestion-btn,
+  .site-footer .donate-coffee-btn {
+    width: min(100%, 260px);
+  }
 }
 
 /* ===========================
