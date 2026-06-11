@@ -545,13 +545,13 @@ admin-dashboard.js?v=47
 Replace the service worker cache:
 
 ```js
-var CACHE_NAME = 'gwynne-park-run-club-v100';
+var CACHE_NAME = 'gwynne-park-run-club-v101';
 ```
 
 with:
 
 ```js
-var CACHE_NAME = 'gwynne-park-run-club-v101';
+var CACHE_NAME = 'gwynne-park-run-club-v102';
 ```
 
 Update matching test assertions.
@@ -562,7 +562,7 @@ Run:
 
 ```powershell
 npm test
-rg -n "styles\\.css\\?v=68|admin-dashboard\\.js\\?v=46|gwynne-park-run-club-v100" -S .
+rg -n "styles\\.css\\?v=68|admin-dashboard\\.js\\?v=46|gwynne-park-run-club-v101" -S .
 ```
 
 Expected: tests pass and stale scan returns no matches.

@@ -381,6 +381,10 @@ assert(/Do not enter real student data until Priority 0 is complete/.test(adminD
 assert(/backend-readiness-card/.test(adminDashboardHtml), 'admin dashboard should include a live backend readiness gate card');
 assert(/backend-readiness-summary/.test(adminDashboardHtml), 'backend readiness card should include a summary target');
 assert(/Backend Storage Gate/.test(adminDashboardHtml), 'backend readiness card should be labelled as the backend storage gate');
+assert(/data-tab="students"[\s\S]*data-tab="sports"[\s\S]*data-tab="training"[\s\S]*data-tab="leaderboard"/.test(adminDashboardHtml), 'admin tabs should place Sports and Training next to Students');
+assert(/id="tab-sports"[\s\S]*athletics-mode-shell[\s\S]*cross-country-card[\s\S]*athletics-results-card/.test(adminDashboardHtml), 'admin Sports tab should contain athletics mode, Cross Country, and interschool results');
+assert(!/id="tab-students"[\s\S]*athletics-mode-shell[\s\S]*id="student-editor-modal"/.test(adminDashboardHtml), 'admin Students tab should not contain the sports controls');
+assert(!/id="tab-events"[\s\S]*athletics-results-card[\s\S]*id="tab-awards"/.test(adminDashboardHtml), 'admin Events tab should not contain interschool results');
 assert(/data-tab="training"/.test(adminDashboardHtml), 'admin dashboard should include a Training tab');
 assert(/data-tab="resources"/.test(adminDashboardHtml), 'admin dashboard should include a Resources tab');
 assert(/data-tab="future-intelligence"/.test(adminDashboardHtml), 'admin dashboard should include a bookmarked Coach Tools tab');
@@ -862,7 +866,7 @@ assert(/student\.js\?v=20/.test(studentProfileHtml), 'student profile should req
 assert(/goals\.js\?v=5/.test(studentProfileHtml), 'student profile should request a fresh goals script');
 assert(/student\.js\?v=20/.test(studentHtml), 'student login should request the current student portal script');
 assert(/goals\.js\?v=5/.test(studentHtml), 'student login should request a fresh goals script');
-assert(/gwynne-park-run-club-v100/.test(serviceWorker), 'service worker cache should be bumped for support link update');
+assert(/gwynne-park-run-club-v101/.test(serviceWorker), 'service worker cache should be bumped for the Sports tab move');
 assert(/backend\.js/.test(serviceWorker), 'service worker should cache the backend adapter');
 assert(/interschool-team\.html/.test(serviceWorker) && /interschool-team\.js/.test(serviceWorker), 'service worker should cache the dedicated interschool team page');
 assertFile('tests/backend-live-style.test.js');
