@@ -1777,8 +1777,10 @@
       return;
     }
     var consentTable=consentRows.length?'<div class="athletics-consent-saved-list"><h3>Saved athletics consent list</h3><table class="progress-history-table"><thead><tr><th>Student</th><th>Division</th><th>Year</th><th>Class</th><th>Consent</th></tr></thead><tbody>'+consentRows.map(function(student){
-      var granted=String(student.consent_status||'pending').toLowerCase()==='granted';
-      return '<tr><td>'+escapeHtml(student.name)+'</td><td>'+escapeHtml(divisionForStudent(student))+'</td><td>'+escapeHtml(student.year||'')+'</td><td>'+escapeHtml(student.cls||'')+'</td><td><span class="'+(granted?'privacy-badge privacy-badge--granted':'privacy-badge')+'">'+(granted?'Put through':'Not yet')+'</span></td></tr>';
+      var status=String(student.consent_status||'').toLowerCase();
+      var label=status==='granted'?'Approved':status==='declined'?'Declined':status==='pending'?'Pending':'Blank';
+      var cls=status==='granted'?'privacy-badge privacy-badge--granted':status==='declined'?'privacy-badge privacy-badge--declined':'privacy-badge';
+      return '<tr><td>'+escapeHtml(student.name)+'</td><td>'+escapeHtml(divisionForStudent(student))+'</td><td>'+escapeHtml(student.year||'')+'</td><td>'+escapeHtml(student.cls||'')+'</td><td><span class="'+cls+'">'+label+'</span></td></tr>';
     }).join('')+'</tbody></table></div>':'';
     var eventCards=rows.length?'<div class="athletics-team-overview-grid">'+rows.map(function(row){
       return '<article class="athletics-team-overview-card">'+
@@ -1833,14 +1835,24 @@
       return String(a.year||'').localeCompare(String(b.year||''))||String(a.cls||'').localeCompare(String(b.cls||''))||String(a.name||'').localeCompare(String(b.name||''));
     });
     athleticsConsentListEl.innerHTML=students.map(function(student){
-      var granted=String(student.consent_status||'pending').toLowerCase()==='granted';
+      var status=String(student.consent_status||'').toLowerCase();
       var meta=[student.id,student.year,student.cls,divisionForStudent(student)].filter(Boolean).join(' · ');
       return '<label class="athletics-consent-option">'+
         '<input type="checkbox" class="athletics-consent-select-check" data-student-id="'+escapeAttr(student.id)+'"'+(selectedMap[student.id]?' checked':'')+' />'+
         '<span><strong>'+escapeHtml(student.name)+'</strong><small>'+escapeHtml(meta)+'</small></span>'+
-        '<span class="athletics-consent-status-toggle"><input type="checkbox" class="athletics-consent-check" data-student-id="'+escapeAttr(student.id)+'"'+(granted?' checked':'')+' /> Consent received</span>'+
+        '<select class="athletics-consent-status-select athletics-consent-status-select--'+escapeAttr(status||'blank')+'" data-student-id="'+escapeAttr(student.id)+'" aria-label="Athletics consent status for '+escapeAttr(student.name)+'">'+
+          '<option value=""'+(!status?' selected':'')+'></option>'+
+          '<option value="pending"'+(status==='pending'?' selected':'')+'>Pending</option>'+
+          '<option value="granted"'+(status==='granted'?' selected':'')+'>Approved</option>'+
+          '<option value="declined"'+(status==='declined'?' selected':'')+'>Declined</option>'+
+        '</select>'+
       '</label>';
     }).join('');
+    Array.prototype.forEach.call(athleticsConsentListEl.querySelectorAll('.athletics-consent-status-select'),function(select){
+      select.addEventListener('change',function(){
+        select.className='athletics-consent-status-select athletics-consent-status-select--'+(select.value||'blank');
+      });
+    });
   }
 
   function openAthleticsConsentModal(trigger){
@@ -1854,11 +1866,11 @@
 
   function saveAthleticsConsentChecklist(){
     var selected=Array.prototype.map.call(document.querySelectorAll('.athletics-consent-select-check:checked'),function(input){return input.dataset.studentId;});
-    var received={};
-    Array.prototype.forEach.call(document.querySelectorAll('.athletics-consent-check'),function(input){received[input.dataset.studentId]=input.checked;});
+    var statuses={};
+    Array.prototype.forEach.call(document.querySelectorAll('.athletics-consent-status-select'),function(input){statuses[input.dataset.studentId]=input.value;});
     var students=getStudents().map(function(student){
-      if(!Object.prototype.hasOwnProperty.call(received,student.id)){return student;}
-      return Object.assign({},student,{consent_status:received[student.id]?'granted':'pending'});
+      if(!Object.prototype.hasOwnProperty.call(statuses,student.id)){return student;}
+      return Object.assign({},student,{consent_status:statuses[student.id]});
     });
     saveStudents(students);
     saveAthleticsConsentSelections(selected);
