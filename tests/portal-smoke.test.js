@@ -746,8 +746,8 @@ assert(/privacy-badge/.test(styles), 'styles should include privacy badge stylin
 assert(/skip-link/.test(styles), 'styles should include skip-link focus styling');
 assert(/:focus-visible/.test(styles), 'styles should include visible keyboard focus styles');
 assert(/multi-school-report-card/.test(styles), 'styles should include multi-school report styling');
-assert(/styles\.css\?v=60/.test(leaderboardHtml), 'leaderboard page should request the current stylesheet version');
-assert(/styles\.css\?v=60/.test(interschoolTeamHtml), 'interschool team page should request the current stylesheet');
+assert(/styles\.css\?v=61/.test(leaderboardHtml), 'leaderboard page should request the current stylesheet version');
+assert(/styles\.css\?v=61/.test(interschoolTeamHtml), 'interschool team page should request the current stylesheet');
 assert(/theme\.js\?v=8/.test(studentProfileHtml), 'student profile should load the shared light/dark theme switch');
 assert(/data-theme="dark"/.test(styles), 'site styles should define dark theme overrides');
 assert(/html\[data-theme="dark"\] \.privacy-badge--public[\s\S]*color:\s*#fff3c4/.test(styles), 'dark mode should keep public-name privacy badges readable');
@@ -787,11 +787,12 @@ assert(/feature-suggestion-btn/.test(adminDashboardHtml), 'admin dashboard foote
 assert(/Feature Suggestion/.test(adminDashboardHtml), 'admin dashboard footer should label the feature suggestion button clearly');
 assert(/privacy-pledge/.test(adminDashboardHtml), 'admin dashboard footer should include the no-ads privacy pledge');
 assert(/No ads\. No tracking\. Parents see their own child only\. Students see their own profile only\. Schools see their own students only\./.test(adminDashboardHtml), 'privacy pledge should state the core access boundaries');
-assert(/donate-coffee-btn/.test(adminDashboardHtml), 'admin dashboard footer should include a low-key support the project button');
-assert(/href="https:\/\/buymeacoffee\.com\/jmancini"/.test(adminDashboardHtml), 'support button should link to the Buy Me a Coffee page');
-assert(/target="_blank"/.test(adminDashboardHtml) && /rel="noopener"/.test(adminDashboardHtml), 'external support link should open safely');
+assert(/data-name="BMC-Widget"/.test(adminDashboardHtml), 'admin dashboard should include the Buy Me a Coffee widget');
+assert(/src="https:\/\/cdnjs\.buymeacoffee\.com\/1\.0\.0\/widget\.prod\.min\.js"/.test(adminDashboardHtml), 'support widget should load the Buy Me a Coffee widget script');
+assert(/data-id="jmancini"/.test(adminDashboardHtml), 'support widget should use the configured Buy Me a Coffee account');
+assert(/data-position="Right"/.test(adminDashboardHtml), 'support widget should float on the right');
+assert(/you feel the need, you're welcome to buy me a coffee/.test(adminDashboardHtml), 'support widget should use the friendly free-project message');
 assert(/feature-suggestion-btn/.test(styles), 'site footer should style the feature suggestion button');
-assert(/donate-coffee-btn/.test(styles), 'site footer should style the support the project button');
 assert(/\.privacy-pledge[\s\S]*max-width:\s*760px/.test(styles), 'privacy pledge should be styled as readable footer text');
 assert(/\.footer-actions[\s\S]*display:\s*flex[\s\S]*flex-wrap:\s*wrap/.test(styles), 'footer actions should wrap cleanly on small screens');
 assert(/\.feature-suggestion-btn[\s\S]*rgba\(255,248,221,0\.98\)[\s\S]*rgba\(242,216,145,0\.86\)/.test(styles), 'feature suggestion button should use a pale gold base colour');
@@ -804,7 +805,7 @@ assert(/goals\.js\?v=4/.test(adminDashboardHtml), 'admin dashboard should reques
 assert(/admin-goals\.js\?v=4/.test(adminDashboardHtml), 'admin dashboard should request a fresh admin goals script after interschool goals changes');
 assert(/goals\.js\?v=4/.test(studentProfileHtml), 'student profile should request a fresh goals script');
 assert(/goals\.js\?v=4/.test(studentHtml), 'student login should request a fresh goals script');
-assert(/gwynne-park-run-club-v88/.test(serviceWorker), 'service worker cache should be bumped for support link update');
+assert(/gwynne-park-run-club-v89/.test(serviceWorker), 'service worker cache should be bumped for support link update');
 assert(/backend\.js/.test(serviceWorker), 'service worker should cache the backend adapter');
 assert(/interschool-team\.html/.test(serviceWorker) && /interschool-team\.js/.test(serviceWorker), 'service worker should cache the dedicated interschool team page');
 assertFile('tests/backend-live-style.test.js');

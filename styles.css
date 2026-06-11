@@ -2860,8 +2860,7 @@ html[data-theme="dark"] .reflection-item p {
   margin-top: 0.6rem;
 }
 
-.site-footer .feature-suggestion-btn,
-.site-footer .donate-coffee-btn {
+.site-footer .feature-suggestion-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -2879,13 +2878,7 @@ html[data-theme="dark"] .reflection-item p {
   transition: background 0.16s ease, border-color 0.16s ease, transform 0.16s ease, box-shadow 0.16s ease;
 }
 
-.site-footer .donate-coffee-btn {
-  background:
-    linear-gradient(180deg, rgba(255,252,232,0.98), rgba(235,205,121,0.9));
-}
-
-.site-footer .feature-suggestion-btn:hover,
-.site-footer .donate-coffee-btn:hover {
+.site-footer .feature-suggestion-btn:hover {
   background:
     linear-gradient(180deg, rgba(255,239,184,1), rgba(225,188,84,0.92));
   border-color: color-mix(in srgb, var(--uniform-gold) 72%, rgba(255,255,255,0.35) 28%);
@@ -2895,15 +2888,13 @@ html[data-theme="dark"] .reflection-item p {
   box-shadow: 0 12px 26px rgba(7,20,38,0.12), inset 0 1px 0 rgba(255,255,255,0.64);
 }
 
-html[data-theme="dark"] .site-footer .feature-suggestion-btn,
-html[data-theme="dark"] .site-footer .donate-coffee-btn {
+html[data-theme="dark"] .site-footer .feature-suggestion-btn {
   color: #071426;
   box-shadow: 0 12px 28px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.72);
 }
 
 @media (max-width: 640px) {
-  .site-footer .feature-suggestion-btn,
-  .site-footer .donate-coffee-btn {
+  .site-footer .feature-suggestion-btn {
     width: min(100%, 220px);
   }
 }
