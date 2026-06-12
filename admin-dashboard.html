@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Gwynne Park Run Club - Admin Dashboard</title>
-    <link rel="stylesheet" href="styles.css?v=68" />
+    <link rel="stylesheet" href="styles.css?v=71" />
     <link rel="manifest" href="manifest.webmanifest" />
     <meta name="theme-color" content="#0c5aa8" />
     <link rel="apple-touch-icon" href="assets/app-icon-192.png" />
@@ -303,9 +303,12 @@
 
       <!-- SPORTS TAB -->
       <div class="tab-panel" id="tab-sports">
-        <div class="card">
-          <h2>&#127947; Goal Settings</h2>
-          <div class="athletics-mode-shell" id="athletics-mode-shell">
+        <div class="card sports-command-card">
+          <div class="sports-command-header">
+            <div>
+              <h2>&#127947; Sports Command Centre</h2>
+              <p class="sports-command-subtitle">Run Club stays protected from carnival training. Use this tab for interschool teams, consent, event results, PBs, house points, and seasonal Cross Country planning.</p>
+            </div>
             <label class="athletics-mode-toggle">
               <input type="checkbox" id="interschool-athletics-mode" />
               <span class="athletics-mode-slider" aria-hidden="true"></span>
@@ -314,14 +317,67 @@
                 <small id="athletics-mode-state">Off - Run Club goals only</small>
               </span>
             </label>
-            <p style="color:#555;font-size:0.9rem;">When off, goal options stay focused on Laps, Lap Time, and Distance. Turn this on to open the interschool team planner for sprints, middle distance, ball games, relays, jumps, and throws.</p>
+          </div>
+          <div class="athletics-mode-shell" id="athletics-mode-shell">
+            <p class="sports-mode-note">When off, student goals stay focused on Laps, Lap Time, and Distance. When on, the command centre opens Athletics and Cross Country tools without adding anything to Run Club lap totals.</p>
             <div id="athletics-mode-panel" class="athletics-mode-panel" hidden>
-              <div class="athletics-panel-actions">
-                <button type="button" id="toggle-athletics-team-overview-btn" class="secondary">Edit team lists</button>
+              <div class="sports-command-grid" id="sports-command-grid" aria-label="Sports command centre summary">
+                <article class="sports-command-tile">
+                  <span>Team Checklist</span>
+                  <strong id="sports-checklist-summary">0 approved</strong>
+                  <small>Consent and follow-up</small>
+                </article>
+                <article class="sports-command-tile">
+                  <span>Event Teams</span>
+                  <strong id="sports-events-summary">0 athletes</strong>
+                  <small>Selected across events</small>
+                </article>
+                <article class="sports-command-tile">
+                  <span>Results</span>
+                  <strong id="sports-results-summary">0 saved</strong>
+                  <small>Times, distances, placings</small>
+                </article>
+                <article class="sports-command-tile">
+                  <span>PBs</span>
+                  <strong id="sports-pb-summary">0 PBs</strong>
+                  <small>Recent personal bests</small>
+                </article>
+                <article class="sports-command-tile">
+                  <span>House Points</span>
+                  <strong id="sports-house-summary">0 pts</strong>
+                  <small>Event scoring total</small>
+                </article>
+                <article class="sports-command-tile">
+                  <span>Cross Country</span>
+                  <strong id="sports-xc-summary">Hidden</strong>
+                  <small>Seasonal courses</small>
+                </article>
               </div>
-              <div id="athletics-team-overview" class="athletics-team-overview" hidden></div>
+              <div class="athletics-panel-actions">
+                <button type="button" id="open-sports-consent-btn" class="secondary">Team Checklist</button>
+                <button type="button" id="toggle-athletics-team-overview-btn" class="secondary">Hide team list</button>
+                <button type="button" id="print-athletics-team-list-btn" class="secondary">Print team list</button>
+                <button type="button" id="export-athletics-team-list-btn" class="secondary">Export team CSV</button>
+              </div>
               <div id="athletics-consent-summary" class="athletics-consent-summary"></div>
+              <section class="sports-command-section" aria-labelledby="sports-event-teams-heading">
+                <div class="sports-section-heading">
+                  <div>
+                    <h3 id="sports-event-teams-heading">Event Teams</h3>
+                    <p>Open an event to select eligible students only. Ball games can be filtered by division inside the popup.</p>
+                  </div>
+                </div>
               <div id="interschool-athletics-events" class="athletics-event-list"></div>
+              </section>
+              <section class="sports-command-section" aria-labelledby="sports-team-list-heading">
+                <div class="sports-section-heading">
+                  <div>
+                    <h3 id="sports-team-list-heading">Team List Summary</h3>
+                    <p>Printable and exportable list of selected athletes, events, division, class, PBs, and consent status.</p>
+                  </div>
+                </div>
+                <div id="athletics-team-overview" class="athletics-team-overview"></div>
+              </section>
             </div>
           </div>
         </div>
@@ -348,6 +404,7 @@
               </label>
               <div id="athletics-team-summary" class="athletics-team-summary"></div>
             </div>
+            <div id="athletics-event-modal-status" class="athletics-event-modal-status"></div>
             <div id="athletics-team-student-list" class="athletics-team-student-list"></div>
             <div class="modal-actions">
               <button type="button" id="save-athletics-team-btn">Save team</button>
@@ -1162,7 +1219,7 @@
     <script src="goals.js?v=5"></script>
     <script src="admin-goals.js?v=5"></script>
     <script src="assets/qrcode-generator.js"></script>
-    <script src="admin-dashboard.js?v=46"></script>
+    <script src="admin-dashboard.js?v=48"></script>
     <script src="pwa.js"></script>
     <script data-name="BMC-Widget" data-cfasync="false" src="https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js" data-id="jmancini" data-description="Support me on Buy me a coffee!" data-message="Thank you for visiting and using this little side project. I am keeping this as a completely free project though if you feel the need, you're welcome to buy me a coffee :)" data-color="#FF813F" data-position="Right" data-x_margin="18" data-y_margin="18"></script>
   </body>
