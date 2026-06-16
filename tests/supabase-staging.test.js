@@ -25,6 +25,7 @@ assertFile('supabase/functions/guardian_access/index.ts');
 assertFile('supabase/seed.staging.sql');
 assertFile('docs/supabase-staging-checklist.md');
 assertFile('docs/staging-coach-staff.sql');
+assertFile('scripts/staging-readiness-check.js');
 assertFile('supabase/migrations/202606160001_live_beta_feature_tables.sql');
 
 const studentAuth = read('supabase/functions/student_auth/index.ts');
@@ -112,6 +113,14 @@ assert(/athletics_team_selections/.test(runbook), 'runbook should mention athlet
 
 const packageJson = JSON.parse(read('package.json'));
 assert(packageJson.scripts['test:supabase-staging'] === 'node tests/supabase-staging.test.js', 'package should expose a Supabase staging test script');
+assert(packageJson.scripts['check:staging-readiness'] === 'node scripts/staging-readiness-check.js', 'package should expose a staging readiness check script');
 assert(packageJson.scripts.test.includes('tests/supabase-staging.test.js'), 'npm test should include Supabase staging checks');
+
+const readinessCheck = read('scripts/staging-readiness-check.js');
+assert(/SUPABASE_URL/.test(readinessCheck), 'staging readiness check should inspect Supabase URL env');
+assert(/SUPABASE_ANON_KEY/.test(readinessCheck), 'staging readiness check should inspect Supabase anon key env');
+assert(/RUN_CLUB_SCHOOL_ID/.test(readinessCheck), 'staging readiness check should inspect school id env');
+assert(/docker info/.test(readinessCheck), 'staging readiness check should inspect Docker availability');
+assert(/supabase --version/.test(readinessCheck), 'staging readiness check should inspect Supabase CLI availability');
 
 console.log('supabase staging checks passed');
