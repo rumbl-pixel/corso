@@ -24,6 +24,7 @@ assertFile('supabase/functions/csv_import/index.ts');
 assertFile('supabase/functions/guardian_access/index.ts');
 assertFile('supabase/seed.staging.sql');
 assertFile('docs/supabase-staging-checklist.md');
+assertFile('docs/staging-coach-staff.sql');
 assertFile('supabase/migrations/202606160001_live_beta_feature_tables.sql');
 
 const studentAuth = read('supabase/functions/student_auth/index.ts');
@@ -57,6 +58,16 @@ assert(/Gwynne Park Run Club Staging/.test(seed), 'staging seed should create a 
 assert(/STAGING1/.test(seed) && /STAGING2/.test(seed), 'staging seed should create fake student barcodes');
 assert(/FAKE DATA ONLY/.test(seed), 'staging seed should clearly mark fake data');
 assert(!/James Smith|Emily Chen|Sarah Johnson/.test(seed), 'staging seed should not copy app demo student names');
+
+const stagingChecklist = read('docs/supabase-staging-checklist.md');
+assert(/role `coach`/.test(stagingChecklist), 'staging checklist should use a coach role for the test staff account');
+assert(/docs\/staging-coach-staff\.sql/.test(stagingChecklist), 'staging checklist should point to the coach staff SQL template');
+assert(!/as `owner`/.test(stagingChecklist), 'staging checklist should not tell the user to use owner for the test account');
+
+const coachStaffSql = read('docs/staging-coach-staff.sql');
+assert(/'coach'/.test(coachStaffSql), 'coach staff SQL should insert the staging staff role as coach');
+assert(/school_users/.test(coachStaffSql), 'coach staff SQL should create a school_users row');
+assert(/app_users/.test(coachStaffSql), 'coach staff SQL should create an app_users row');
 
 const liveBetaMigration = read('supabase/migrations/202606160001_live_beta_feature_tables.sql');
 [
