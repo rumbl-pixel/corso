@@ -40,7 +40,22 @@ The staging school id is:
 10000000-0000-4000-8000-000000000001
 ```
 
-## 3. Deploy Edge Functions
+## 3. Create Staging Coach Login
+
+Create your test staff user in Supabase Auth first. For staging, use role `coach` rather than owner/admin so we prove ordinary coach-level access works.
+
+After creating the Auth user, copy that user's UUID and run the template in `docs/staging-coach-staff.sql` after replacing:
+
+- `REPLACE-WITH-AUTH-USER-UUID`
+- `REPLACE-WITH-COACH-EMAIL`
+
+This creates:
+
+- an `app_users` row
+- a `school_users` row for the staging school with role `coach`
+- a `staff_invites` audit row marked `accepted`
+
+## 4. Deploy Edge Functions
 
 Deploy the browser-facing function routes:
 
@@ -59,7 +74,7 @@ supabase secrets set SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 
 Service-role keys belong only in Supabase Edge Function secrets, never in `config.js` or static files.
 
-## 4. Run Live-Style Check
+## 5. Run Live-Style Check
 
 From this repo, run:
 
@@ -79,7 +94,7 @@ Expected result:
 }
 ```
 
-## 5. RLS Sanity Checks
+## 6. RLS Sanity Checks
 
 Before connecting real screens to staging:
 
