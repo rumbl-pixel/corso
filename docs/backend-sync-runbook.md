@@ -21,6 +21,8 @@ Cutover order:
 6. Migrate demo roster and historical records.
 7. Keep demo access disabled before real student data is entered.
 
+Staff login now uses Supabase Auth when `demoMode: false`. Add staff users in Supabase Auth, then add matching `school_users` rows with `owner`, `admin`, or `coach` roles. The browser stores the staff access token in `runClubAdminSession` and uses it for live REST/RPC requests; `config.js` must still contain only the public anon key, never the service-role key.
+
 Staging setup starts with fake data:
 
 ```bash

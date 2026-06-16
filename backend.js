@@ -126,11 +126,27 @@
     return c.supabaseUrl + '/functions/v1/' + name;
   }
 
+  function authSession() {
+    try {
+      return JSON.parse(global.localStorage && global.localStorage.getItem('runClubAdminSession'));
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function bearerToken() {
+    var session = authSession();
+    if (session && session.mode === 'live' && session.access_token) {
+      return session.access_token;
+    }
+    return config().supabaseAnonKey;
+  }
+
   function headers(extra) {
     var c = config();
     return Object.assign({
       apikey: c.supabaseAnonKey,
-      Authorization: 'Bearer ' + c.supabaseAnonKey,
+      Authorization: 'Bearer ' + bearerToken(),
       'Content-Type': 'application/json',
       Prefer: 'return=representation'
     }, extra || {});
