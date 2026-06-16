@@ -2,6 +2,16 @@
 
 Use fake staging data only until Priority 0 is complete.
 
+## 0. Check Local Readiness
+
+Before applying migrations or running live-style checks, run:
+
+```bash
+npm run check:staging-readiness
+```
+
+This checks the local Supabase CLI, Docker Desktop, required staging files, and the public environment values needed for the hosted staging check. It does not print secret values.
+
 ## 1. Create Staging Project
 
 Install the Supabase CLI before running the local commands below. Create a Supabase project for staging, then apply the migrations:
