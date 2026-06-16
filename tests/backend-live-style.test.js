@@ -34,6 +34,26 @@ function createBackend(fetchImpl, endpoints = {}, configOverrides = {}) {
   return window.RunClubBackend;
 }
 
+function createBackendWithSession(fetchImpl, session, endpoints = {}, configOverrides = {}) {
+  const storage = createLocalStorage();
+  storage.setItem('runClubAdminSession', JSON.stringify(session));
+  const window = {
+    RUN_CLUB_CONFIG: Object.assign({
+      demoMode: false,
+      syncEnabled: true,
+      liveDataMode: true,
+      schoolId: 'school-live-style',
+      supabaseUrl: 'https://example.supabase.co/',
+      supabaseAnonKey: 'anon-live-style',
+      endpoints
+    }, configOverrides),
+    localStorage: storage,
+    fetch: fetchImpl
+  };
+  vm.runInNewContext(fs.readFileSync(path.join(root, 'backend.js'), 'utf8'), { window });
+  return window.RunClubBackend;
+}
+
 function response(status, body) {
   return {
     ok: status >= 200 && status < 300,
@@ -436,6 +456,21 @@ function assert(condition, message) {
   }, { studentAuth: 'https://functions.example.test/student_auth' });
   await customBackend.callEdgeFunction('studentAuth', { code: 'CUSTOM' });
   assert(customCalls[0].url === 'https://functions.example.test/student_auth', 'edge function should honour configured endpoint aliases');
+
+  const staffTokenCalls = [];
+  const staffTokenBackend = createBackendWithSession((url, options) => {
+    staffTokenCalls.push({ url, options });
+    return Promise.resolve(response(200, []));
+  }, {
+    email: 'coach@example.test',
+    mode: 'live',
+    access_token: 'staff-access-token',
+    role: 'coach',
+    school_id: 'school-live-style'
+  });
+  await staffTokenBackend.backendDataAccess.getStudents([]);
+  assert(staffTokenCalls[0].options.headers.apikey === 'anon-live-style', 'staff live requests should keep the public anon apikey header');
+  assert(staffTokenCalls[0].options.headers.Authorization === 'Bearer staff-access-token', 'staff live requests should use the logged-in staff access token');
 
   const demoBackend = createBackend(() => Promise.resolve(response(500, {})), {}, {
     demoMode: true,

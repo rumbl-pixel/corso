@@ -143,9 +143,14 @@ const adminHtml = read('admin.html');
 const adminEmailInput = adminHtml.match(/<input[^>]*id="admin-email"[^>]*>/) || adminHtml.match(/<input[^>]*type="text"[^>]*admin-email[^>]*>/);
 assert(adminEmailInput && /type="text"/.test(adminEmailInput[0]), 'admin login should accept DEMO without email validation');
 assert(/DEMO/.test(adminHtml), 'admin login should show a DEMO hint');
+assert(/admin\.js\?v=2/.test(adminHtml), 'admin login should request the current staff auth script');
 
 const adminJs = read('admin.js');
 assert(/DEMO/.test(adminJs), 'admin login should handle DEMO bypass');
+assert(/auth\/v1\/token\?grant_type=password/.test(adminJs), 'admin login should use Supabase password auth outside demo mode');
+assert(/school_users/.test(adminJs), 'admin login should verify invite-only school user roles before opening the dashboard');
+assert(/owner','admin','coach/.test(adminJs), 'admin login should allow only owner/admin/coach staff roles');
+assert(/access_token/.test(adminJs), 'admin login should persist the staff access token for live backend requests');
 
 const studentHtml = read('student.html');
 assert(/DEMO/.test(studentHtml), 'student login should show a DEMO hint');
@@ -433,7 +438,7 @@ assert(/role="tablist"/.test(adminDashboardHtml), 'admin tabs should expose a ta
 assert(/aria-selected="true"/.test(adminDashboardHtml), 'admin active tab should expose selected state');
 assert(/aria-controls="tab-scanner"/.test(adminDashboardHtml), 'admin tabs should reference tab panels');
 assert(/admin-dashboard\.js\?v=50/.test(adminDashboardHtml), 'admin dashboard should request the current live beta dashboard script');
-assert(/backend\.js\?v=22/.test(adminDashboardHtml), 'admin dashboard should load the current backend adapter before app scripts');
+assert(/backend\.js\?v=23/.test(adminDashboardHtml), 'admin dashboard should load the current backend adapter before app scripts');
 
 const adminDashboardJs = read('admin-dashboard.js');
 assert(/view=admin/.test(adminDashboardJs), 'admin student profile links should keep the profile in admin view mode');
@@ -703,7 +708,7 @@ const parentHtml = read('parent.html');
 assert(/id="parent-form"/.test(parentHtml), 'parent portal should expose a login form');
 assert(/DEMO/.test(parentHtml), 'parent portal should show a DEMO hint');
 assert(/parent\.js/.test(parentHtml), 'parent portal should load parent.js');
-assert(/backend\.js\?v=22/.test(parentHtml), 'parent portal should load the current backend adapter before parent access checks');
+assert(/backend\.js\?v=23/.test(parentHtml), 'parent portal should load the current backend adapter before parent access checks');
 assert(!/Log Home Activity|Home Activity|parent-activity-form/.test(parentHtml), 'parent portal should not include home activity logging');
 assert(/print-parent-certificate-btn/.test(parentHtml), 'parent portal should let parents print child award certificates');
 assert(/guardian-link-code/.test(parentHtml), 'parent portal should explain guardian link codes');
@@ -912,7 +917,7 @@ assert(/student\.js\?v=20/.test(studentProfileHtml), 'student profile should req
 assert(/goals\.js\?v=5/.test(studentProfileHtml), 'student profile should request a fresh goals script');
 assert(/student\.js\?v=20/.test(studentHtml), 'student login should request the current student portal script');
 assert(/goals\.js\?v=5/.test(studentHtml), 'student login should request a fresh goals script');
-assert(/gwynne-park-run-club-v106/.test(serviceWorker), 'service worker cache should be bumped for the live beta backend update');
+assert(/gwynne-park-run-club-v107/.test(serviceWorker), 'service worker cache should be bumped for the staff auth backend update');
 assert(/backend\.js/.test(serviceWorker), 'service worker should cache the backend adapter');
 assert(/interschool-team\.html/.test(serviceWorker) && /interschool-team\.js/.test(serviceWorker), 'service worker should cache the dedicated interschool team page');
 assertFile('tests/backend-live-style.test.js');

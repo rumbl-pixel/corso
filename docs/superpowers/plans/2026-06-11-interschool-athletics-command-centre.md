@@ -545,25 +545,25 @@ admin-dashboard.js?v=51
 If `backend.js` changed, replace:
 
 ```text
-backend.js?v=22
+backend.js?v=23
 ```
 
 with:
 
 ```text
-backend.js?v=23
+backend.js?v=24
 ```
 
 Replace the service worker cache:
 
 ```js
-var CACHE_NAME = 'gwynne-park-run-club-v106';
+var CACHE_NAME = 'gwynne-park-run-club-v107';
 ```
 
 with:
 
 ```js
-var CACHE_NAME = 'gwynne-park-run-club-v107';
+var CACHE_NAME = 'gwynne-park-run-club-v108';
 ```
 
 Update matching test assertions.
@@ -574,7 +574,7 @@ Run:
 
 ```powershell
 npm test
-rg -n "styles\\.css\\?v=72|admin-dashboard\\.js\\?v=50|backend\\.js\\?v=22|gwynne-park-run-club-v106" -S .
+rg -n "styles\\.css\\?v=72|admin-dashboard\\.js\\?v=50|backend\\.js\\?v=23|gwynne-park-run-club-v107" -S .
 ```
 
 Expected: tests pass and stale scan returns no matches.
