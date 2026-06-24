@@ -52,12 +52,12 @@ The staging school id is:
 
 ## 3. Create Staging Coach Login
 
-Create your test staff user in Supabase Auth first. For staging, use role `coach` rather than owner/admin so we prove ordinary coach-level access works.
+Create your test staff user in Supabase Auth first. The login screen uses a 4-digit Site code plus an assigned username, so set `siteCode` or `schoolSites` in `config.js` to point the code to the staging school id. Create the Supabase Auth user with the internal email pattern from `config.js`: `username@authUsernameDomain` (for example `coach01@corso.local`). For staging, use role `coach` rather than owner/admin so we prove ordinary coach-level access works.
 
 After creating the Auth user, copy that user's UUID and run the template in `docs/staging-coach-staff.sql` after replacing:
 
 - `REPLACE-WITH-AUTH-USER-UUID`
-- `REPLACE-WITH-COACH-EMAIL`
+- `REPLACE-WITH-COACH-EMAIL` using the internal username email
 
 This creates:
 
@@ -66,6 +66,17 @@ This creates:
 - a `staff_invites` audit row marked `accepted`
 
 ## 4. Deploy Edge Functions
+
+## 4. Optional Platform Admin Grant
+
+For owner-only testing, create the Corso owner Auth user, then run `docs/platform-admin-grant.sql` after replacing:
+
+- `REPLACE-WITH-OWNER-AUTH-USER-UUID`
+- `REPLACE-WITH-OWNER-EMAIL`
+
+Do not use this for schools. School users should stay coach-only and school-scoped.
+
+## 5. Deploy Edge Functions
 
 Deploy the browser-facing function routes:
 
@@ -84,7 +95,7 @@ supabase secrets set SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 
 Service-role keys belong only in Supabase Edge Function secrets, never in `config.js` or static files.
 
-## 5. Run Live-Style Check
+## 6. Run Live-Style Check
 
 From this repo, run:
 
@@ -104,10 +115,12 @@ Expected result:
 }
 ```
 
-## 6. RLS Sanity Checks
+## 7. RLS Sanity Checks
 
 Before connecting real screens to staging:
 
+- platform admin login should show platform access and be reserved for the Corso owner
+- coach login should show only the configured staging school
 - anon REST reads should fail or return no private school data unless allowed by policy
 - staff-authenticated reads should return only the staging school
 - `student_auth` should return only the barcode-matched staging student

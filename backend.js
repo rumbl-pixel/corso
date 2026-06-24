@@ -58,6 +58,19 @@
     return !!(c.syncEnabled && c.schoolId && c.supabaseUrl && c.supabaseAnonKey);
   }
 
+  function staffAccessToken() {
+    try {
+      var raw = global.localStorage && global.localStorage.getItem('runClubAdminSession');
+      var session = raw ? JSON.parse(raw) : null;
+      if (session && session.mode === 'live' && session.access_token) {
+        return session.access_token;
+      }
+    } catch (e) {
+      return '';
+    }
+    return '';
+  }
+
   function backendReadiness() {
     var c = config();
     var blockers = [];
@@ -126,27 +139,11 @@
     return c.supabaseUrl + '/functions/v1/' + name;
   }
 
-  function authSession() {
-    try {
-      return JSON.parse(global.localStorage && global.localStorage.getItem('runClubAdminSession'));
-    } catch (e) {
-      return null;
-    }
-  }
-
-  function bearerToken() {
-    var session = authSession();
-    if (session && session.mode === 'live' && session.access_token) {
-      return session.access_token;
-    }
-    return config().supabaseAnonKey;
-  }
-
   function headers(extra) {
     var c = config();
     return Object.assign({
       apikey: c.supabaseAnonKey,
-      Authorization: 'Bearer ' + bearerToken(),
+      Authorization: 'Bearer ' + (staffAccessToken() || c.supabaseAnonKey),
       'Content-Type': 'application/json',
       Prefer: 'return=representation'
     }, extra || {});
@@ -553,8 +550,8 @@
         p_school_id: c.schoolId,
         p_course_key: course.id || course.course_key || course.name || '',
         p_name: course.name || '',
-        p_distance_m: Number(course.distance_m || course.distanceMetres || 0),
-        p_division: course.division || '',
+        p_distance_m: Number(course.distance_m || course.distanceMetres || course.distance || 0),
+        p_division: course.division || course.year_group || '',
         p_active: course.active !== false,
         p_metadata: course.metadata || {}
       });
@@ -563,8 +560,8 @@
       var c = config();
       return callRpc('save_coach_note', {
         p_school_id: c.schoolId,
-        p_tool: note.tool || '',
-        p_scope: note.scope || '',
+        p_tool: note.tool || 'coach-tools',
+        p_scope: note.scope || 'general',
         p_note: note.note || '',
         p_staff_label: note.staff || note.staff_label || '',
         p_metadata: note.metadata || {}
@@ -576,8 +573,8 @@
         p_school_id: c.schoolId,
         p_student_id: notification.student_id || null,
         p_notification_type: notification.notification_type || notification.type || 'coach-reminder',
-        p_title: notification.title || '',
-        p_message: notification.message || '',
+        p_title: notification.title || 'Coach reminder',
+        p_message: notification.message || 'Check your run club profile.',
         p_metadata: notification.metadata || {}
       });
     },
@@ -619,6 +616,7 @@
       training_completions: localLoad('rc_training_completions', []),
       medical_notes: localLoad('rc_medical_notes', {}),
       athletics_team_selections: localLoad('rc_athletics_team_selections', {}),
+      athletics_consent_selection: localLoad('rc_athletics_consent_selection', []),
       athletics_results: localLoad('rc_athletics_results', []),
       cross_country_courses: localLoad('rc_cross_country_courses', []),
       coach_notes: localLoad('rc_coach_notes', []),

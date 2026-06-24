@@ -1,4 +1,4 @@
-# Gwynne Park Run Club
+# Corso
 
 A Marathon Kids-style school run club platform built with plain HTML/JS and Supabase Edge Functions.
 
@@ -54,3 +54,7 @@ Do not enter real student data into the public GitHub Pages demo. Before real
 rosters are imported, replace localStorage with authenticated backend storage,
 disable universal demo access, enforce school-scoped row-level security, and
 keep private service credentials out of browser files.
+
+Education compliance readiness notes live in `docs/education-compliance-readiness.md`.
+Use that evidence pack with school leadership, privacy reviewers, or Department
+contacts before entering real student data.

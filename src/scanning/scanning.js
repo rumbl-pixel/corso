@@ -103,6 +103,12 @@
     return milestoneThresholds().indexOf(laps) !== -1 ? (laps + ' laps') : null;
   }
 
+  function runClubLapSession(options) {
+    options = options || {};
+    var sessionType = String(options.session_type || options.sessionType || programSettings().defaultSessionType || 'Run Club').toLowerCase();
+    return !/(interschool|athletics|cross country|cross-country|training|carnival)/.test(sessionType);
+  }
+
   // --- Core: log a lap from a scanned barcode ---
   // Returns a result object describing what happened (success/error + details).
   function scanAudit() { return load(KEYS.scanAudit, []); }
@@ -152,6 +158,7 @@
     var scannerId = options.scanner_id || options.scannerId || 'unknown-scanner';
     var scanTime = new Date().toISOString();
     var idem = idempotencyKey(barcode, options);
+    var scoringLap = options.countLap === false ? false : runClubLapSession(options);
     var liveGuard = liveScanGuard();
     if (!liveGuard.ok) {
       return { success: false, error: liveGuard.message, barcode: barcode };
@@ -172,12 +179,30 @@
       return { success: false, error: 'Code not recognised: ' + barcode, barcode: barcode };
     }
 
-    student.laps += 1;
-    saveStudents(students);
-    auditScan({ barcode: barcode, scanner_id: scannerId, source: options.source || 'scanner', success: true, duplicate: false, student_id: student.id, student_name: student.name, laps_after: student.laps, idempotency_key: idem, time: scanTime });
+    if (scoringLap) {
+      student.laps += 1;
+      saveStudents(students);
+    }
+    auditScan({
+      barcode: barcode,
+      scanner_id: scannerId,
+      source: options.source || 'scanner',
+      success: true,
+      duplicate: false,
+      attendance_only: !scoringLap,
+      lap_delta: scoringLap ? 1 : 0,
+      session_type: options.session_type || options.sessionType || programSettings().defaultSessionType,
+      student_id: student.id,
+      student_name: student.name,
+      laps_after: student.laps,
+      idempotency_key: idem,
+      time: scanTime
+    });
 
     var backendStatus = 'local-only';
-    if (liveGuard.live && global.RunClubBackend && global.RunClubBackend.backendDataAccess && global.RunClubBackend.backendDataAccess.recordLapScan) {
+    if (!scoringLap) {
+      backendStatus = 'attendance-only';
+    } else if (liveGuard.live && global.RunClubBackend && global.RunClubBackend.backendDataAccess && global.RunClubBackend.backendDataAccess.recordLapScan) {
       backendStatus = 'live-write-started';
       global.RunClubBackend.backendDataAccess.recordLapScan({
         school_id: global.RunClubBackend.config().schoolId,
@@ -212,7 +237,7 @@
 
     return {
       success: true,
-      message: 'Lap logged',
+      message: scoringLap ? 'Lap logged' : 'Attendance recorded - Run Club laps unchanged',
       barcode: barcode,
       student: {
         id: student.id,
@@ -222,9 +247,10 @@
         laps: student.laps,
         km: lapsToKm(student.laps)
       },
+      attendance_only: !scoringLap,
       idempotency_key: idem,
       backend_status: backendStatus,
-      milestone: milestoneJustReached(student.laps)
+      milestone: scoringLap ? milestoneJustReached(student.laps) : null
     };
   }
 
@@ -270,6 +296,7 @@
     programSettings: programSettings,
     lapDistanceKm: lapDistanceKm,
     milestoneThresholds: milestoneThresholds,
+    runClubLapSession: runClubLapSession,
     MILESTONES: MILESTONES,
     awardsFor: awardsFor,
     milestoneJustReached: milestoneJustReached,

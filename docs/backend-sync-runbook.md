@@ -21,7 +21,7 @@ Cutover order:
 6. Migrate demo roster and historical records.
 7. Keep demo access disabled before real student data is entered.
 
-Staff login now uses Supabase Auth when `demoMode: false`. Add staff users in Supabase Auth, then add matching `school_users` rows with `owner`, `admin`, or `coach` roles. For first staging, use `coach` so ordinary coach access is proven before wider admin/owner permissions are tested. The browser stores the staff access token in `runClubAdminSession` and uses it for live REST/RPC requests; `config.js` must still contain only the public anon key, never the service-role key.
+Staff login now uses a StrideTrack-style 4-digit Site code plus assigned usernames in the UI when `demoMode: false`. The Site code resolves the school scope through `siteCode`/`schoolSites` in `config.js`, then the browser converts each username to an internal Supabase Auth email using `authUsernameDomain` (for example `coach01` becomes `coach01@corso.local`). School staff must be invited as `coach` only, with a matching `school_users` row for that one school. The Corso owner uses the separate `platform_admins` grant, not a school staff role, so platform-wide access stays owner-only and auditable. The browser stores the staff access token in `runClubAdminSession` and uses it for live REST/RPC requests; `config.js` must still contain only the public anon key, never the service-role key.
 
 Staging setup starts with fake data:
 
@@ -40,6 +40,8 @@ supabase functions deploy guardian_access
 ```
 
 Seed only fake staging data from `supabase/seed.staging.sql`. See `docs/supabase-staging-checklist.md` before connecting the UI to staging.
+
+Use `docs/staging-coach-staff.sql` for a school coach account and `docs/platform-admin-grant.sql` only for the Corso owner account.
 
 ## Live Beta Feature Tables
 
@@ -147,4 +149,6 @@ Priority 3 provides the bridge. Priority 0 is still the live-data gate:
 - removal of universal `DEMO`
 - consent, retention, deletion, and incident processes
 - staff_invites reviewed against the real Supabase Auth invite list
+- school staff accounts confirmed as coach-only for their own school
+- platform admin access granted only through `platform_admins`
 - athletics_team_selections and athletics_results checked with fake staging students before real carnival data is entered

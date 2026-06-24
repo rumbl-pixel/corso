@@ -1,4 +1,4 @@
-# Gwynne Park Run Club - Roadmap
+# Corso - Roadmap
 
 Inspired by Marathon Kids Connect and StrideTrack. This file is the source of truth for feature progress.
 
@@ -16,11 +16,11 @@ Quick progress view lives in `docs/roadmap-progress.md`.
 - Priority 6: 8 / 8 complete. Status: Done.
 - Priority 7: 11 / 11 complete. Status: Done.
 - Priority 8: 9 / 9 complete. Status: Done.
-- Priority 9: 5 / 5 skeletons created. Status: Bookmarked for later.
+- Priority 9: 2 / 8 functional build steps complete. Status: In Progress.
 
 ## Current Focus
 
-- Current lane: all core tracked feature priorities are complete. Priority 9 is a visible skeleton/bookmark lane for later smart coach tools, not a live decision system.
+- Current lane: Priority 9 functional build has started with a local smart-coach insight engine. It is still staff-reviewed and rule-based, not autonomous AI advice.
 - Recommended next item: review live environment variables, school-scoped roles, staff invite accounts, and school approval with the school before entering real student data.
 - Privacy note: keep demo mode for testing; turn on live data mode only after the configured backend readiness gate shows ready.
 - Backend pilot: local Supabase fake backend remains available for safe testing; live-style guards are in place for roster, scans, sessions, guardian access, training, medical safety notes, exports, and audit flows.
@@ -182,13 +182,16 @@ Status: Done.
 
 ## Priority 9 - Smart Coach And Celebration Tools
 
-Status: Bookmarked. Skeletons are visible in the Admin Coach Tools tab and student Training tab; full data logic, AI assistance, note storage, and moderation are deliberately parked until after live permissions, privacy review, and school approval.
+Status: Functional local v1 complete. The shared local insight engine now powers Coach Tools cards and modals, including staff follow-up/resolved workflow states and staff-reviewed Mini Coach summaries with safe next steps. Full autonomous AI advice and public celebration moderation remain parked until after live permissions, privacy review, and school approval.
 
-- [x] 9.1 Mini Coach AI / Smart Suggestions skeleton created.
-- [x] 9.2 Personal Bests coaching skeleton created.
-- [x] 9.3 Coach Notes skeleton created.
-- [x] 9.4 Celebration Wall skeleton created.
-- [x] 9.5 Next Best Action Admin Cards skeleton created.
+- [x] 9.1 Shared smart-coach insight engine created for needs attention, close to award, unopened training, PBs, class trends, celebration candidates, and next-best actions.
+- [x] 9.2 Mini Coach AI / Smart Suggestions skeleton created.
+- [x] 9.3 Personal Bests coaching skeleton created.
+- [x] 9.4 Coach Notes skeleton created.
+- [x] 9.5 Celebration Wall skeleton created.
+- [x] 9.6 Next Best Action Admin Cards skeleton created.
+- [x] 9.7 Wire Coach Tools modals fully to the insight engine with richer action workflows and resolved/follow-up states.
+- [x] 9.8 Add staff-reviewed Mini Coach summaries that explain insights and suggest safe next steps.
 
 Later build requirements:
 

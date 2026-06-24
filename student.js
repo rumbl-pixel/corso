@@ -125,6 +125,42 @@
     });
   }
 
+  function escapeAttr(value) {
+    return escapeHtml(value).replace(/"/g, '&quot;');
+  }
+
+  function isExternalTrainingUrl(value) {
+    return /^https?:\/\//i.test(String(value || '').trim());
+  }
+
+  function parseTrainingExerciseResources(notes) {
+    return String(notes || '').split(/\n|;/).map(function (line) {
+      var text = line.trim();
+      var markdown = text.match(/^\[([^\]]+)\]\((https?:\/\/[^)]+)\)$/i);
+      if (markdown) {
+        return { label: markdown[1].trim(), url: markdown[2].trim() };
+      }
+      var pipe = text.match(/^(.+?)\s*\|\s*(https?:\/\/\S+)$/i);
+      if (pipe) {
+        return { label: pipe[1].trim(), url: pipe[2].trim() };
+      }
+      return text ? { label: text, url: '' } : null;
+    }).filter(Boolean);
+  }
+
+  function trainingNotesHtml(task) {
+    var resources = parseTrainingExerciseResources(task.notes);
+    if (!resources.length) {
+      return '<p>' + escapeHtml(task.notes || 'Review this training task before your next run club session.') + '</p>';
+    }
+    return '<ul class="training-exercise-list">' + resources.map(function (resource) {
+      var label = escapeHtml(resource.label);
+      return '<li>' + (resource.url
+        ? '<a class="training-exercise-link" href="' + escapeAttr(resource.url) + '" target="_blank" rel="noopener" data-training-id="' + escapeAttr(task.id) + '">' + label + '</a>'
+        : '<span>' + label + '</span>') + '</li>';
+    }).join('') + '</ul>';
+  }
+
   function barcodeBarsHtml(code) {
     var patterns = {
       '0':'nnnwwnwnn','1':'wnnwnnnnw','2':'nnwwnnnnw','3':'wnwwnnnnn','4':'nnnwwnnnw',
@@ -164,7 +200,7 @@
   function barcodeCardHtml(student) {
     var code = student.barcode || student.id;
     return '<div class="barcode-card-preview">' +
-      '<div class="barcode-card-school">Gwynne Park Run Club</div>' +
+      '<div class="barcode-card-school">Corso</div>' +
       '<strong class="barcode-card-name">' + escapeHtml(student.name) + '</strong>' +
       '<div class="barcode-card-meta">' + escapeHtml(student.year) + ' / ' + escapeHtml(student.cls) + '</div>' +
       '<div class="barcode-qr-row">' + barcodeBarsHtml(code) + qrCodeHtml(code) + '</div>' +
@@ -179,7 +215,7 @@
     var html = '<html><head><title>' + escapeHtml(student.name) + ' Barcode Card</title>' +
       '<style>@page{size:85.6mm 53.98mm;margin:0;}*{box-sizing:border-box;}body{margin:0;width:85.6mm;height:53.98mm;font-family:Arial,sans-serif;color:#102a43;}.barcode-card-print{width:85.6mm;height:53.98mm;border:0.35mm solid #0c5aa8;padding:4mm;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:1.2mm;}.barcode-card-school{font-size:3mm;font-weight:700;color:#0c5aa8;text-transform:uppercase;}.barcode-card-name{font-size:4.8mm;line-height:1.1;}.barcode-card-meta{font-size:2.9mm;color:#52616b;}.barcode-qr-row{display:flex;align-items:center;justify-content:center;gap:3mm;width:100%;}.barcode-bars{height:13mm;display:flex;align-items:stretch;justify-content:center;gap:0.45mm;width:54mm;margin-top:1mm;}.barcode-bars span{display:block;background:#0b1f38;height:100%;}.qr-code svg{display:block;width:18mm;height:18mm;}.qr-code-fallback{border:0.3mm solid #0b1f38;padding:2mm;font-size:2.2mm;}.barcode-code{font-family:Consolas,monospace;font-size:4.2mm;font-weight:700;letter-spacing:0.45mm;color:#0b1f38;}@media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact;}}</style>' +
       '</head><body><div class="barcode-card-print">' +
-      '<div class="barcode-card-school">Gwynne Park Run Club</div>' +
+      '<div class="barcode-card-school">Corso</div>' +
       '<strong class="barcode-card-name">' + escapeHtml(student.name) + '</strong>' +
       '<div class="barcode-card-meta">' + escapeHtml(student.year) + ' / ' + escapeHtml(student.cls) + '</div>' +
       '<div class="barcode-qr-row">' + barcodeBarsHtml(code) + qrCodeHtml(code) + '</div>' +
@@ -298,12 +334,12 @@
       : '<tr><td colspan="4">No progress events yet.</td></tr>';
     var html = '<html><head><title>' + escapeHtml(student.name) + ' Term Progress Report</title>' +
       '<style>@page{size:A4;margin:14mm;}*{box-sizing:border-box;}body{font-family:Arial,sans-serif;color:#102a43;margin:0;}header{border-bottom:3px solid #003880;padding-bottom:8mm;margin-bottom:8mm;}h1{color:#003880;margin:0 0 2mm;font-size:24pt;}h2{color:#003880;margin:8mm 0 3mm;font-size:14pt;}.meta{color:#4b5563;font-size:10pt;}.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:4mm;margin:6mm 0;}.box{border:1px solid #d9e2ec;border-left:4px solid #c99722;padding:4mm;border-radius:2mm;}.value{font-size:18pt;font-weight:700;color:#003880;}.label{text-transform:uppercase;font-size:8pt;color:#64748b;}table{width:100%;border-collapse:collapse;font-size:9.5pt;}th{background:#eef4fb;color:#0b1f38;text-align:left;}th,td{border-bottom:1px solid #d9e2ec;padding:2.5mm;}ul{margin-top:0;}footer{margin-top:10mm;color:#64748b;font-size:8pt;}@media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact;}}</style>' +
-      '</head><body><header><h1>Gwynne Park Run Club</h1><div class="meta">' + escapeHtml(report.term) + ' progress report for ' + escapeHtml(student.name) + ' - ' + escapeHtml(student.year) + ' / ' + escapeHtml(student.cls) + '</div></header>' +
+      '</head><body><header><h1>Corso</h1><div class="meta">' + escapeHtml(report.term) + ' progress report for ' + escapeHtml(student.name) + ' - ' + escapeHtml(student.year) + ' / ' + escapeHtml(student.cls) + '</div></header>' +
       '<section class="summary"><div class="box"><div class="value">' + report.laps + '</div><div class="label">Laps</div></div><div class="box"><div class="value">' + escapeHtml(report.distance) + '</div><div class="label">Distance</div></div><div class="box"><div class="value">' + report.training.opened + ' / ' + report.training.assigned + '</div><div class="label">Training Opened</div></div></section>' +
       '<h2>Awards</h2><ul>' + awardRows + '</ul>' +
       '<h2>Goals</h2><table><thead><tr><th>Goal</th><th>Set By</th><th>Progress</th><th>Status</th></tr></thead><tbody>' + goalRows + '</tbody></table>' +
       '<h2>Recent Progress</h2><table><thead><tr><th>Date</th><th>Type</th><th>Event</th><th>Value</th></tr></thead><tbody>' + timelineRows + '</tbody></table>' +
-      '<footer>Generated from local Gwynne Park Run Club demo data. Use the browser print dialog to save this report as a PDF.</footer>' +
+      '<footer>Generated from local Corso demo data. Use the browser print dialog to save this report as a PDF.</footer>' +
       '</body></html>';
     win.document.write(html);
     win.document.close();
@@ -479,9 +515,12 @@
   }
 
   function recordTrainingCompletion(task) {
-    return recordTrainingEventWithBackend(task, 'reviewed').then(function (result) {
+    return recordTrainingEventWithBackend(task, 'completed').then(function (result) {
       if (!result.ok) { return result; }
       var rows = loadLocal(TRAINING_COMPLETIONS_KEY, []);
+      if (rows.some(function (row) { return row.assignment_id === task.id && row.student_id === currentStudent.id; })) {
+        return result;
+      }
       rows.push({
         assignment_id: task.id,
         student_id: currentStudent.id,
@@ -505,27 +544,35 @@
     listEl.innerHTML = tasks.slice().reverse().map(function (task) {
       var opened = trainingOpened(task.id);
       var completed = trainingCompletionFor(task.id);
-      return '<div class="training-card">' +
-        '<div class="training-card-head"><strong>' + escapeHtml(task.title) + '</strong>' +
-        (completed ? '<span class="award-badge">Reviewed</span>' : opened ? '<span class="award-badge">Opened</span>' : '<span class="training-status-pill">New</span>') + '</div>' +
-        '<p>' + escapeHtml(task.notes || 'Review this training task before your next run club session.') + '</p>' +
-        '<div class="training-meta">' + (task.due_date ? 'Due ' + escapeHtml(task.due_date) : 'No due date') + (opened ? ' · Opened ' + new Date(opened.opened_at).toLocaleDateString() : '') + (completed ? ' · Reviewed ' + new Date(completed.completed_at).toLocaleDateString() : '') + '</div>' +
-        '<div class="training-actions"><a class="btn-primary training-open-link" href="' + escapeHtml(task.url) + '" target="_blank" rel="noopener" data-training-id="' + escapeHtml(task.id) + '">Open training</a>' +
-        '<button class="secondary training-reviewed-btn" type="button" data-training-id="' + escapeHtml(task.id) + '"' + (completed ? ' disabled' : '') + '>' + (completed ? 'Reviewed' : 'Mark reviewed') + '</button></div>' +
+      var externalUrl = isExternalTrainingUrl(task.url);
+      return '<div class="training-card training-checklist-card' + (completed ? ' training-checklist-card--complete' : '') + '">' +
+        '<label class="training-checklist-row">' +
+          '<input class="training-complete-check" type="checkbox" data-training-id="' + escapeAttr(task.id) + '"' + (completed ? ' checked disabled' : '') + ' />' +
+          '<span class="training-checklist-copy"><span class="training-card-head"><strong>' + escapeHtml(task.title) + '</strong>' +
+          (completed ? '<span class="award-badge">Completed</span>' : opened ? '<span class="award-badge">Opened</span>' : '<span class="training-status-pill">New</span>') + '</span></span>' +
+        '</label>' +
+        trainingNotesHtml(task) +
+        '<div class="training-meta">' + (task.due_date ? 'Due ' + escapeHtml(task.due_date) : 'No due date') + (opened ? ' · Opened ' + new Date(opened.opened_at).toLocaleDateString() : '') + (completed ? ' · Completed ' + new Date(completed.completed_at).toLocaleDateString() : '') + '</div>' +
+        '<div class="training-actions">' + (externalUrl ? '<a class="btn-primary training-open-link" href="' + escapeAttr(task.url) + '" target="_blank" rel="noopener" data-training-id="' + escapeAttr(task.id) + '">Open training</a>' : '') + '</div>' +
       '</div>';
     }).join('');
-    document.querySelectorAll('.training-open-link').forEach(function (link) {
+    document.querySelectorAll('.training-open-link, .training-exercise-link').forEach(function (link) {
       link.addEventListener('click', function () {
         var task = tasks.find(function (item) { return item.id === link.dataset.trainingId; });
         if (task) { recordTrainingClick(task); }
       });
     });
-    document.querySelectorAll('.training-reviewed-btn').forEach(function (button) {
-      button.addEventListener('click', function () {
-        var task = tasks.find(function (item) { return item.id === button.dataset.trainingId; });
+    document.querySelectorAll('.training-complete-check').forEach(function (checkbox) {
+      checkbox.addEventListener('change', function () {
+        var task = tasks.find(function (item) { return item.id === checkbox.dataset.trainingId; });
         if (task) {
+          checkbox.disabled = true;
           recordTrainingCompletion(task).then(function (result) {
-            if (!result.ok) { return; }
+            if (!result.ok) {
+              checkbox.checked = false;
+              checkbox.disabled = false;
+              return;
+            }
             renderTraining();
             renderStudentTimeline();
           });

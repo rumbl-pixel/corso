@@ -4,11 +4,11 @@ Decision date: 2026-06-08
 
 ## Decision
 
-Use Supabase as the production backend for Gwynne Park Run Club:
+Use Supabase as the production backend for Corso:
 
 - Database: Supabase Postgres.
 - Auth: Supabase Auth for staff/admin accounts first, then parent and student access models.
-- Authorization: Postgres Row Level Security on every school-data table before real student data is entered.
+- Authorization: Postgres Row Level Security on every school-data table before real student data is entered. Platform admin access is a separate platform-level grant; school staff are coach-only and school-scoped.
 - Server-side workflows: Supabase Edge Functions for sensitive actions such as CSV import, student/parent access token exchange, scan writes that need validation, and future reports that should not trust browser-only calculations.
 - Local development: Supabase CLI migrations and local project tooling.
 - Frontend deployment: keep the current static HTML/CSS/JS app deployable as a static site while Priority 3 replaces localStorage with backend access. A later Next.js/Lovable migration remains optional, not required for the backend cutover.
@@ -39,6 +39,8 @@ For Priority 3, target:
 
 - No real student roster should be entered until Priority 0 is complete.
 - Every table containing school, student, parent, scan, training, goal, award, or audit data must have RLS enabled before browser access.
+- Corso owner access must use `platform_admins`; school staff should not be given cross-school roles.
+- School coach accounts must be scoped to one `school_id` and must not see other schools.
 - Service-role keys are allowed only in server/Edge Function environments.
 - Demo mode stays available until the backend flow is working, then Priority 0 removes universal `DEMO` access before launch.
 - Offline scanning must use idempotency keys before writing to production tables.

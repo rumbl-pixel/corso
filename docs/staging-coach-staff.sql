@@ -1,6 +1,6 @@
 -- Staging staff role template.
 -- Create the staff user in Supabase Auth first, then replace the placeholders below.
--- Use role 'coach' for the first staging login unless a wider admin/owner test is required.
+-- Use role 'coach' for school staff. Platform admin access is a separate platform_admins grant.
 
 insert into public.app_users (
   id,
