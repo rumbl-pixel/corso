@@ -1,6 +1,6 @@
-# Gwynne Park Run Club - Progress Checklist
+# Corso - Progress Checklist
 
-Last updated: 2026-06-10
+Last updated: 2026-06-22
 
 This is the quick-read roadmap. `FEATURES.md` remains the full source of truth.
 
@@ -15,12 +15,12 @@ This is the quick-read roadmap. `FEATURES.md` remains the full source of truth.
 - [x] Priority 6 - Competitions And Challenges: 8 / 8 complete. Done.
 - [x] Priority 7 - Interschool Athletics And Cross Country: 11 / 11 complete. Done.
 - [x] Priority 8 - Polish, Help, And Long-Term Enhancements: 9 / 9 complete. Done.
-- [x] Priority 9 - Smart Coach And Celebration Tools: 5 / 5 skeletons created. Bookmarked for later.
+- [x] Priority 9 - Smart Coach And Celebration Tools: 8 / 8 functional local build steps complete. Done.
 
 ## Current Focus
 
 - [x] All core tracked feature priorities are complete. Remaining launch work is operational setup, school approval, and real Supabase/Auth configuration before live student data is entered.
-- [x] Priority 9 smart coach skeletons created for Mini Coach AI, Personal Bests, Coach Notes, Celebration Wall, and Next Best Action Admin Cards; full data logic is parked for later privacy review.
+- [x] Priority 9 shared smart-coach insight engine created for needs attention, close-to-award runners, unopened training, PBs, class trends, celebration candidates, and next-best actions. Coach Tools modals now support staff notes, categories, follow-up dates, resolved/follow-up workflow states, and staff-reviewed Mini Coach summaries with safe next steps. Full autonomous AI advice is still parked for later privacy review.
 - [x] 3.1 Backend stack decision completed: Supabase Postgres/Auth/RLS/Edge Functions.
 - [x] 3.2 Initial production schema completed with RLS enabled on student/school data tables.
 - [x] Priority 3 backend adapter, idempotent scan sync, report views, backup/export tracking, and demo migration path completed.
@@ -66,6 +66,8 @@ This is the quick-read roadmap. `FEATURES.md` remains the full source of truth.
 - [x] 8.9 Authorised Compass class-list sync completed as a CSV import pathway with template and authorisation notes.
 - [x] Priority 0 backend cutover completed with a visible backend readiness gate, live roster write guard, live scanner write guard, live scan-undo guard, live CSV/Compass import guard, live run-session guard, live manual-adjustment guard, live activity-credit guard, live guardian-link guard, live parent-access guard, live training-assignment guard, live training-event guard, live medical-note guard, Supabase student upsert, Supabase student batch import, Supabase student soft-delete, direct `record_lap_scan` calls, direct `record_scan_undo` calls, Supabase run session create/finish calls, manual adjustment, activity credit, guardian link, training assignment, training event, and medical safety note ledgers/RPCs, parent `guardian_access` Edge Function, and student privacy fields migration.
 - [x] Signup/access model locked: invite-only staff/coaches, passwordless student barcode/QR/code access, parent child-name search plus guardian code/link confirmation. See `docs/access-model-decision.md`.
+- [x] Claude handoff package started: `docs/claude-transition-plan.md`, `docs/claude-first-review-brief.md`, and `docs/handover-summary.md` now give a second reviewer the product context, first review task, privacy rules, local run command, and test commands.
+- [x] Vendor compliance posture added: Compliance workspace now separates automated technical checks from school signup/use attestation, school sign-off, parent notice, data map, breach log, and evidence-pack export.
 
 ## Go-Live Gate
 
@@ -138,4 +140,4 @@ Priority 0 implementation is complete. Keep demo mode enabled until the real sch
 - [x] Priority 6: house/class/year competitions and challenge progress.
 - [x] Priority 7: Interschool Athletics and Cross Country modules.
 - [x] Priority 8: mobile polish, help notes, privacy controls, branding settings, accessibility audit, and authorised Compass class-list sync.
-- [x] Priority 9: smart coach and celebration skeletons bookmarked for a later full build.
+- [x] Priority 9: smart coach and celebration functional local build completed with a local rule-based insight engine, staff-reviewed Coach Tools workflows, and safe Mini Coach next-step summaries.

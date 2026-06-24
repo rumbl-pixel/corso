@@ -17,7 +17,17 @@
     catch (e) { return null; }
   }
 
-  if (!getAdminSession()) {
+  function hasKioskAccess(session) {
+    return !!session && (
+      session.mode === 'demo' ||
+      session.role === 'coach' ||
+      session.role === 'platform_admin' ||
+      session.access_scope === 'school' ||
+      session.access_scope === 'platform'
+    );
+  }
+
+  if (!hasKioskAccess(getAdminSession())) {
     window.location.href = 'admin.html';
     return;
   }

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# build.sh — Gwynne Park Run Club automated build + deploy
+# build.sh — Corso automated build + deploy
 #
 # What it does:
 #   1. Assembles the modular src/ files into the deployable root so static

@@ -1,6 +1,6 @@
 {
-  "name": "Gwynne Park Run Club",
-  "short_name": "GP Run Club",
+  "name": "Corso",
+  "short_name": "Corso",
   "description": "Installable school run club scanner, leaderboard, student, parent, and admin platform.",
   "start_url": "./index.html",
   "scope": "./",

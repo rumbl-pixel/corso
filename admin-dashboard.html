@@ -3,21 +3,21 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Gwynne Park Run Club - Admin Dashboard</title>
-    <link rel="stylesheet" href="styles.css?v=72" />
+    <title>Corso - Admin Dashboard</title>
+    <link rel="stylesheet" href="styles.css?v=118" />
     <link rel="manifest" href="manifest.webmanifest" />
     <meta name="theme-color" content="#0c5aa8" />
     <link rel="apple-touch-icon" href="assets/app-icon-192.png" />
     <script src="config.js"></script>
-    <script src="theme.js?v=8"></script>
+    <script src="theme.js?v=12"></script>
   </head>
   <body class="page page-admin-dashboard">
     <a class="skip-link" href="#main-content">Skip to main content</a>
     <header class="site-header">
       <div class="header-inner">
-        <a class="brand brand-home-link" href="index.html" aria-label="Back to Gwynne Park Run Club home page">
-          <img class="brand-logo" src="assets/gwynne-park-logo.png" alt="Gwynne Park Schools" />
-          <h1>Gwynne Park Run Club</h1>
+        <a class="brand brand-home-link" href="index.html" aria-label="Back to Corso home page">
+          <img class="brand-logo" src="assets/corso-logo.png" alt="Corso" />
+          <h1>Corso</h1>
         </a>
         <nav class="main-nav">
           <a href="index.html">Home</a>
@@ -36,17 +36,12 @@
       <div class="tabs" role="tablist" aria-label="Admin dashboard sections">
         <button class="tab-btn active" data-tab="scanner" role="tab" aria-selected="true" aria-controls="tab-scanner">&#128247; Scanner</button>
         <button class="tab-btn" data-tab="students" role="tab" aria-selected="false" aria-controls="tab-students">&#128101; Students</button>
-        <button class="tab-btn" data-tab="sports" role="tab" aria-selected="false" aria-controls="tab-sports">&#127967; Sports</button>
-        <button class="tab-btn" data-tab="training" role="tab" aria-selected="false" aria-controls="tab-training">&#127947; Training</button>
+        <button class="tab-btn" data-tab="coach-hub" role="tab" aria-selected="false" aria-controls="tab-coach-hub">&#127947; Coach Hub</button>
         <button class="tab-btn" data-tab="leaderboard" role="tab" aria-selected="false" aria-controls="tab-leaderboard">&#127942; Leaderboard</button>
         <button class="tab-btn" data-tab="activity" role="tab" aria-selected="false" aria-controls="tab-activity">&#9201; Activity</button>
         <button class="tab-btn" data-tab="events" role="tab" aria-selected="false" aria-controls="tab-events">&#128197; Events</button>
         <button class="tab-btn" data-tab="awards" role="tab" aria-selected="false" aria-controls="tab-awards">&#127885; Awards</button>
-        <button class="tab-btn" data-tab="resources" role="tab" aria-selected="false" aria-controls="tab-resources">Resources</button>
-        <button class="tab-btn" data-tab="reports" role="tab" aria-selected="false" aria-controls="tab-reports">&#128202; Reports</button>
-        <button class="tab-btn" data-tab="future-intelligence" role="tab" aria-selected="false" aria-controls="tab-future-intelligence">Coach Tools</button>
-        <button class="tab-btn" data-tab="import" role="tab" aria-selected="false" aria-controls="tab-import">&#128229; Import</button>
-        <button class="tab-btn" data-tab="help" role="tab" aria-selected="false" aria-controls="tab-help">Help</button>
+        <button class="tab-btn" data-tab="school-admin" role="tab" aria-selected="false" aria-controls="tab-school-admin">&#9881; School Admin</button>
       </div>
 
       <!-- SCANNER TAB -->
@@ -301,8 +296,45 @@
         </div>
       </div>
 
+      <!-- COACH HUB -->
+      <div class="tab-panel coach-hub-panel" id="tab-coach-hub">
+        <div class="card coach-hub-card">
+          <div class="section-heading-row">
+            <div>
+              <h2>Coach Hub</h2>
+              <p class="muted-copy">Plan sessions, assign training, manage sports teams, and review coach insight tools from one staff workspace.</p>
+            </div>
+            <span class="bookmark-pill">Planning workspace</span>
+          </div>
+          <div class="coach-hub-summary-grid" aria-label="Coach Hub sections">
+            <article>
+              <strong>Sports</strong>
+              <span>Interschool teams, consent, PBs, results, Cross Country.</span>
+            </article>
+            <article>
+              <strong>Training</strong>
+              <span>Assign student tasks and track opens/completion.</span>
+            </article>
+            <article>
+              <strong>Programming</strong>
+              <span>Build PE/session plans with Mini Coach support.</span>
+            </article>
+            <article>
+              <strong>Insights</strong>
+              <span>Needs attention, close to award, notes, trends.</span>
+            </article>
+          </div>
+          <div class="coach-hub-tabs" role="tablist" aria-label="Coach Hub tools">
+            <button class="coach-hub-tab active" type="button" data-coach-section="sports" role="tab" aria-selected="true" aria-controls="tab-sports">&#127967; Sports</button>
+            <button class="coach-hub-tab" type="button" data-coach-section="training" role="tab" aria-selected="false" aria-controls="tab-training">&#127947; Training</button>
+            <button class="coach-hub-tab" type="button" data-coach-section="resources" role="tab" aria-selected="false" aria-controls="tab-resources">&#128218; Programming</button>
+            <button class="coach-hub-tab" type="button" data-coach-section="future-intelligence" role="tab" aria-selected="false" aria-controls="tab-future-intelligence">&#129504; Insights</button>
+          </div>
+        </div>
+      </div>
+
       <!-- SPORTS TAB -->
-      <div class="tab-panel" id="tab-sports">
+      <div class="tab-panel coach-hub-section" id="tab-sports">
         <div class="card sports-command-card">
           <div class="sports-command-header">
             <div>
@@ -321,6 +353,12 @@
           <div class="athletics-mode-shell" id="athletics-mode-shell">
             <p class="sports-mode-note">When off, student goals stay focused on Laps, Lap Time, and Distance. When on, the command centre opens Athletics and Cross Country tools without adding anything to Run Club lap totals.</p>
             <div id="athletics-mode-panel" class="athletics-mode-panel" hidden>
+              <div class="sports-workflow-strip" aria-label="Sports workflow">
+                <span><strong>1</strong> Confirm consent</span>
+                <span><strong>2</strong> Pick event teams</span>
+                <span><strong>3</strong> Record results and PBs</span>
+                <span><strong>4</strong> Print or export team lists</span>
+              </div>
               <div class="sports-command-grid" id="sports-command-grid" aria-label="Sports command centre summary">
                 <article class="sports-command-tile">
                   <span>Team Checklist</span>
@@ -353,7 +391,7 @@
                   <small>Seasonal courses</small>
                 </article>
               </div>
-              <div class="athletics-panel-actions">
+              <div class="athletics-panel-actions sports-command-actions">
                 <button type="button" id="open-sports-consent-btn" class="secondary">Team Checklist</button>
                 <button type="button" id="toggle-athletics-team-overview-btn" class="secondary">Hide team list</button>
                 <button type="button" id="print-athletics-team-list-btn" class="secondary">Print team list</button>
@@ -405,12 +443,17 @@
               <div id="athletics-team-summary" class="athletics-team-summary"></div>
             </div>
             <div id="athletics-event-modal-status" class="athletics-event-modal-status"></div>
-            <div id="athletics-team-student-list" class="athletics-team-student-list"></div>
+            <div class="athletics-team-quick-actions" aria-label="Quick team selection controls">
+              <button type="button" id="select-visible-athletes-btn" class="secondary">Select visible</button>
+              <button type="button" id="select-approved-athletes-btn" class="secondary">Approved only</button>
+              <button type="button" id="clear-visible-athletes-btn" class="secondary">Clear visible</button>
+            </div>
             <div class="modal-actions">
               <button type="button" id="save-athletics-team-btn">Save team</button>
               <button type="button" id="cancel-athletics-team-btn" class="secondary">Cancel</button>
             </div>
-            <pre id="athletics-team-result" hidden></pre>
+            <div id="athletics-team-result" class="inline-save-status" hidden></div>
+            <div id="athletics-team-student-list" class="athletics-team-student-list"></div>
           </div>
         </div>
 
@@ -519,7 +562,7 @@
             </div>
             <button type="submit">Save result</button>
           </form>
-          <pre id="athletics-result-output" hidden></pre>
+          <div id="athletics-result-output" class="inline-save-status" hidden></div>
           <div class="form-grid" style="margin-top:1rem;">
             <div>
               <h3>PB Tracking</h3>
@@ -576,26 +619,55 @@
 
       <!-- EVENTS TAB -->
       <div class="tab-panel" id="tab-events">
+        <div class="card events-calendar-card">
+          <div class="events-calendar-head">
+            <div>
+              <h2>&#128197; Events Calendar</h2>
+              <p>Plan run club sessions around WA school terms and holidays. Holiday dates are stored locally from the WA Department of Education published term dates.</p>
+            </div>
+            <div class="event-calendar-controls" aria-label="Calendar month controls">
+              <button id="event-calendar-prev" type="button" class="secondary" aria-label="Previous month">‹</button>
+              <strong id="event-calendar-title">Calendar</strong>
+              <button id="event-calendar-next" type="button" class="secondary" aria-label="Next month">›</button>
+              <button id="event-calendar-today" type="button" class="secondary">Today</button>
+            </div>
+          </div>
+
+          <div class="event-calendar-layout">
+            <section aria-labelledby="event-calendar-title">
+              <div id="event-calendar-grid" class="event-calendar-grid" aria-live="polite"></div>
+            </section>
+            <aside class="wa-holiday-summary" aria-label="Western Australia school holiday summary">
+              <h3>WA school holidays</h3>
+              <p id="wa-holiday-next">Checking the current term window...</p>
+              <div id="wa-holiday-list" class="wa-holiday-list"></div>
+              <a id="wa-school-holiday-source" href="https://www.education.wa.edu.au/future-term-dates" target="_blank" rel="noopener">WA Department of Education term dates</a>
+            </aside>
+          </div>
+        </div>
+
         <div class="card">
           <h2>&#128197; Program Events</h2>
           <p style="color:#555;font-size:0.9rem;">Create named events (Jog-a-thon, Run Club, PE class, Move-a-thon, etc.) to segment lap reports by event type.</p>
-          <label>Event name <input type="text" id="event-name" placeholder="e.g. Term 2 Jog-a-thon" /></label>
-          <label>Event type
-            <select id="event-type">
-              <option>Run Club</option>
-              <option>Jog-a-thon</option>
-              <option>PE Class</option>
-              <option>Move-a-thon</option>
-              <option>Recess</option>
-              <option>Brain Booster</option>
-              <option>Girls Run Club</option>
-              <option>Other</option>
-            </select>
-          </label>
-          <label>Date <input type="date" id="event-date" /></label>
+          <div class="form-grid">
+            <label>Event name <input type="text" id="event-name" placeholder="e.g. Term 2 Jog-a-thon" /></label>
+            <label>Event type
+              <select id="event-type">
+                <option>Run Club</option>
+                <option>Jog-a-thon</option>
+                <option>PE Class</option>
+                <option>Move-a-thon</option>
+                <option>Recess</option>
+                <option>Brain Booster</option>
+                <option>Girls Run Club</option>
+                <option>Other</option>
+              </select>
+            </label>
+            <label>Date <input type="date" id="event-date" /></label>
+          </div>
           <button id="create-event-btn" type="button">Create event</button>
           <pre id="event-result" hidden></pre>
-          <div id="events-list" style="margin-top:1rem;"></div>
+          <div id="events-list" class="program-events-list"></div>
         </div>
 
       </div>
@@ -693,67 +765,75 @@
       </div>
 
       <!-- TRAINING TAB -->
-      <div class="tab-panel" id="tab-training">
-        <div class="card">
-          <h2>&#127947; Assign Training</h2>
-          <p style="color:#555;font-size:0.9rem;">Assign at-home training links or tasks for students to review. This skeleton tracks whether students have opened the link and marked the assigned task as reviewed; it does not collect self-reported activity.</p>
+      <div class="tab-panel coach-hub-section" id="tab-training">
+        <div class="card training-workflow-card" id="training-library-builder">
+          <h2>&#127947; Create Training Assignment</h2>
+          <p style="color:#555;font-size:0.9rem;">Build a workout, assign it to selected students, and track whether students open or complete it. This does not collect self-reported activity.</p>
           <form id="training-form" class="compact-form">
-            <div class="form-grid">
-              <label>Training title
-                <input type="text" id="training-title" required placeholder="e.g. Warm-up drills before run club" />
-              </label>
-              <label>Training link
-                <input type="text" id="training-url" required placeholder="https://..." />
-              </label>
-              <label>Due date
-                <input type="date" id="training-due-date" />
-              </label>
-              <label>Notes
-                <input type="text" id="training-notes" placeholder="Short instructions for students" />
-              </label>
+            <div class="training-workflow-grid">
+              <section class="training-assignment-panel" aria-label="Training assignment details">
+                <div class="form-grid">
+                  <label>Training title
+                    <input type="text" id="training-title" required placeholder="e.g. Warm-up drills before run club" />
+                  </label>
+                  <label>Training link <span class="field-hint">optional</span>
+                    <input type="text" id="training-url" placeholder="https://... or leave blank for in-app plan" />
+                  </label>
+                  <label>Due date
+                    <input type="date" id="training-due-date" />
+                  </label>
+                  <label>Notes / exercise links
+                    <textarea id="training-notes" rows="4" placeholder="A-Skips | https://example.com/a-skips"></textarea>
+                  </label>
+                </div>
+                <div class="training-student-picker">
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:0.75rem;">
+                    <strong>Assign to students</strong>
+                    <button id="select-all-training-students" type="button" class="link-btn">Select all</button>
+                  </div>
+                  <div id="training-student-list" class="ag-student-list"></div>
+                </div>
+                <button type="submit">Assign training</button>
+                <div id="training-result" class="inline-save-status" hidden></div>
+              </section>
+              <section class="training-builder-panel" aria-label="Workout builder">
+                <div class="training-builder-head">
+                  <div>
+                    <h3>Workout Builder</h3>
+                    <p>Click drills to build a plan, then copy it into the assignment fields.</p>
+                  </div>
+                  <button id="assign-builder-workout-btn" type="button" class="secondary">Copy plan into assignment</button>
+                </div>
+                <div class="training-builder-grid">
+                  <div>
+                    <h4>Drill Library</h4>
+                    <div id="training-library-list"></div>
+                  </div>
+                  <div>
+                    <h4>Workout Plan</h4>
+                    <div id="workout-builder-dropzone" tabindex="0"></div>
+                    <label>Workout title
+                      <input type="text" id="workout-builder-title" placeholder="e.g. Sprint start tune-up" autocomplete="off" />
+                    </label>
+                    <label>Workout link
+                      <input type="text" id="workout-builder-url" placeholder="Optional shared link" autocomplete="off" />
+                    </label>
+                  </div>
+                </div>
+              </section>
             </div>
-            <div class="training-student-picker">
-              <div style="display:flex;align-items:center;justify-content:space-between;gap:0.75rem;">
-                <strong>Assign to students</strong>
-                <button id="select-all-training-students" type="button" class="link-btn">Select all</button>
-              </div>
-              <div id="training-student-list" class="ag-student-list"></div>
-            </div>
-            <button type="submit">Assign training</button>
           </form>
-          <pre id="training-result" hidden></pre>
-        </div>
-
-        <div class="card" id="training-library-builder">
-          <h2>Workout Builder Library</h2>
-          <div class="form-grid">
-            <div>
-              <h3>Drill Library</h3>
-              <div id="training-library-list"></div>
-            </div>
-            <div>
-              <h3>Workout Plan</h3>
-              <div id="workout-builder-dropzone" tabindex="0"></div>
-              <label>Workout title
-                <input type="text" id="workout-builder-title" placeholder="e.g. Sprint start tune-up" autocomplete="off" />
-              </label>
-              <label>Workout link
-                <input type="text" id="workout-builder-url" placeholder="Optional link, defaults to in-app plan" autocomplete="off" />
-              </label>
-              <button id="assign-builder-workout-btn" type="button" class="secondary">Use builder as assignment</button>
-            </div>
-          </div>
         </div>
 
         <div class="card">
           <h2>&#128203; Training Status</h2>
-          <p style="color:#555;font-size:0.9rem;">Shows assigned tasks, link opens, and student reviewed status.</p>
+          <p style="color:#555;font-size:0.9rem;">Shows assigned tasks, link opens, and student completion status.</p>
           <div id="training-status-list"></div>
         </div>
       </div>
 
       <!-- RESOURCES TAB -->
-      <div class="tab-panel" id="tab-resources">
+      <div class="tab-panel coach-hub-section" id="tab-resources">
         <div class="card" id="program-resource-hub">
           <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
             <div>
@@ -762,48 +842,59 @@
             </div>
             <button id="print-program-resources-btn" type="button" class="secondary">Print resources</button>
           </div>
-          <div class="resource-card-grid">
-            <article class="resource-card resource-card--lesson">
-              <h3>Run Club Session Plan</h3>
-              <p><strong>25-35 minutes:</strong> roll call, dynamic warm-up, scan/run block, short challenge, cooldown, and quick teacher notes.</p>
-              <ul>
-                <li>Use one active admin device for scans.</li>
-                <li>Set lap distance and duplicate cooldown before starting.</li>
-                <li>Finish the session before reviewing reports.</li>
-              </ul>
-            </article>
-            <article class="resource-card resource-card--lesson">
-              <h3>Interschool Athletics Rotation</h3>
-              <p><strong>Four stations:</strong> sprint starts, 400m pacing, jump/throw technique, and ball-game teamwork.</p>
-              <ul>
-                <li>Use year/division groups to keep rotations fair.</li>
-                <li>Record results only from admin screens.</li>
-                <li>Flag PBs and age champion points after review.</li>
-              </ul>
-            </article>
-            <article class="resource-card resource-card--lesson">
-              <h3>Cross Country Preparation</h3>
-              <p><strong>Focus:</strong> steady pacing, course awareness, breathing rhythm, and safe finish-line flow.</p>
-              <ul>
-                <li>Set course distance by year or division.</li>
-                <li>Use marshal notes before the first trial.</li>
-                <li>Check participation gaps after each session.</li>
-              </ul>
-            </article>
-            <article class="resource-card resource-card--safety">
-              <h3>Privacy And Safety Reminders</h3>
-              <p><strong>Before real data:</strong> complete Priority 0. Keep demo names during testing and share student information only through approved school processes.</p>
-              <ul>
-                <li>Students do not self-report outside activity.</li>
-                <li>Kiosk access stays behind admin login.</li>
-                <li>Export only the reports you actually need.</li>
-              </ul>
-            </article>
+          <div id="resource-session-planner" class="resource-session-planner resource-card--lesson" aria-label="Run Club Session Plan, Interschool Athletics Rotation, Cross Country Preparation, Speed Tune-Up, Middle-Distance Builder, Field Event Circuit, Barcode And Device Setup, Sprint Mechanics, Relay, Long Jump, Vortex Throw, Ball Games, Cross Country, Athletics Station Circuit">
+            <div id="resource-session-list" class="resource-session-list"></div>
+            <div id="resource-session-detail" class="resource-session-detail" aria-live="polite"></div>
+            <div id="resource-plan-save-status" class="inline-save-status" hidden></div>
+            <aside id="resource-mini-coach-widget" class="resource-mini-coach-widget" aria-live="polite">
+              <button id="resource-mini-coach-toggle" class="resource-mini-coach-toggle" type="button" aria-expanded="false" aria-controls="resource-mini-coach-popover">
+                <span aria-hidden="true">&#129504;</span>
+                <strong>Mini Coach</strong>
+              </button>
+              <div id="resource-mini-coach-popover" class="resource-mini-coach-popover" hidden>
+                <div class="resource-mini-coach-head">
+                  <div>
+                    <strong>Mini Coach</strong>
+                    <span id="resource-mini-coach-session">Session helper</span>
+                  </div>
+                  <button id="resource-mini-coach-close" type="button" aria-label="Close Mini Coach">x</button>
+                </div>
+                <section class="resource-mini-coach-section resource-mini-coach-brief">
+                  <span>Current read</span>
+                  <p id="resource-mini-coach-summary"></p>
+                </section>
+                <section class="resource-mini-coach-section">
+                  <span>Smart suggestions</span>
+                  <ul id="resource-mini-coach-notes"></ul>
+                </section>
+                <div id="resource-mini-coach-actions" class="resource-mini-coach-actions"></div>
+                <div id="resource-mini-coach-pairings" class="resource-mini-coach-pairings"></div>
+                <div id="resource-mini-coach-program" class="resource-mini-coach-program" hidden></div>
+                <div id="resource-mini-coach-chat-log" class="resource-mini-coach-chat-log" aria-live="polite"></div>
+                <form id="resource-mini-coach-chat-form" class="resource-mini-coach-chat-form">
+                  <label for="resource-mini-coach-chat-input">Ask about this lesson</label>
+                  <div>
+                    <input id="resource-mini-coach-chat-input" type="text" placeholder="e.g. What pairs well with sprints?" autocomplete="off" />
+                    <button type="submit">Ask</button>
+                  </div>
+                </form>
+              </div>
+            </aside>
           </div>
+          <article class="resource-card resource-card--safety">
+            <h3>Privacy And Safety Reminders</h3>
+            <p><strong>Before real data:</strong> complete Priority 0. Keep demo names during testing and share student information only through approved school processes.</p>
+            <ul>
+              <li>Students do not self-report outside activity.</li>
+              <li>Kiosk access stays behind admin login.</li>
+              <li>Export only the reports you actually need.</li>
+            </ul>
+          </article>
         </div>
 
         <div class="card" id="lesson-plan-section">
           <h2>Lesson Plan Starters</h2>
+          <p style="color:#555;font-size:0.9rem;">Open a session above to adapt timings, include or skip activities, and print the teacher-ready version.</p>
           <div class="resource-card-grid">
             <article class="resource-card resource-card--printable">
               <h3>Speed Tune-Up</h3>
@@ -829,8 +920,50 @@
         </div>
       </div>
 
+      <!-- SCHOOL ADMIN HUB -->
+      <div class="tab-panel admin-hub-panel" id="tab-school-admin">
+        <div class="card admin-hub-card">
+          <div class="section-heading-row">
+            <div>
+              <h2>School Admin</h2>
+              <p class="muted-copy">Reports, settings, imports, and launch help live here so the daily run-club tools stay easier to scan.</p>
+            </div>
+            <span class="bookmark-pill">Setup workspace</span>
+          </div>
+          <div class="admin-hub-summary-grid" aria-label="School Admin sections">
+            <article>
+              <strong>Reports</strong>
+              <span>Exports, summaries, audits, history, and printable packs.</span>
+            </article>
+            <article>
+              <strong>Settings</strong>
+              <span>School name, emblem, colours, and default branding.</span>
+            </article>
+            <article>
+              <strong>Compliance</strong>
+              <span>Approval evidence, data map, parent notice, and breach log.</span>
+            </article>
+            <article>
+              <strong>Import</strong>
+              <span>Roster CSV, templates, and future Compass staging.</span>
+            </article>
+            <article>
+              <strong>Help</strong>
+              <span>Privacy gates, launch readiness, and admin guidance.</span>
+            </article>
+          </div>
+          <div class="admin-hub-tabs" role="tablist" aria-label="School Admin tools">
+            <button class="admin-hub-tab active" type="button" data-admin-section="reports" role="tab" aria-selected="true" aria-controls="tab-reports">&#128202; Reports</button>
+            <button class="admin-hub-tab" type="button" data-admin-section="school-settings" role="tab" aria-selected="false" aria-controls="tab-school-settings">&#9881; Settings</button>
+            <button class="admin-hub-tab" type="button" data-admin-section="compliance" role="tab" aria-selected="false" aria-controls="tab-compliance">&#128737; Compliance</button>
+            <button class="admin-hub-tab" type="button" data-admin-section="import" role="tab" aria-selected="false" aria-controls="tab-import">&#128229; Import</button>
+            <button class="admin-hub-tab" type="button" data-admin-section="help" role="tab" aria-selected="false" aria-controls="tab-help">Help</button>
+          </div>
+        </div>
+      </div>
+
       <!-- REPORTS TAB -->
-      <div class="tab-panel" id="tab-reports">
+      <div class="tab-panel admin-hub-section" id="tab-reports">
         <div class="card" id="onboarding-wizard-card">
           <h2>&#129513; Onboarding Wizard</h2>
           <p style="color:#555;font-size:0.9rem;">Set the core school and program defaults used by scanning, reports, certificates, and future setup screens.</p>
@@ -914,29 +1047,6 @@
             <button id="export-multi-school-csv-btn" type="button" class="secondary">Export multi-school CSV</button>
           </div>
           <div id="multi-school-summary-list" style="margin-top:1rem;"></div>
-        </div>
-
-        <div class="card" id="branding-settings-card">
-          <h2>Theme And Branding</h2>
-          <p style="color:#555;font-size:0.9rem;">Adjust the local demo theme for review screens. Keep colours high contrast and close to school branding before sharing.</p>
-          <form id="branding-settings-form" class="compact-form">
-            <div class="form-grid">
-              <label>App title
-                <input type="text" id="branding-app-title" placeholder="Gwynne Park Run Club" />
-              </label>
-              <label>School blue
-                <input type="color" id="branding-school-blue" value="#003880" />
-              </label>
-              <label>Uniform gold
-                <input type="color" id="branding-uniform-gold" value="#c99722" />
-              </label>
-            </div>
-            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-              <button id="save-branding-btn" type="submit">Save branding</button>
-              <button id="reset-branding-btn" type="button" class="secondary">Reset school defaults</button>
-            </div>
-          </form>
-          <pre id="branding-settings-result" hidden></pre>
         </div>
 
         <div class="card">
@@ -1032,11 +1142,199 @@
         <!-- SCHOOL SUMMARY -->
         <div class="card">
           <h2>&#127758; School-wide summary</h2>
-          <div id="school-summary"></div>
+        <div id="school-summary"></div>
         </div>
       </div>
 
-      <div class="tab-panel" id="tab-future-intelligence">
+      <div class="tab-panel admin-hub-section" id="tab-school-settings">
+        <div class="card" id="branding-settings-card">
+          <h2>School Settings</h2>
+          <p class="muted-copy">Set the name and emblem coaches want this school run club to use. If nothing is saved, Corso and the default Corso mark stay active.</p>
+          <form id="branding-settings-form" class="compact-form">
+            <div class="form-grid">
+              <div class="branding-name-control">
+                <label>Run club name
+                  <input type="text" id="branding-app-title" placeholder="Corso" />
+                </label>
+                <button id="apply-branding-title-btn" type="button" class="secondary">Apply run club name</button>
+              </div>
+              <div class="branding-field-control">
+                <span class="branding-field-label">School emblem</span>
+                <input class="branding-file-input" type="file" id="branding-logo-upload" accept="image/png,image/jpeg,image/svg+xml,image/webp" />
+              </div>
+              <div class="branding-field-control branding-color-control">
+                <span class="branding-field-label">School blue</span>
+                <input class="branding-color-input" type="color" id="branding-school-blue" value="#003880" aria-label="School blue" />
+              </div>
+              <div class="branding-field-control branding-color-control">
+                <span class="branding-field-label">Uniform gold</span>
+                <input class="branding-color-input" type="color" id="branding-uniform-gold" value="#c99722" aria-label="Uniform gold" />
+              </div>
+              <button id="apply-branding-colors-btn" type="button" class="secondary branding-colors-apply-btn">Apply colours</button>
+            </div>
+            <p class="settings-helper-note">Corso keeps a default palette for every school until a coach chooses custom colours. Use Reset to Corso defaults to clear the school override.</p>
+            <div class="settings-action-row">
+              <button id="save-branding-btn" type="submit">Save school settings</button>
+              <button id="clear-branding-logo-btn" type="button" class="secondary">Clear uploaded emblem</button>
+              <button id="reset-branding-btn" type="button" class="secondary">Reset to Corso defaults</button>
+            </div>
+          </form>
+          <div class="branding-logo-preview-row">
+            <img id="branding-logo-preview" class="branding-logo-preview" src="assets/corso-logo.png" alt="Active run club emblem preview" />
+            <div>
+              <strong>Active emblem</strong>
+              <p id="branding-logo-note">Using the default Corso mark until a school emblem is uploaded.</p>
+            </div>
+          </div>
+          <div id="branding-settings-result" class="inline-save-status" hidden></div>
+        </div>
+      </div>
+
+      <div class="tab-panel admin-hub-section" id="tab-compliance">
+        <div class="card vendor-posture-card">
+          <div class="section-heading-row">
+            <div>
+              <h2>Vendor Compliance Posture</h2>
+              <p class="muted-copy">Corso can verify technical readiness and produce evidence, but school approval remains a human sign-off.</p>
+            </div>
+            <span id="vendor-posture-status" class="bookmark-pill">Checking</span>
+          </div>
+          <p id="vendor-posture-copy" class="muted-copy">Run the automatic checks, complete school sign-off, then export the evidence pack for review.</p>
+        </div>
+
+        <div class="card school-admin-signup-card">
+          <div class="section-heading-row">
+            <div>
+              <h2>School Admin Signup &amp; Use Attestation</h2>
+              <p class="muted-copy">Record the authorised school contact and the operating commitments before real student data is used.</p>
+            </div>
+            <span class="bookmark-pill">Signup sheet</span>
+          </div>
+          <form id="school-admin-signup-form" class="compact-form">
+            <div class="form-grid">
+              <label>School name
+                <input type="text" id="signup-school-name" placeholder="School name" autocomplete="organization" />
+              </label>
+              <label>Site code
+                <input type="text" id="signup-site-code" placeholder="4 digit site code" maxlength="4" inputmode="numeric" />
+              </label>
+              <label>School admin name
+                <input type="text" id="signup-admin-name" placeholder="Authorised staff member" autocomplete="name" />
+              </label>
+              <label>Role / position
+                <input type="text" id="signup-admin-role" placeholder="e.g. PE teacher, deputy, coordinator" />
+              </label>
+              <label>School email
+                <input type="email" id="signup-admin-email" placeholder="name@school.wa.edu.au" autocomplete="email" />
+              </label>
+              <label>Review date
+                <input type="date" id="signup-review-date" />
+              </label>
+            </div>
+            <div id="school-signup-attestations" class="compliance-checklist-list">
+              <label class="compliance-checklist-item">
+                <input type="checkbox" id="signup-attest-authorised" data-signup-attestation="authorised" />
+                <span><strong>Authorised school representative</strong><small>I confirm I am authorised to configure Corso for this school.</small></span>
+              </label>
+              <label class="compliance-checklist-item">
+                <input type="checkbox" id="signup-attest-policy" data-signup-attestation="policy" />
+                <span><strong>Policy and government standards alignment</strong><small>I confirm this school will abide by Corso policy and applicable school, Department, privacy, child safety, and data-retention requirements.</small></span>
+              </label>
+              <label class="compliance-checklist-item">
+                <input type="checkbox" id="signup-attest-parent-notice" data-signup-attestation="parent_notice" />
+                <span><strong>Parent/guardian communication</strong><small>I confirm required parent/guardian communication or consent has been completed where required.</small></span>
+              </label>
+              <label class="compliance-checklist-item">
+                <input type="checkbox" id="signup-attest-data" data-signup-attestation="data" />
+                <span><strong>Authorised student data only</strong><small>I confirm student data entered into Corso is authorised for this run club and athletics purpose.</small></span>
+              </label>
+              <label class="compliance-checklist-item">
+                <input type="checkbox" id="signup-attest-staff-access" data-signup-attestation="staff_access" />
+                <span><strong>Staff access limited</strong><small>I confirm access will be limited to authorised school staff and school-approved support pathways.</small></span>
+              </label>
+              <label class="compliance-checklist-item">
+                <input type="checkbox" id="signup-attest-retention-breach" data-signup-attestation="retention_breach" />
+                <span><strong>Retention and incident pathway</strong><small>I confirm the school will manage retention, correction, deletion, and incident/breach response decisions.</small></span>
+              </label>
+            </div>
+            <div class="settings-action-row">
+              <button type="submit">Save signup attestation</button>
+              <button id="export-school-signup-btn" type="button" class="secondary">Export signup sheet</button>
+            </div>
+          </form>
+          <div id="school-signup-summary" class="breach-log-list"></div>
+        </div>
+
+        <div class="card compliance-auto-checks-card">
+          <h2>Auto-checked technical controls</h2>
+          <p class="muted-copy">These are detected from the app configuration, backend readiness, and built-in guardrails.</p>
+          <div id="compliance-auto-checks-list" class="launch-readiness-checklist"></div>
+        </div>
+
+        <div class="card compliance-checklist-card">
+          <div class="section-heading-row">
+            <div>
+              <h2>School sign-off required</h2>
+              <p class="muted-copy">Human attestation items for leadership, parent communication, ST4S-style evidence, retention, and breach response.</p>
+            </div>
+            <span class="bookmark-pill">School sign-off</span>
+          </div>
+          <div id="compliance-checklist-list" class="compliance-checklist-list"></div>
+          <div class="settings-action-row">
+            <button id="print-compliance-checklist-btn" type="button" class="secondary">Print checklist</button>
+            <button id="export-compliance-pack-btn" type="button">Export evidence pack</button>
+          </div>
+          <div id="compliance-result" class="inline-save-status" hidden></div>
+        </div>
+
+        <div class="card compliance-data-map-card">
+          <h2>Data Map</h2>
+          <p class="muted-copy">Plain-English inventory of what Corso handles, why it exists, who can access it, and the suggested review/retention decision.</p>
+          <div id="compliance-data-map"></div>
+        </div>
+
+        <div class="card parent-notice-card">
+          <h2>Parent Collection Notice</h2>
+          <p class="muted-copy">Draft wording schools can review before families are asked to use the platform.</p>
+          <div id="parent-notice-preview" class="parent-notice-preview"></div>
+          <div class="settings-action-row">
+            <button id="print-parent-notice-btn" type="button">Print parent notice</button>
+            <button id="export-parent-notice-btn" type="button" class="secondary">Export notice text</button>
+          </div>
+        </div>
+
+        <div class="card breach-log-card">
+          <h2>Incident / Breach Log</h2>
+          <p class="muted-copy">Staff-only local incident register skeleton. Use the school/Department breach process for real incidents.</p>
+          <form id="breach-log-form" class="compact-form">
+            <div class="form-grid">
+              <label>Date
+                <input type="date" id="breach-log-date" />
+              </label>
+              <label>Status
+                <select id="breach-log-status">
+                  <option value="open">Open</option>
+                  <option value="reviewing">Reviewing</option>
+                  <option value="resolved">Resolved</option>
+                </select>
+              </label>
+              <label>Affected records
+                <input type="text" id="breach-log-affected" placeholder="e.g. 2 student profiles, export file" />
+              </label>
+              <label>School contact
+                <input type="text" id="breach-log-contact" placeholder="e.g. Principal / ICT manager" />
+              </label>
+            </div>
+            <label>Issue and action taken
+              <textarea id="breach-log-notes" rows="3" maxlength="520" placeholder="Record what happened, immediate containment, evidence preserved, and next step."></textarea>
+            </label>
+            <button type="submit">Save incident note</button>
+          </form>
+          <div id="breach-log-list" class="breach-log-list"></div>
+        </div>
+      </div>
+
+      <div class="tab-panel coach-hub-section" id="tab-future-intelligence">
         <div class="card future-bookmark-card">
           <div class="section-heading-row">
             <div>
@@ -1069,13 +1367,35 @@
             <button id="close-coach-tool-modal-btn" type="button" class="modal-close-btn" aria-label="Close coach tool">×</button>
           </div>
           <div class="mini-coach-panel">
-            <strong>Mini Coach AI placeholder</strong>
-            <span id="coach-tool-ai-copy">Later this space can summarise the list and suggest next steps for staff review.</span>
+            <strong>Mini Coach Staff Summary</strong>
+            <span id="coach-tool-ai-copy">Rule-based, staff-reviewed summary and safe next steps will appear here when a Coach Tool opens.</span>
           </div>
           <div id="coach-tool-actions" class="coach-tool-actions"></div>
           <div id="coach-tool-list" class="coach-tool-list"></div>
           <form id="coach-tool-note-form" class="compact-form coach-tool-note-form">
             <input type="hidden" id="coach-tool-note-scope" />
+            <div class="form-grid">
+              <label>Status
+                <select id="coach-tool-note-status">
+                  <option value="open">Open</option>
+                  <option value="follow-up">Follow-up</option>
+                  <option value="resolved">Resolved</option>
+                </select>
+              </label>
+              <label>Category
+                <select id="coach-tool-note-category">
+                  <option value="general">General</option>
+                  <option value="attendance">Attendance</option>
+                  <option value="award">Award</option>
+                  <option value="training">Training</option>
+                  <option value="pb">PB</option>
+                  <option value="celebration">Celebration</option>
+                </select>
+              </label>
+              <label>Follow-up date
+                <input type="date" id="coach-tool-follow-up-date" />
+              </label>
+            </div>
             <label>Save coach note
               <textarea id="coach-tool-note-text" rows="3" maxlength="360" placeholder="Type a staff-only follow-up note..."></textarea>
             </label>
@@ -1086,7 +1406,7 @@
       </div>
 
       <!-- IMPORT TAB -->
-      <div class="tab-panel" id="tab-import">
+      <div class="tab-panel admin-hub-section" id="tab-import">
         <div class="card">
           <h2>&#128229; CSV Roster Import</h2>
           <p style="color:#555;font-size:0.9rem;">Upload a CSV to bulk-import students. Classes are created automatically if they don't exist.</p>
@@ -1132,7 +1452,7 @@
       </div>
 
       <!-- HELP TAB -->
-      <div class="tab-panel" id="tab-help">
+      <div class="tab-panel admin-hub-section" id="tab-help">
         <div class="card admin-help-card" id="help-privacy-gate">
           <h2>Go-Live Privacy Gate</h2>
           <p>Do not enter real student data until Priority 0 is complete. Use demo names only while testing layouts, scanning, training, reports, and interschool workflows.</p>
@@ -1141,6 +1461,30 @@
             <li>Before launch, add real staff login, role permissions, consent controls, and audit logs.</li>
             <li>Export or clear demo data before using real student information.</li>
           </ul>
+        </div>
+
+        <div class="card admin-help-card" id="help-education-compliance">
+          <h2>Education Compliance Readiness</h2>
+          <p>Use this evidence pack before sharing Corso with a school, Department contact, or privacy reviewer.</p>
+          <div class="help-note-grid">
+            <div>
+              <strong>School approval</strong>
+              <p>Record principal/leadership approval, parent communication, acceptable-use expectations, and whether Corso needs Department or sector review.</p>
+            </div>
+            <div>
+              <strong>Data map</strong>
+              <p>Confirm every field collected, why it is needed, who can see it, where it is stored, and when it is deleted or de-identified.</p>
+            </div>
+            <div>
+              <strong>Provider review</strong>
+              <p>Prepare ST4S-style evidence for privacy, security, online safety, interoperability, sub-processors, hosting, backups, and breach response.</p>
+            </div>
+            <div>
+              <strong>Breach response</strong>
+              <p>Nominate the school contact path, preserve logs, assess affected records, and follow the school/Department information breach process.</p>
+            </div>
+          </div>
+          <p class="muted-copy">Reference: <a href="docs/education-compliance-readiness.md">Education Compliance Readiness Notes</a></p>
         </div>
 
         <div class="card admin-help-card backend-readiness-card" id="backend-readiness-card">
@@ -1217,10 +1561,10 @@
     </main>
 
     <footer class="site-footer">
-      <p>Gwynne Park Run Club &copy; 2026 &middot; <a href="privacy-policy.html">Privacy Policy</a></p>
+      <p>Corso &copy; 2026 &middot; <a href="privacy-policy.html">Privacy Policy</a></p>
       <p class="privacy-pledge">No ads. No tracking. Parents see their own child only. Students see their own profile only. Schools see their own students only.</p>
       <div class="footer-actions">
-        <a class="feature-suggestion-btn" href="mailto:support@gwynneparkrunclub.com.au?subject=Gwynne%20Park%20Run%20Club%20Feature%20Suggestion">Feature Suggestion</a>
+        <a class="feature-suggestion-btn" href="mailto:support@gwynneparkrunclub.com.au?subject=Corso%20Feature%20Suggestion">Feature Suggestion</a>
       </div>
     </footer>
 
@@ -1229,8 +1573,16 @@
     <script src="goals.js?v=5"></script>
     <script src="admin-goals.js?v=5"></script>
     <script src="assets/qrcode-generator.js"></script>
-    <script src="admin-dashboard.js?v=50"></script>
+    <script src="admin-dashboard.js?v=85"></script>
     <script src="pwa.js"></script>
-    <script data-name="BMC-Widget" data-cfasync="false" src="https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js" data-id="jmancini" data-description="Support me on Buy me a coffee!" data-message="Thank you for visiting and using this little side project. I am keeping this as a completely free project though if you feel the need, you're welcome to buy me a coffee :)" data-color="#FF813F" data-position="Right" data-x_margin="18" data-y_margin="18"></script>
+        <script src='https://storage.ko-fi.com/cdn/scripts/overlay-widget.js'></script>
+    <script>
+      kofiWidgetOverlay.draw('jmancini', {
+        'type': 'floating-chat',
+        'floating-chat.donateButton.text': 'Support Us',
+        'floating-chat.donateButton.background-color': '#ffffff',
+        'floating-chat.donateButton.text-color': '#323842'
+      });
+    </script>
   </body>
 </html>

@@ -5,6 +5,9 @@ window.RUN_CLUB_CONFIG = {
   syncEnabled: false,
   liveDataMode: false,
   schoolId: '',
+  siteCode: '',
+  schoolSites: {},
+  authUsernameDomain: 'corso.local',
   supabaseUrl: '',
   supabaseAnonKey: '',
   endpoints: {

@@ -1,6 +1,6 @@
 # Roadmap Workflow
 
-This workflow keeps the Gwynne Park Run Club roadmap clear enough that we can tell what is finished, what is next, and what is deliberately waiting for the right moment.
+This workflow keeps the Corso roadmap clear enough that we can tell what is finished, what is next, and what is deliberately waiting for the right moment.
 
 ## Status Labels
 

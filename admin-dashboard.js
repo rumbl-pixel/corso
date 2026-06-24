@@ -8,7 +8,17 @@
   }
   var session = getSession();
   if (!session) { window.location.href = 'admin.html'; return; }
-  document.getElementById('session-label').textContent = 'Logged in as ' + session.email + ' (' + session.mode + ' mode)';
+  function sessionAccessLabel(currentSession) {
+    if (!currentSession) { return ''; }
+    if (currentSession.role === 'platform_admin' || currentSession.access_scope === 'platform') {
+      return 'Platform admin access - all schools';
+    }
+    if (currentSession.role === 'coach' || currentSession.access_scope === 'school') {
+      return 'Coach access - school scope ' + (currentSession.school_id || 'not set');
+    }
+    return 'Demo access - local sample data only';
+  }
+  document.getElementById('session-label').textContent = (session.username || session.email || 'Signed in') + ' · ' + sessionAccessLabel(session);
   document.getElementById('logout-btn').addEventListener('click', function () {
     localStorage.removeItem('runClubAdminSession');
     window.location.href = 'admin.html';
@@ -22,6 +32,7 @@
   var MILESTONE_NOTIFICATIONS_KEY = 'rc_milestone_notifications';
   var CHALLENGE_NOTIFICATIONS_KEY = 'rc_challenge_notifications';
   var COACH_NOTES_KEY = 'rc_coach_notes';
+  var COACH_FOLLOWUPS_KEY = 'rc_coach_followups';
   var STUDENT_NOTIFICATIONS_KEY = 'rc_student_notifications';
   var CROSS_COUNTRY_COURSES_KEY = 'rc_cross_country_courses';
   var ATHLETICS_RESULTS_KEY = 'rc_athletics_results';
@@ -29,7 +40,15 @@
   var ATHLETICS_CONSENT_SELECTIONS_KEY = 'rc_athletics_consent_selections';
   var CROSS_COUNTRY_VISIBLE_KEY = 'rc_cross_country_visible';
   var BUILDER_WORKOUTS_KEY = 'rc_builder_workouts';
+  var RESOURCE_SESSION_PLANS_KEY = 'rc_resource_session_plans';
+  var COMPLIANCE_CHECKLIST_KEY = 'rc_compliance_checklist';
+  var SCHOOL_SIGNUP_KEY = 'rc_school_admin_signup';
+  var BREACH_LOG_KEY = 'rc_breach_log';
   var THEME_SETTINGS_KEY = 'rc_theme_settings';
+  var DEFAULT_BRAND_TITLE = 'Corso';
+  var DEFAULT_BRAND_LOGO = 'assets/corso-logo.png';
+  var DEFAULT_SCHOOL_BLUE = '#003880';
+  var DEFAULT_UNIFORM_GOLD = '#c99722';
 
   var ATHLETICS_EVENT_OPTIONS = [
     {id:'xc',name:'Cross Country',category:'cross-country',measure:'time',points:true},
@@ -47,8 +66,35 @@
     {id:'baton-relay',name:'Baton Relay',category:'relay',measure:'time',points:true}
   ];
 
+  var WARMUP_MOBILITY_DRILLS = [
+    {id:'easy-jog',title:'Easy jog or skip',minutes:2,cue:'Raise temperature with relaxed movement'},
+    {id:'leg-swings',title:'Leg swings',minutes:1,cue:'Front/back and side swings for hip mobility'},
+    {id:'walking-lunges',title:'Walking lunges',minutes:2,cue:'Tall chest, soft knee, controlled steps'},
+    {id:'ankling',title:'Ankling',minutes:2,cue:'Quick toe-to-heel contacts under the hips'},
+    {id:'high-knees',title:'High knees',minutes:2,cue:'Drive knee up, foot snaps down under body'},
+    {id:'butt-kicks',title:'Butt kicks',minutes:2,cue:'Heel recovers under the body, relaxed posture'},
+    {id:'a-skips',title:'A-skips',minutes:2,cue:'Tall posture, knee drive, coordinated arm swing'},
+    {id:'b-skips',title:'B-skips',minutes:2,cue:'Lift, extend, then paw foot down under hips'},
+    {id:'straight-leg-run',title:'Straight-leg run',minutes:2,cue:'Stiff ankle, gentle pawing action, no leaning back'},
+    {id:'carioca',title:'Carioca / grapevine',minutes:2,cue:'Sideways rhythm to open hips and trunk'},
+    {id:'lateral-shuffle',title:'Lateral shuffle',minutes:2,cue:'Stay low, face forward, quick feet both ways'},
+    {id:'build-up-strides',title:'Build-up strides',minutes:3,cue:'2 to 3 relaxed accelerations before faster work'}
+  ];
+  var DEFAULT_WARMUP_DRILL_IDS = ['easy-jog','leg-swings','ankling','high-knees','butt-kicks','a-skips','b-skips','build-up-strides'];
+  var selectedWarmupDrillIds = DEFAULT_WARMUP_DRILL_IDS.slice();
+
+  function selectedWarmupDrills(){
+    return WARMUP_MOBILITY_DRILLS.filter(function(drill){return selectedWarmupDrillIds.indexOf(drill.id)!==-1;});
+  }
+
+  function warmupMobilityComponent(){
+    var drills=selectedWarmupDrills();
+    var detail=drills.map(function(drill){return drill.title+' - '+drill.cue;}).join(' | ');
+    return {id:'warmup-mobility',title:'Mobility Warm-up',minutes:Math.max(5,drills.reduce(function(sum,drill){return sum+drill.minutes;},0)),focus:'Prep',detail:detail||'Select warm-up drills from the checkbox library'};
+  }
+
   var TRAINING_LIBRARY_COMPONENTS = [
-    {id:'warmup-mobility',title:'Mobility Warm-up',minutes:5,focus:'Prep',detail:'Ankles, hips, shoulders, gentle skipping'},
+    warmupMobilityComponent(),
     {id:'sprint-starts',title:'Sprint Starts',minutes:8,focus:'Sprints',detail:'3-point starts, reaction cue, 6 x 10m'},
     {id:'stride-outs',title:'Stride Outs',minutes:8,focus:'Middle distance',detail:'6 x relaxed 60m build-ups'},
     {id:'tempo-loop',title:'Tempo Loop',minutes:12,focus:'Cross country',detail:'Steady loop, talk-test pace'},
@@ -65,12 +111,17 @@
   function cleanThresholds(value){ var list=Array.isArray(value)?value:String(value||'').split(','); list=list.map(function(item){return Number(item);}).filter(function(item){return isFinite(item)&&item>0;}).map(function(item){return Math.round(item);}).sort(function(a,b){return a-b;}); return list.length?Array.from(new Set(list)):[5,10,25,50,100,200,500]; }
   function programSettings(){ var settings=window.RunClubScan&&window.RunClubScan.programSettings?window.RunClubScan.programSettings():load(K.programSettings,{schoolName:'Gwynne Park Schools',lapDistanceKm:0.25,defaultSessionType:'Run Club',activeYears:['Year 1','Year 2','Year 3','Year 4','Year 5','Year 6'],classNames:['1A','2A','3A','4C','5B','6A'],awardThresholds:[5,10,25,50,100,200,500]}); var lapDistanceKm=Number(settings.lapDistanceKm); if(!isFinite(lapDistanceKm)||lapDistanceKm<=0){lapDistanceKm=0.25;} return {schoolName:String(settings.schoolName||'Gwynne Park Schools'),lapDistanceKm:lapDistanceKm,defaultSessionType:String(settings.defaultSessionType||'Run Club'),activeYears:cleanList(settings.activeYears,['Year 1','Year 2','Year 3','Year 4','Year 5','Year 6']),classNames:cleanList(settings.classNames,['1A','2A','3A','4C','5B','6A']),awardThresholds:cleanThresholds(settings.awardThresholds)}; }
   function saveProgramSettings(partial){ save(K.programSettings,Object.assign({},programSettings(),partial)); }
-  function themeSettings(){ return Object.assign({appTitle:'Gwynne Park Run Club',schoolBlue:'#003880',uniformGold:'#c99722'},load(THEME_SETTINGS_KEY,{})); }
+  function themeSettings(){
+    var settings=Object.assign({appTitle:DEFAULT_BRAND_TITLE,schoolBlue:DEFAULT_SCHOOL_BLUE,uniformGold:DEFAULT_UNIFORM_GOLD,logoDataUrl:DEFAULT_BRAND_LOGO,logoName:''},load(THEME_SETTINGS_KEY,{}));
+    if(settings.logoDataUrl==='assets/corso-logo.svg'){settings.logoDataUrl=DEFAULT_BRAND_LOGO;}
+    return settings;
+  }
   function applyThemeSettings(){
     var settings=themeSettings();
-    document.documentElement.style.setProperty('--school-blue',settings.schoolBlue);
-    document.documentElement.style.setProperty('--uniform-gold',settings.uniformGold);
+    applyBrandColorTokens(settings);
     document.querySelectorAll('.brand h1').forEach(function(el){el.textContent=settings.appTitle;});
+    document.querySelectorAll('.brand-logo, .kiosk-brand-logo').forEach(function(img){img.src=settings.logoDataUrl||DEFAULT_BRAND_LOGO; img.alt=settings.logoName?settings.appTitle+' emblem':'Corso';});
+    if(document.title){document.title=document.title.replace(/^(?:[^-–]+(?=\s[-–]\s)|Corso\b)/,settings.appTitle);}
   }
   function duplicateWindowMs(){ return scannerSettings().duplicateCooldownSeconds*1000; }
   function scannerId(){ var settings=scannerSettings(); return settings.deviceName+(settings.deviceLocation?' - '+settings.deviceLocation:''); }
@@ -208,17 +259,39 @@
   }
 
   // --- Helpers ---
-  function showResult(el,payload) { el.hidden=false; el.textContent=JSON.stringify(payload,null,2); }
+  function resultMetaText(payload){
+    if(!payload||typeof payload!=='object'){return '';}
+    return Object.keys(payload).filter(function(key){
+      return ['success','message','error'].indexOf(key)===-1;
+    }).map(function(key){
+      var value=payload[key];
+      if(value&&typeof value==='object'){
+        if(Array.isArray(value)){value=value.length+' items';}
+        else if(value.name){value=value.name;}
+        else if(value.title){value=value.title;}
+        else {value=Object.keys(value).length+' details';}
+      }
+      return key.replace(/_/g,' ')+': '+String(value);
+    }).join(' · ');
+  }
+
+  function showResult(el,payload) {
+    var success=!(payload&&payload.success===false);
+    var message=payload&&payload.error?payload.error:(payload&&payload.message?payload.message:(success?'Saved.':'Something needs attention.'));
+    showInlineStatus(el,success,message,resultMetaText(payload));
+  }
+
+  function showInlineStatus(el,success,message,meta){
+    if(!el){return;}
+    el.hidden=false;
+    el.classList.toggle('inline-save-status--success',success!==false);
+    el.classList.toggle('inline-save-status--error',success===false);
+    el.innerHTML='<strong>'+escapeHtml(message||'Saved.')+'</strong>'+(meta?'<span>'+escapeHtml(meta)+'</span>':'');
+  }
 
   function openAdminModalAt(overlay, trigger){
     if(!overlay){return;}
-    var top=48;
-    if(trigger&&trigger.getBoundingClientRect){
-      var rect=trigger.getBoundingClientRect();
-      var maxTop=Math.max(16, window.innerHeight-180);
-      top=Math.min(Math.max(16, rect.top-24), maxTop);
-    }
-    overlay.style.setProperty('--modal-top', top+'px');
+    overlay.style.removeProperty('--modal-top');
     overlay.hidden=false;
     overlay.scrollTop=0;
     var modal=overlay.querySelector('.student-editor-modal');
@@ -314,7 +387,7 @@
   function barcodeCardHtml(student) {
     var code = student.barcode || student.id;
     return '<div class="barcode-card-preview">' +
-      '<div class="barcode-card-school">Gwynne Park Run Club</div>' +
+      '<div class="barcode-card-school">Corso</div>' +
       '<strong class="barcode-card-name">' + escapeHtml(student.name) + '</strong>' +
       '<div class="barcode-card-meta">' + escapeHtml(student.year) + ' / ' + escapeHtml(student.cls) + '</div>' +
       '<div class="barcode-qr-row">' + barcodeBarsHtml(code) + qrCodeHtml(code) + '</div>' +
@@ -329,7 +402,7 @@
     var html = '<html><head><title>' + escapeHtml(student.name) + ' Barcode Card</title>' +
       '<style>@page{size:85.6mm 53.98mm;margin:0;}*{box-sizing:border-box;}body{margin:0;width:85.6mm;height:53.98mm;font-family:Arial,sans-serif;color:#102a43;}.barcode-card-print{width:85.6mm;height:53.98mm;border:0.35mm solid #0c5aa8;padding:4mm;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:1.2mm;}.barcode-card-school{font-size:3mm;font-weight:700;color:#0c5aa8;text-transform:uppercase;}.barcode-card-name{font-size:4.8mm;line-height:1.1;}.barcode-card-meta{font-size:2.9mm;color:#52616b;}.barcode-qr-row{display:flex;align-items:center;justify-content:center;gap:3mm;width:100%;}.barcode-bars{height:13mm;display:flex;align-items:stretch;justify-content:center;gap:0.45mm;width:54mm;margin-top:1mm;}.barcode-bars span{display:block;background:#0b1f38;height:100%;}.qr-code svg{display:block;width:18mm;height:18mm;}.qr-code-fallback{border:0.3mm solid #0b1f38;padding:2mm;font-size:2.2mm;}.barcode-code{font-family:Consolas,monospace;font-size:4.2mm;font-weight:700;letter-spacing:0.45mm;color:#0b1f38;}@media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact;}}</style>' +
       '</head><body><div class="barcode-card-print">' +
-      '<div class="barcode-card-school">Gwynne Park Run Club</div>' +
+      '<div class="barcode-card-school">Corso</div>' +
       '<strong class="barcode-card-name">' + escapeHtml(student.name) + '</strong>' +
       '<div class="barcode-card-meta">' + escapeHtml(student.year) + ' / ' + escapeHtml(student.cls) + '</div>' +
       '<div class="barcode-qr-row">' + barcodeBarsHtml(code) + qrCodeHtml(code) + '</div>' +
@@ -374,8 +447,56 @@
 
   // --- TABS ---
   var tabBtns = document.querySelectorAll('.tab-btn');
+  var coachHubTabs = document.querySelectorAll('.coach-hub-tab');
+  var adminHubTabs = document.querySelectorAll('.admin-hub-tab');
   var tabPanels = document.querySelectorAll('.tab-panel');
+  var coachHubSections = ['sports','training','resources','future-intelligence'];
+  var activeCoachHubSection = 'sports';
+  var adminHubSections = ['reports','school-settings','compliance','import','help'];
+  var activeAdminHubSection = 'reports';
+  function isCoachHubSection(tabName){
+    return coachHubSections.indexOf(tabName)!==-1;
+  }
+  function isAdminHubSection(tabName){
+    return adminHubSections.indexOf(tabName)!==-1;
+  }
+  function setProgrammingCoachWidgetVisibility(tabName){
+    var widget=document.getElementById('resource-mini-coach-widget');
+    if(widget){widget.hidden=tabName!=='resources';}
+  }
+  function activateCoachHubSection(sectionName){
+    if(!isCoachHubSection(sectionName)){sectionName='sports';}
+    activeCoachHubSection=sectionName;
+    coachHubTabs.forEach(function(btn){
+      var active=btn.dataset.coachSection===sectionName;
+      btn.classList.toggle('active',active);
+      btn.setAttribute('aria-selected',String(active));
+    });
+    coachHubSections.forEach(function(section){
+      var panel=document.getElementById('tab-'+section);
+      if(panel){panel.classList.toggle('active',section===sectionName);}
+    });
+    setProgrammingCoachWidgetVisibility(sectionName);
+  }
+  function activateAdminHubSection(sectionName){
+    if(!isAdminHubSection(sectionName)){sectionName='reports';}
+    activeAdminHubSection=sectionName;
+    adminHubTabs.forEach(function(btn){
+      var active=btn.dataset.adminSection===sectionName;
+      btn.classList.toggle('active',active);
+      btn.setAttribute('aria-selected',String(active));
+    });
+    adminHubSections.forEach(function(section){
+      var panel=document.getElementById('tab-'+section);
+      if(panel){panel.classList.toggle('active',section===sectionName);}
+    });
+    setProgrammingCoachWidgetVisibility(sectionName);
+  }
   function activateAdminTab(tabName) {
+    var requestedSection=isCoachHubSection(tabName)?tabName:null;
+    var requestedAdminSection=isAdminHubSection(tabName)?tabName:null;
+    if(requestedSection){tabName='coach-hub';}
+    if(requestedAdminSection){tabName='school-admin';}
     var btn = Array.from(tabBtns).find(function(candidate) { return candidate.dataset.tab === tabName; });
     var panel = document.getElementById('tab-' + tabName);
     if (!btn || !panel) { return false; }
@@ -384,11 +505,28 @@
     btn.classList.add('active');
     btn.setAttribute('aria-selected','true');
     panel.classList.add('active');
+    if(tabName==='coach-hub'){
+      activateCoachHubSection(requestedSection||activeCoachHubSection);
+    } else if(tabName==='school-admin'){
+      activateAdminHubSection(requestedAdminSection||activeAdminHubSection);
+    } else {
+      setProgrammingCoachWidgetVisibility(tabName);
+    }
     return true;
   }
   tabBtns.forEach(function(btn) {
     btn.addEventListener('click', function() {
       activateAdminTab(btn.dataset.tab);
+    });
+  });
+  coachHubTabs.forEach(function(btn){
+    btn.addEventListener('click',function(){
+      activateAdminTab(btn.dataset.coachSection);
+    });
+  });
+  adminHubTabs.forEach(function(btn){
+    btn.addEventListener('click',function(){
+      activateAdminTab(btn.dataset.adminSection);
     });
   });
   var adminUrlParams = new URLSearchParams(window.location.search);
@@ -1226,6 +1364,7 @@
   function normalizeTrainingUrl(url){
     var value=String(url||'').trim();
     if(!value){return '';}
+    if(/^in-app:\/\//i.test(value)){return value;}
     if(!/^https?:\/\//i.test(value)){value='https://'+value;}
     return value;
   }
@@ -1265,7 +1404,6 @@
     var assigned=selectedTrainingStudents();
     if(!assigned.length){showResult(trainingResultEl,{success:false,error:'Select at least one student.'});return;}
     var url=normalizeTrainingUrl(trainingUrlEl.value);
-    if(!url){showResult(trainingResultEl,{success:false,error:'Add a training link.'});return;}
     var assignment={
       id:'training-'+Date.now(),
       title:trainingTitleEl.value.trim(),
@@ -1306,12 +1444,12 @@
         var student=students.find(function(s){return s.id===studentId;});
         var click=trainingClickFor(task.id,studentId);
         var completion=trainingCompletionFor(task.id,studentId);
-        return '<tr><td>'+escapeHtml(student?student.name:studentId)+'</td><td>'+escapeHtml(student?student.year:'')+'</td><td>'+escapeHtml(student?student.cls:'')+'</td><td>'+(completion?'Reviewed':click?'Opened':'Not opened')+'</td><td>'+escapeHtml(click?new Date(click.opened_at).toLocaleString():'')+'</td><td>'+escapeHtml(completion?new Date(completion.completed_at).toLocaleString():'')+'</td></tr>';
+        return '<tr><td>'+escapeHtml(student?student.name:studentId)+'</td><td>'+escapeHtml(student?student.year:'')+'</td><td>'+escapeHtml(student?student.cls:'')+'</td><td>'+(completion?'Completed':click?'Opened':'Not opened')+'</td><td>'+escapeHtml(click?new Date(click.opened_at).toLocaleString():'')+'</td><td>'+escapeHtml(completion?new Date(completion.completed_at).toLocaleString():'')+'</td></tr>';
       }).join('');
       return '<div class="training-assignment">'+
         '<div class="training-assignment-head"><div><strong>'+escapeHtml(task.title)+'</strong><br><span>'+escapeHtml(task.notes||'No notes')+'</span></div><a href="'+escapeAttr(task.url)+'" target="_blank" rel="noopener">Open task</a></div>'+
         '<div class="training-meta">'+(task.due_date?'Due '+escapeHtml(task.due_date)+' • ':'')+(task.assigned_student_ids||[]).length+' student(s)</div>'+
-        '<table class="training-status-table"><thead><tr><th>Student</th><th>Year</th><th>Class</th><th>Status</th><th>Last opened</th><th>Reviewed</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+        '<table class="training-status-table"><thead><tr><th>Student</th><th>Year</th><th>Class</th><th>Status</th><th>Last opened</th><th>Completed</th></tr></thead><tbody>'+rows+'</tbody></table>'+
       '</div>';
     }).join('');
   }
@@ -1335,21 +1473,41 @@
   }
 
   function addBuilderComponent(componentId){
-    var item=TRAINING_LIBRARY_COMPONENTS.find(function(component){return component.id===componentId;});
+    var item=componentId==='warmup-mobility'?warmupMobilityComponent():TRAINING_LIBRARY_COMPONENTS.find(function(component){return component.id===componentId;});
     if(!item){return;}
     builderWorkout.push(Object.assign({},item));
     renderWorkoutBuilderDropzone();
   }
 
+  function renderWarmupMobilitySelector(){
+    return '<div class="warmup-drill-selector" aria-label="Edit Mobility Warm-up drills">'+
+      '<div class="warmup-drill-selector-head"><strong>Edit Mobility Warm-up</strong><span>'+selectedWarmupDrills().length+' selected</span></div>'+
+      WARMUP_MOBILITY_DRILLS.map(function(drill){
+        var checked=selectedWarmupDrillIds.indexOf(drill.id)!==-1?' checked':'';
+        return '<label class="warmup-drill-option"><input class="warmup-drill-check" type="checkbox" value="'+escapeAttr(drill.id)+'"'+checked+' />'+
+          '<span><strong>'+escapeHtml(drill.title)+'</strong><small>'+drill.minutes+' min - '+escapeHtml(drill.cue)+'</small></span></label>';
+      }).join('')+
+    '</div>';
+  }
+
   function renderTrainingLibraryBuilder(){
     if(!trainingLibraryListEl||!workoutBuilderDropzoneEl){return;}
-    trainingLibraryListEl.innerHTML=TRAINING_LIBRARY_COMPONENTS.map(function(item){
+    var libraryComponents=TRAINING_LIBRARY_COMPONENTS.map(function(item){return item.id==='warmup-mobility'?warmupMobilityComponent():item;});
+    trainingLibraryListEl.innerHTML=libraryComponents.map(function(item){
+      var warmupEditor=item.id==='warmup-mobility'?renderWarmupMobilitySelector():'';
       return '<button type="button" class="training-library-chip" draggable="true" data-component-id="'+escapeAttr(item.id)+'">'+
-        '<strong>'+escapeHtml(item.title)+'</strong><span>'+item.minutes+' min - '+escapeHtml(item.focus)+'</span><small>'+escapeHtml(item.detail)+'</small></button>';
+        '<strong>'+escapeHtml(item.title)+'</strong><span>'+item.minutes+' min - '+escapeHtml(item.focus)+'</span><small>'+escapeHtml(item.detail)+'</small></button>'+warmupEditor;
     }).join('');
     document.querySelectorAll('.training-library-chip').forEach(function(chip){
       chip.addEventListener('click',function(){addBuilderComponent(chip.dataset.componentId);});
       chip.addEventListener('dragstart',function(e){e.dataTransfer.setData('text/plain',chip.dataset.componentId);});
+    });
+    document.querySelectorAll('.warmup-drill-check').forEach(function(input){
+      input.addEventListener('change',function(){
+        var checked=Array.prototype.map.call(document.querySelectorAll('.warmup-drill-check:checked'),function(item){return item.value;});
+        selectedWarmupDrillIds=checked.length?checked:DEFAULT_WARMUP_DRILL_IDS.slice(0,1);
+        renderTrainingLibraryBuilder();
+      });
     });
     workoutBuilderDropzoneEl.addEventListener('dragover',function(e){e.preventDefault();});
     workoutBuilderDropzoneEl.addEventListener('drop',function(e){e.preventDefault();addBuilderComponent(e.dataTransfer.getData('text/plain'));});
@@ -1360,10 +1518,10 @@
     if(!builderWorkout.length){showResult(trainingResultEl,{success:false,error:'Add at least one drill to the workout builder.'});return;}
     var title=workoutBuilderTitleEl.value.trim()||builderWorkout.map(function(item){return item.title;}).slice(0,2).join(' + ');
     var total=builderWorkout.reduce(function(sum,item){return sum+Number(item.minutes||0);},0);
-    var planText=builderWorkout.map(function(item,index){return (index+1)+'. '+item.title+' ('+item.minutes+' min): '+item.detail;}).join(' | ');
+    var planText=builderWorkout.map(function(item){return item.title+' - '+item.minutes+' min - '+item.detail;}).join('\n');
     trainingTitleEl.value=title;
     trainingUrlEl.value=workoutBuilderUrlEl.value.trim()||'in-app://training-builder/'+Date.now();
-    trainingNotesEl.value=total+' min plan: '+planText;
+    trainingNotesEl.value=total+' min plan\n'+planText;
     var saved=builderWorkouts();
     saved.push({id:'builder-workout-'+Date.now(),title:title,total_minutes:total,components:builderWorkout.slice(),created_at:new Date().toISOString(),created_by:session.email});
     save(BUILDER_WORKOUTS_KEY,saved);
@@ -1379,6 +1537,955 @@
     renderTrainingStatus();
     renderTrainingLibraryBuilder();
     document.getElementById('assign-builder-workout-btn').addEventListener('click',createTrainingAssignmentFromBuilder);
+  }
+
+  var resourceSessionListEl=document.getElementById('resource-session-list');
+  var resourceSessionDetailEl=document.getElementById('resource-session-detail');
+  var resourcePlanSaveStatusEl=document.getElementById('resource-plan-save-status');
+  var resourceMiniCoachWidgetEl=document.getElementById('resource-mini-coach-widget');
+  var resourceMiniCoachToggleEl=document.getElementById('resource-mini-coach-toggle');
+  var resourceMiniCoachPopoverEl=document.getElementById('resource-mini-coach-popover');
+  var resourceMiniCoachCloseEl=document.getElementById('resource-mini-coach-close');
+  var resourceMiniCoachSessionEl=document.getElementById('resource-mini-coach-session');
+  var resourceMiniCoachSummaryEl=document.getElementById('resource-mini-coach-summary');
+  var resourceMiniCoachNotesEl=document.getElementById('resource-mini-coach-notes');
+  var resourceMiniCoachActionsEl=document.getElementById('resource-mini-coach-actions');
+  var resourceMiniCoachPairingsEl=document.getElementById('resource-mini-coach-pairings');
+  var resourceMiniCoachProgramEl=document.getElementById('resource-mini-coach-program');
+  var resourceMiniCoachChatLogEl=document.getElementById('resource-mini-coach-chat-log');
+  var resourceMiniCoachChatFormEl=document.getElementById('resource-mini-coach-chat-form');
+  var resourceMiniCoachChatInputEl=document.getElementById('resource-mini-coach-chat-input');
+  var resourceMiniCoachChatHistory=[];
+  var resourceMiniCoachGeneratedProgram=null;
+  if(resourceMiniCoachWidgetEl&&resourceMiniCoachWidgetEl.parentElement!==document.body){
+    document.body.appendChild(resourceMiniCoachWidgetEl);
+  }
+  var activeTopTab=document.querySelector('.tab-btn.active');
+  setProgrammingCoachWidgetVisibility(activeTopTab&&activeTopTab.dataset.tab==='coach-hub'?activeCoachHubSection:(activeTopTab?activeTopTab.dataset.tab:'scanner'));
+  var activeResourceSessionId='run-club-session';
+  var WA_HPE_CURRICULUM_URL='https://k10outline.scsa.wa.edu.au/home/wa-curriculum/learning-areas/health-and-physical-education/p-10-hpe-curriculum/p-10-hpe-curriculum';
+  var ASC_PLAYING_FOR_LIFE_URL='https://www.ausport.gov.au/p4l';
+  var ASC_SPORT_LESSON_PLANS_URL='https://www.ausport.gov.au/sport-lesson-plans';
+  var WORLD_ATHLETICS_KIDS_URL='https://worldathletics.org/en/kids-athletics/teaching-athletics';
+  var AUSTRALIAN_HPE_URL='https://www.australiancurriculum.edu.au/curriculum-information/understand-this-learning-area/health-and-physical-education';
+  var SPARK_PE_URL='https://sparkpe.org/free-lesson-downloads/';
+  var PE_STATION_IDEAS_URL='https://www.capnpetespowerpe.com/single-post/track-and-field-in-physical-education-10-exciting-pe-activity-stations-that-get-students-fired-up';
+  var RESOURCE_PLAN_SECTIONS=[
+    {id:'starters',title:'Starters',defaultTarget:8,placeholder:'Warm-up focus, safety reminders, setup notes...'},
+    {id:'sessions',title:'Sessions',defaultTarget:18,placeholder:'Main learning block, rotations, coaching cues...'},
+    {id:'cooldowns',title:'Cool-downs',defaultTarget:4,placeholder:'Recovery, reflection, pack-up, next steps...'}
+  ];
+  var RESOURCE_SESSION_TEMPLATES=[
+    {
+      id:'run-club-session',
+      title:'Run Club Session Plan',
+      duration:30,
+      focus:'Barcode-supported laps, pacing, encouragement, and safe session flow.',
+      miniCoach:'Mini Coach: connects steady participation to WA Curriculum HPE movement confidence, active choices, and learning through movement.',
+      curriculum:[
+        {label:'WA Curriculum HPE',url:WA_HPE_CURRICULUM_URL},
+        {label:'Movement and physical activity',url:WA_HPE_CURRICULUM_URL},
+        {label:'Making active choices',url:WA_HPE_CURRICULUM_URL}
+      ],
+      activities:[
+        {id:'roll-call',title:'Roll call and safety scan',section:'starters',minutes:3,included:true,detail:'Confirm space, medical flags, scanner device and session type.'},
+        {id:'dynamic-warmup',title:'Dynamic warm-up',section:'starters',minutes:6,included:true,detail:'Easy jog, ankling, A-skips, arm swings and movement cues.'},
+        {id:'scan-run',title:'Scan and run block',section:'sessions',minutes:15,included:true,detail:'Students complete laps while staff scan attendance and lap progress.'},
+        {id:'challenge',title:'Short challenge',section:'sessions',minutes:4,included:true,detail:'Class target, even pacing, teamwork or personal effort focus.'},
+        {id:'cooldown',title:'Cooldown and notes',section:'cooldowns',minutes:2,included:true,detail:'Walk, water, quick reflection and teacher notes.'}
+      ]
+    },
+    {
+      id:'athletics-rotation',
+      title:'Interschool Athletics Rotation',
+      duration:35,
+      focus:'Rotating event stations for sprinting, middle distance, jumps, throws and teamwork.',
+      miniCoach:'Mini Coach: links event rotation to moving our bodies, applying movement concepts, teamwork, and fair participation.',
+      curriculum:[
+        {label:'WA Curriculum HPE',url:WA_HPE_CURRICULUM_URL},
+        {label:'Moving our bodies',url:WA_HPE_CURRICULUM_URL},
+        {label:'Learning through movement',url:WA_HPE_CURRICULUM_URL}
+      ],
+      activities:[
+        {id:'briefing',title:'Division briefing',section:'starters',minutes:4,included:true,detail:'Group students by Junior, Intermediate, Senior and explain station expectations.'},
+        {id:'sprint-starts',title:'Sprint starts station',section:'sessions',minutes:8,included:true,detail:'Reaction cues, 3-point starts, 10m acceleration focus.'},
+        {id:'middle-distance',title:'Middle-distance pacing station',section:'sessions',minutes:8,included:true,detail:'Controlled 100m, 200m or 400m rhythm practice by division.'},
+        {id:'field-events',title:'Long jump and Vortex technique',section:'sessions',minutes:8,included:true,detail:'Take-off markers, safe landing, throwing lane and retrieval routine.'},
+        {id:'ball-games',title:'Ball-game teamwork',section:'sessions',minutes:5,included:true,detail:'Tunnel Ball, Leader Ball or Pass Ball communication and turn-taking.'},
+        {id:'review',title:'PB and team review',section:'cooldowns',minutes:2,included:true,detail:'Record noteworthy PBs and selection notes in Sports tab.'}
+      ]
+    },
+    {
+      id:'cross-country-prep',
+      title:'Cross Country Preparation',
+      duration:30,
+      focus:'Pacing, breathing rhythm, course awareness and safe finish-line flow.',
+      miniCoach:'Mini Coach: supports active choices, effort awareness, resilience and safe participation in outdoor movement contexts.',
+      curriculum:[
+        {label:'WA Curriculum HPE',url:WA_HPE_CURRICULUM_URL},
+        {label:'Making active choices',url:WA_HPE_CURRICULUM_URL},
+        {label:'Learning through movement',url:WA_HPE_CURRICULUM_URL}
+      ],
+      activities:[
+        {id:'course-walk',title:'Course walk and hazards',section:'starters',minutes:5,included:true,detail:'Show route, marshal points, finish area, water and safe passing.'},
+        {id:'warmup',title:'Progressive warm-up',section:'starters',minutes:5,included:true,detail:'Jog, mobility, breathing rhythm and relaxed strides.'},
+        {id:'pacing-block',title:'Pacing block',section:'sessions',minutes:12,included:true,detail:'Steady running or run/walk effort matched to year group distance.'},
+        {id:'finish-flow',title:'Finish-line practice',section:'cooldowns',minutes:4,included:true,detail:'Finish chute, recovery walk and scanning/order expectations.'},
+        {id:'reflection',title:'Reflection and next action',section:'cooldowns',minutes:4,included:true,detail:'Students identify one pacing cue or confidence target for next session.'}
+      ]
+    },
+    {
+      id:'speed-tune-up',
+      title:'Speed Tune-Up',
+      duration:25,
+      focus:'Sprint mechanics for 50m, 75m, 100m and 200m preparation.',
+      miniCoach:'Mini Coach: targets locomotor skills, body control, acceleration mechanics and confidence in short-distance events.',
+      curriculum:[
+        {label:'WA Curriculum HPE',url:WA_HPE_CURRICULUM_URL},
+        {label:'Moving our bodies',url:WA_HPE_CURRICULUM_URL}
+      ],
+      activities:[
+        {id:'jog',title:'Easy jog and mobility',section:'starters',minutes:4,included:true,detail:'Raise temperature without fatigue.'},
+        {id:'askips',title:'A-skips, ankling and wall drives',section:'starters',minutes:7,included:true,detail:'Tall posture, rhythm, knee lift and ground contact cues.'},
+        {id:'accelerations',title:'Three 30m accelerations',section:'sessions',minutes:8,included:true,detail:'Build from relaxed to fast with full walk-back recovery.'},
+        {id:'relaxed-sprint',title:'Relaxed 75m run',section:'sessions',minutes:4,included:true,detail:'Fast but smooth, no straining.'},
+        {id:'cooldown',title:'Cooldown walk',section:'cooldowns',minutes:2,included:true,detail:'Walk, breathe, water.'}
+      ]
+    },
+    {
+      id:'middle-distance-builder',
+      title:'Middle-Distance Builder',
+      duration:30,
+      focus:'Controlled effort for 400m, cross country and run club endurance.',
+      miniCoach:'Mini Coach: links pacing judgement, effort regulation and active participation to HPE movement learning.',
+      curriculum:[
+        {label:'WA Curriculum HPE',url:WA_HPE_CURRICULUM_URL},
+        {label:'Making active choices',url:WA_HPE_CURRICULUM_URL}
+      ],
+      activities:[
+        {id:'easy-lap',title:'Easy lap',section:'starters',minutes:5,included:true,detail:'Comfortable conversational pace.'},
+        {id:'pacing-talk',title:'Pacing talk',section:'starters',minutes:3,included:true,detail:'Discuss first half control and finish effort.'},
+        {id:'steady-200s',title:'Two steady 200m efforts',section:'sessions',minutes:10,included:true,detail:'Even rhythm with walk recovery.'},
+        {id:'controlled-400',title:'Controlled 400m effort',section:'sessions',minutes:8,included:true,detail:'Smooth effort, finish composed.'},
+        {id:'recovery',title:'Recovery walk',section:'cooldowns',minutes:4,included:true,detail:'Cool down and note one pacing cue.'}
+      ]
+    },
+    {
+      id:'field-event-circuit',
+      title:'Field Event Circuit',
+      duration:30,
+      focus:'Long jump and Vortex Throw technique with safe attempts.',
+      miniCoach:'Mini Coach: supports object control, force, balance, safe retrieval routines and technique reflection.',
+      curriculum:[
+        {label:'WA Curriculum HPE',url:WA_HPE_CURRICULUM_URL},
+        {label:'Moving our bodies',url:WA_HPE_CURRICULUM_URL},
+        {label:'Learning through movement',url:WA_HPE_CURRICULUM_URL}
+      ],
+      activities:[
+        {id:'safety',title:'Safety setup',section:'starters',minutes:4,included:true,detail:'Landing area, throwing lane, wait line and retrieval signal.'},
+        {id:'jump-markers',title:'Long jump take-off markers',section:'sessions',minutes:8,included:true,detail:'Short approach, jump off one foot, land balanced.'},
+        {id:'vortex-throws',title:'Vortex throw practice',section:'sessions',minutes:8,included:true,detail:'Side-on stance, step, throw, follow-through.'},
+        {id:'measured-attempts',title:'Three measured attempts',section:'sessions',minutes:8,included:true,detail:'Record best safe attempt if needed.'},
+        {id:'packup',title:'Pack-up and reflection',section:'cooldowns',minutes:2,included:true,detail:'Retrieve equipment and name one technical cue.'}
+      ]
+    },
+    {
+      id:'barcode-device-setup',
+      title:'Barcode And Device Setup',
+      duration:20,
+      focus:'Operational checklist for scanners, iPads, phones and printed ID cards.',
+      miniCoach:'Mini Coach: admin-only checklist. Not a curriculum lesson; use it to reduce session friction before students arrive.',
+      curriculum:[
+        {label:'WA Curriculum HPE',url:WA_HPE_CURRICULUM_URL},
+        {label:'Teacher planning support',url:WA_HPE_CURRICULUM_URL}
+      ],
+      activities:[
+        {id:'print-cards',title:'Print ID cards',section:'starters',minutes:5,included:true,detail:'Generate and print credit-card sized student barcode cards.'},
+        {id:'device-name',title:'Name each device',section:'starters',minutes:3,included:true,detail:'Set scanner device name and location in Admin Scanner settings.'},
+        {id:'camera-test',title:'Camera permission test',section:'sessions',minutes:4,included:true,detail:'Open kiosk on phone/iPad and confirm camera permission.'},
+        {id:'demo-scan',title:'Demo scan',section:'sessions',minutes:5,included:true,detail:'Scan one test barcode and verify it records once.'},
+        {id:'fallback',title:'Fallback check',section:'cooldowns',minutes:3,included:true,detail:'Confirm typed barcode entry works if a scanner fails.'}
+      ]
+    }
+  ];
+
+  RESOURCE_SESSION_TEMPLATES=RESOURCE_SESSION_TEMPLATES.concat([
+    {
+      id:'foundation-run-jump-throw',
+      title:'Run, Jump, Throw Fundamentals',
+      duration:40,
+      focus:'A broad PE foundation session for locomotor skills, landing shapes, safe throwing, and teamwork.',
+      miniCoach:'Mini Coach: use this as the first lesson in an athletics unit. Keep it playful, fast moving, and focused on safe movement quality.',
+      curriculum:[
+        {label:'WA Curriculum HPE',url:WA_HPE_CURRICULUM_URL},
+        {label:'World Athletics Kids',url:WORLD_ATHLETICS_KIDS_URL},
+        {label:'ASC Playing for Life',url:ASC_PLAYING_FOR_LIFE_URL}
+      ],
+      activities:[
+        {id:'frjt-start-game',title:'Traffic light movers',section:'starters',minutes:6,included:true,detail:'Students move on green, freeze on red, change movement on amber.',how:'Call movement types such as jog, skip, hop, side-step and walk. Keep the space wide and stop often to reset posture.',cues:'Eyes up, soft feet, personal space, balanced stop.',safety:'Use clear boundaries and remove loose equipment before students move.',progressions:'Add partner mirroring or ask students to invent a safe movement pattern.',links:[{label:'ASC Playing for Life',url:ASC_PLAYING_FOR_LIFE_URL},{label:'WA HPE Movement',url:WA_HPE_CURRICULUM_URL}]},
+        {id:'frjt-run-lines',title:'Run the lines',section:'sessions',minutes:8,included:true,detail:'Short line runs to practise starting, stopping and changing speed.',how:'Set cones 10m apart. Students run out, slow down before the cone, turn safely and return.',cues:'Lean slightly forward, arms cheek to pocket, slow before turning.',safety:'Stagger groups so nobody turns into another runner.',progressions:'Make one return a skip, one a sprint, one a walk recovery.',links:[{label:'World Athletics Kids',url:WORLD_ATHLETICS_KIDS_URL}]},
+        {id:'frjt-jump-land',title:'Jump and stick landing',section:'sessions',minutes:8,included:true,detail:'Two-foot jumps and one-foot take-offs with quiet landings.',how:'Mark take-off spots. Students jump to a hoop or line and hold the landing for two seconds.',cues:'Bend knees, arms swing, land soft, chest up.',safety:'Use grass, mats or soft surfaces; avoid slippery areas.',progressions:'Add a short approach or ask students to measure personal improvement.',links:[{label:'World Athletics Kids',url:WORLD_ATHLETICS_KIDS_URL}]},
+        {id:'frjt-throw-target',title:'Throw for target zones',section:'sessions',minutes:12,included:true,detail:'Safe overarm throwing with beanbags, foam balls or vortex equipment.',how:'Create three landing zones. Students throw from behind a line, wait for the signal, retrieve together, then rotate.',cues:'Side on, step with opposite foot, point then throw, follow through.',safety:'No retrieval until all throwing has stopped.',progressions:'Change object weight, target distance or scoring zones.',links:[{label:'World Athletics Kids',url:WORLD_ATHLETICS_KIDS_URL},{label:'PE station ideas',url:PE_STATION_IDEAS_URL}]},
+        {id:'frjt-reflect',title:'Movement reflection',section:'cooldowns',minutes:6,included:true,detail:'Students name one running, jumping or throwing cue they used.',how:'Walk a slow lap, then ask pairs to share one cue and one safety rule.',cues:'Use simple language students can repeat next lesson.',safety:'Use this to check fatigue and readiness to return to class.',progressions:'Students choose the skill they want to practise next time.',links:[{label:'Australian Curriculum HPE',url:AUSTRALIAN_HPE_URL}]}
+      ]
+    },
+    {
+      id:'sprint-mechanics-50-75-100',
+      title:'Sprint Mechanics 50m, 75m, 100m',
+      duration:35,
+      focus:'Acceleration, posture, rhythm, and safe sprint efforts for Junior, Intermediate and Senior students.',
+      miniCoach:'Mini Coach: sprint lessons work best when students sprint less often but with higher quality and full recovery.',
+      curriculum:[
+        {label:'WA Curriculum HPE',url:WA_HPE_CURRICULUM_URL},
+        {label:'World Athletics Kids',url:WORLD_ATHLETICS_KIDS_URL},
+        {label:'Track and field stations',url:PE_STATION_IDEAS_URL}
+      ],
+      activities:[
+        {id:'sm-warmup',title:'Sprint mobility warm-up',section:'starters',minutes:7,included:true,detail:'Ankling, A-skips, high knees and relaxed strides.',how:'Run drills over 15m. Walk back after each drill and keep cues short.',cues:'Tall hips, quick feet under body, relaxed face and hands.',safety:'Stop if students are racing the drill instead of controlling it.',progressions:'Senior students can add B-skips or wall drives.',links:[{label:'World Athletics Kids',url:WORLD_ATHLETICS_KIDS_URL}]},
+        {id:'sm-start-shapes',title:'Start shapes',section:'sessions',minutes:8,included:true,detail:'Standing, falling and three-point starts over 10m.',how:'Teach one start position at a time, then let students complete 3-4 short starts with full walk-back recovery.',cues:'Push the ground away, first steps powerful, eyes down then rise.',safety:'No starting blocks needed; keep lanes clear.',progressions:'Add reaction commands or partner clap starts.',links:[{label:'WA Curriculum HPE',url:WA_HPE_CURRICULUM_URL}]},
+        {id:'sm-acceleration',title:'20m acceleration lanes',section:'sessions',minutes:8,included:true,detail:'Build speed over 20m without overstriding.',how:'Students sprint to 20m, then decelerate through a 10m run-off zone.',cues:'Short powerful first steps, arms drive straight, finish through the cone.',safety:'Long run-off area is required before any wall/fence.',progressions:'Time only the final rep after technique practice.',links:[{label:'World Athletics Kids',url:WORLD_ATHLETICS_KIDS_URL}]},
+        {id:'sm-race-model',title:'Event distance rhythm',section:'sessions',minutes:8,included:true,detail:'Practise the correct school carnival distance for the division.',how:'Juniors run 50m, Intermediates 75m, Seniors 100m at smooth effort.',cues:'Fast start, relaxed middle, run past the line.',safety:'Limit to two quality reps for younger students.',progressions:'Add lane draw or final selection trial later, not in the first lesson.',links:[{label:'Track and field stations',url:PE_STATION_IDEAS_URL}]},
+        {id:'sm-cooldown',title:'Sprint reset',section:'cooldowns',minutes:4,included:true,detail:'Walk, calf shake-out and one cue recap.',how:'Ask students to point to the cue that helped most: start, arms, posture or finish.',cues:'Leave them confident, not exhausted.',safety:'Hydrate and monitor heat.',progressions:'Students write one target for next sprint session.',links:[{label:'Australian Curriculum HPE',url:AUSTRALIAN_HPE_URL}]}
+      ]
+    },
+    {
+      id:'relay-baton-straight-line',
+      title:'Straight-Line Baton Relay',
+      duration:35,
+      focus:'Safe baton exchange, lane awareness, acceleration and team communication.',
+      miniCoach:'Mini Coach: keep relay teaching simple. Straight lines, clear waiting zones, and one exchange cue are enough for primary students.',
+      curriculum:[
+        {label:'WA Curriculum HPE',url:WA_HPE_CURRICULUM_URL},
+        {label:'ASC Playing for Life',url:ASC_PLAYING_FOR_LIFE_URL},
+        {label:'World Athletics Kids',url:WORLD_ATHLETICS_KIDS_URL}
+      ],
+      activities:[
+        {id:'relay-call-response',title:'Call and pass warm-up',section:'starters',minutes:6,included:true,detail:'Stationary baton pass with voice cue.',how:'Pairs stand one behind the other. Back runner says “hand”, front runner reaches back, pass happens only when ready.',cues:'Call early, palm open, pass into the hand.',safety:'Use foam batons or rolled paper for beginners.',progressions:'Add walking then jogging passes.',links:[{label:'ASC Playing for Life',url:ASC_PLAYING_FOR_LIFE_URL}]},
+        {id:'relay-zones',title:'Exchange zone walk-through',section:'sessions',minutes:7,included:true,detail:'Students learn where to wait, accelerate and pass.',how:'Mark waiting line, go line and pass zone. Walk the route before running.',cues:'Outgoing runner looks forward, incoming runner calls clearly.',safety:'One team per lane; no crossing lanes.',progressions:'Let students choose a team cue word.',links:[{label:'World Athletics Kids',url:WORLD_ATHLETICS_KIDS_URL}]},
+        {id:'relay-rolling-pass',title:'Jogging exchange reps',section:'sessions',minutes:10,included:true,detail:'Repeated low-speed baton exchanges in lanes.',how:'Teams of four rotate through positions. Keep speed at 60 percent until passes are reliable.',cues:'Smooth beats fast; baton never thrown.',safety:'Stop immediately if students bunch up.',progressions:'Increase speed only when the baton is passed cleanly three times.',links:[{label:'WA Curriculum HPE',url:WA_HPE_CURRICULUM_URL}]},
+        {id:'relay-team-run',title:'Team relay rehearsal',section:'sessions',minutes:8,included:true,detail:'One full straight-line relay rehearsal by team.',how:'Run one clean attempt, then discuss what helped the team.',cues:'Run your leg, communicate, stay in lane.',safety:'Use clear finish/run-off space.',progressions:'Record team time only after technique practice.',links:[{label:'World Athletics Kids',url:WORLD_ATHLETICS_KIDS_URL}]},
+        {id:'relay-reflection',title:'Team reflection',section:'cooldowns',minutes:4,included:true,detail:'Students identify one communication strength.',how:'Each team names one thing to keep and one thing to improve.',cues:'Praise teamwork over winning.',safety:'Set batons down before leaving.',progressions:'Add leadership roles for captains or helpers.',links:[{label:'Australian Curriculum HPE',url:AUSTRALIAN_HPE_URL}]}
+      ]
+    },
+    {
+      id:'middle-distance-pacing-100-200-400',
+      title:'Middle Distance Pacing 100m, 200m, 400m',
+      duration:40,
+      focus:'Pacing judgement for Junior 100m, Intermediate 200m and Senior 400m events.',
+      miniCoach:'Mini Coach: pacing lessons should feel controlled. The goal is learning effort regulation, not smashing every rep.',
+      curriculum:[
+        {label:'WA Curriculum HPE',url:WA_HPE_CURRICULUM_URL},
+        {label:'Australian Curriculum HPE',url:AUSTRALIAN_HPE_URL},
+        {label:'World Athletics Kids',url:WORLD_ATHLETICS_KIDS_URL}
+      ],
+      activities:[
+        {id:'md-talk-test',title:'Talk-test warm-up',section:'starters',minutes:6,included:true,detail:'Students jog at a pace where they can still talk.',how:'Use a short loop and ask students to say a phrase while moving.',cues:'Smooth breathing, shoulders down, no racing yet.',safety:'Check heat and asthma plans before continuous running.',progressions:'Students rate effort out of 10.',links:[{label:'WA Curriculum HPE',url:WA_HPE_CURRICULUM_URL}]},
+        {id:'md-even-pace',title:'Even pace out-and-back',section:'sessions',minutes:8,included:true,detail:'Run out for time, turn, return at the same pace.',how:'Students run 30 seconds out and try to return in 30 seconds.',cues:'Start easier than you think, rhythm over rush.',safety:'Use a visible turn marker and clear traffic flow.',progressions:'Increase to 45 or 60 seconds for older students.',links:[{label:'World Athletics Kids',url:WORLD_ATHLETICS_KIDS_URL}]},
+        {id:'md-division-reps',title:'Division event reps',section:'sessions',minutes:12,included:true,detail:'Juniors 100m, Intermediates 200m, Seniors 400m at controlled pace.',how:'Divide students by event distance. Run one controlled rep, walk recovery, then one improved pacing rep.',cues:'First half controlled, second half strong.',safety:'Avoid back-to-back maximum efforts.',progressions:'Students try to negative split the second rep.',links:[{label:'WA Curriculum HPE',url:WA_HPE_CURRICULUM_URL}]},
+        {id:'md-team-pacer',title:'Team pacer challenge',section:'sessions',minutes:8,included:true,detail:'Teams try to finish together inside a target window.',how:'Give a group target such as “finish within five seconds of each other”.',cues:'Encourage, listen, adjust pace.',safety:'Group by similar ability so no one is dragged beyond capacity.',progressions:'Let students nominate a pacer and rotate leadership.',links:[{label:'ASC Playing for Life',url:ASC_PLAYING_FOR_LIFE_URL}]},
+        {id:'md-reflect',title:'Pacing reflection',section:'cooldowns',minutes:6,included:true,detail:'Students record their best pacing cue.',how:'Walk and discuss: what did your body feel like when the pace was right?',cues:'Notice breathing, legs, rhythm and confidence.',safety:'Cool down long enough after harder running.',progressions:'Set one personal pacing goal for next session.',links:[{label:'Australian Curriculum HPE',url:AUSTRALIAN_HPE_URL}]}
+      ]
+    },
+    {
+      id:'long-jump-primary',
+      title:'Long Jump Primary Progression',
+      duration:40,
+      focus:'Run-up rhythm, one-foot take-off, safe landing and measured attempts.',
+      miniCoach:'Mini Coach: teach long jump as rhythm plus safe landing before chasing distance.',
+      curriculum:[
+        {label:'WA Curriculum HPE',url:WA_HPE_CURRICULUM_URL},
+        {label:'World Athletics Kids',url:WORLD_ATHLETICS_KIDS_URL},
+        {label:'Track and field stations',url:PE_STATION_IDEAS_URL}
+      ],
+      activities:[
+        {id:'lj-landing-shape',title:'Landing shapes',section:'starters',minutes:6,included:true,detail:'Practise two-foot soft landings and balance holds.',how:'Students jump from a standing start to a line, land on two feet and hold.',cues:'Knees bent, arms forward, freeze the landing.',safety:'Use a soft, flat landing area.',progressions:'Add a hoop or mat target.',links:[{label:'World Athletics Kids',url:WORLD_ATHLETICS_KIDS_URL}]},
+        {id:'lj-takeoff-foot',title:'Find take-off foot',section:'sessions',minutes:6,included:true,detail:'Students discover their preferred one-foot take-off.',how:'Try three easy run-and-pop jumps and note which foot feels natural.',cues:'Jump off one foot, land on two.',safety:'No full-speed run-ups yet.',progressions:'Mark preferred take-off foot with a wristband or note.',links:[{label:'WA Curriculum HPE',url:WA_HPE_CURRICULUM_URL}]},
+        {id:'lj-runup-rhythm',title:'Five-step run-up rhythm',section:'sessions',minutes:10,included:true,detail:'Short approach into a controlled take-off.',how:'Use 5-7 steps only. Students aim to hit a take-off zone, not a board.',cues:'Tall run, eyes forward, pop up and out.',safety:'One jumper at a time per lane.',progressions:'Students adjust start mark by half-steps.',links:[{label:'Track and field stations',url:PE_STATION_IDEAS_URL}]},
+        {id:'lj-measured-jumps',title:'Three safe attempts',section:'sessions',minutes:12,included:true,detail:'Students complete measured attempts after technique practice.',how:'Measure from take-off zone to nearest back mark on landing.',cues:'Same run-up, strong take-off, safe landing.',safety:'Rake/check landing area between jumps if using a pit.',progressions:'Record best attempt and one technique note.',links:[{label:'World Athletics Kids',url:WORLD_ATHLETICS_KIDS_URL}]},
+        {id:'lj-review',title:'Jump review',section:'cooldowns',minutes:6,included:true,detail:'Students compare what changed when technique improved.',how:'Ask students whether run-up, take-off or landing helped most.',cues:'Distance follows control.',safety:'Finish with walking and hydration.',progressions:'Set a next lesson target: rhythm, take-off or landing.',links:[{label:'Australian Curriculum HPE',url:AUSTRALIAN_HPE_URL}]}
+      ]
+    },
+    {
+      id:'vortex-throw-primary',
+      title:'Vortex Throw Technique',
+      duration:35,
+      focus:'Safe throwing routines, side-on shape, step-through action and measured throws.',
+      miniCoach:'Mini Coach: throwing lessons succeed when retrieval rules are crystal clear before anyone throws.',
+      curriculum:[
+        {label:'WA Curriculum HPE',url:WA_HPE_CURRICULUM_URL},
+        {label:'World Athletics Kids',url:WORLD_ATHLETICS_KIDS_URL},
+        {label:'Track and field stations',url:PE_STATION_IDEAS_URL}
+      ],
+      activities:[
+        {id:'vt-safety-routine',title:'Throwing safety routine',section:'starters',minutes:5,included:true,detail:'Teach throw line, wait line, landing zone and retrieval signal.',how:'Walk students through the routine with no equipment first.',cues:'Throw, freeze, wait, retrieve together.',safety:'No student crosses the line until teacher signal.',progressions:'Student leaders repeat the safety command.',links:[{label:'WA Curriculum HPE',url:WA_HPE_CURRICULUM_URL}]},
+        {id:'vt-side-on',title:'Side-on target shapes',section:'sessions',minutes:7,included:true,detail:'Practise side-on body shape without release.',how:'Students hold vortex/foam object, point non-throwing arm to target and rehearse the step.',cues:'Side to target, elbow high, eyes forward.',safety:'Spacing arms-length plus equipment length.',progressions:'Add slow-motion throw without distance focus.',links:[{label:'World Athletics Kids',url:WORLD_ATHLETICS_KIDS_URL}]},
+        {id:'vt-step-throw',title:'Step and throw',section:'sessions',minutes:10,included:true,detail:'Controlled throws into broad zones.',how:'Students step with opposite foot and throw to coloured distance zones.',cues:'Step, pull, release high, follow through.',safety:'All throwers release in the same direction.',progressions:'Score zones but reward technique points too.',links:[{label:'Track and field stations',url:PE_STATION_IDEAS_URL}]},
+        {id:'vt-measured',title:'Measured best of three',section:'sessions',minutes:9,included:true,detail:'Three safe measured attempts with partner marker.',how:'Partner stands outside landing sector and marks only after signal.',cues:'Repeat same routine each throw.',safety:'Use cones to mark out-of-bounds landing areas.',progressions:'Students identify one cue before each attempt.',links:[{label:'World Athletics Kids',url:WORLD_ATHLETICS_KIDS_URL}]},
+        {id:'vt-packup',title:'Equipment count and cue recap',section:'cooldowns',minutes:4,included:true,detail:'Count equipment, return safely, name one throwing cue.',how:'Students return gear before sharing cues.',cues:'Safety routine is part of performance.',safety:'No free throwing during pack-up.',progressions:'Students coach a partner next lesson.',links:[{label:'Australian Curriculum HPE',url:AUSTRALIAN_HPE_URL}]}
+      ]
+    },
+    {
+      id:'ball-games-carnival',
+      title:'Carnival Ball Games Rotation',
+      duration:40,
+      focus:'Tunnel Ball, Leader Ball and Pass Ball skills for teamwork, passing accuracy and fast transitions.',
+      miniCoach:'Mini Coach: ball games are movement, communication and cooperation lessons. Make rotations short and roles clear.',
+      curriculum:[
+        {label:'WA Curriculum HPE',url:WA_HPE_CURRICULUM_URL},
+        {label:'ASC Playing for Life',url:ASC_PLAYING_FOR_LIFE_URL},
+        {label:'Australian Curriculum HPE',url:AUSTRALIAN_HPE_URL}
+      ],
+      activities:[
+        {id:'bg-passing-warmup',title:'Partner pass warm-up',section:'starters',minutes:6,included:true,detail:'Chest pass, bounce pass and overhead pass with accuracy targets.',how:'Pairs stand 3-5m apart and pass to a target chest/high hands.',cues:'Step to target, soft hands, call name.',safety:'Use soft balls and avoid head-height hard passes.',progressions:'Add movement after pass.',links:[{label:'ASC Playing for Life',url:ASC_PLAYING_FOR_LIFE_URL}]},
+        {id:'bg-tunnel-ball',title:'Tunnel Ball station',section:'sessions',minutes:9,included:true,detail:'Roll ball through team tunnel and sprint to front.',how:'Teams line up straddled. Back student rolls ball through legs, front collects and runs to back/front depending carnival rules.',cues:'Low roll, team spacing, quick reset.',safety:'No diving onto the ball.',progressions:'Add rule variations for junior/senior groups.',links:[{label:'WA Curriculum HPE',url:WA_HPE_CURRICULUM_URL}]},
+        {id:'bg-leader-ball',title:'Leader Ball station',section:'sessions',minutes:9,included:true,detail:'Leader passes to each teammate, who returns and sits/rotates.',how:'Leader faces team. Pass down the line with clean catches before speed.',cues:'Target hands, eyes on ball, call ready.',safety:'Keep lines separated.',progressions:'Change pass type or leader rotation.',links:[{label:'ASC Playing for Life',url:ASC_PLAYING_FOR_LIFE_URL}]},
+        {id:'bg-pass-ball',title:'Pass Ball station',section:'sessions',minutes:9,included:true,detail:'Pass across team sequence with communication and accuracy.',how:'Students pass in a set order, moving only after the pass is secure.',cues:'Pass then move, talk early, help teammate.',safety:'Use clear team lanes.',progressions:'Add timed challenge after accuracy improves.',links:[{label:'ASC Sport Lesson Plans',url:ASC_SPORT_LESSON_PLANS_URL}]},
+        {id:'bg-team-review',title:'Team review',section:'cooldowns',minutes:7,included:true,detail:'Teams identify the communication that improved performance.',how:'Each group shares one phrase or habit that made them faster.',cues:'Teamwork is trainable.',safety:'Collect balls first to reduce distraction.',progressions:'Students choose event roles for the next carnival practice.',links:[{label:'Australian Curriculum HPE',url:AUSTRALIAN_HPE_URL}]}
+      ]
+    },
+    {
+      id:'cross-country-skills',
+      title:'Cross Country Skills And Course Confidence',
+      duration:40,
+      focus:'Course awareness, pacing, overtaking etiquette, finish flow and effort confidence.',
+      miniCoach:'Mini Coach: cross country is a confidence unit. Teach course routines and effort choices before asking for hard running.',
+      curriculum:[
+        {label:'WA Curriculum HPE',url:WA_HPE_CURRICULUM_URL},
+        {label:'Australian Curriculum HPE',url:AUSTRALIAN_HPE_URL},
+        {label:'ASC Playing for Life',url:ASC_PLAYING_FOR_LIFE_URL}
+      ],
+      activities:[
+        {id:'xc-map-walk',title:'Course map walk',section:'starters',minutes:7,included:true,detail:'Walk the route and name marshal points, turns and finish area.',how:'Stop at important course points and ask students what safe choices look like there.',cues:'Know the course, know your effort, know where help is.',safety:'Identify hazards and asthma/medical processes.',progressions:'Students explain the course to a partner.',links:[{label:'WA Curriculum HPE',url:WA_HPE_CURRICULUM_URL}]},
+        {id:'xc-gears',title:'Running gears',section:'sessions',minutes:8,included:true,detail:'Students practise easy, steady and strong effort levels.',how:'Use 30-second blocks: gear 1 walk/jog, gear 2 steady, gear 3 strong but controlled.',cues:'You can change gears without stopping.',safety:'Avoid maximum sprints in endurance sessions.',progressions:'Students choose a gear for hills, turns and finish.',links:[{label:'Australian Curriculum HPE',url:AUSTRALIAN_HPE_URL}]},
+        {id:'xc-overtake',title:'Overtaking etiquette',section:'sessions',minutes:6,included:true,detail:'Practice safe passing on a narrow path.',how:'Set a cone corridor. Students pass with voice cue and space.',cues:'Call, pass wide, no pushing, keep moving.',safety:'No shoulder contact or cutting off.',progressions:'Add small groups with different speeds.',links:[{label:'ASC Playing for Life',url:ASC_PLAYING_FOR_LIFE_URL}]},
+        {id:'xc-loop',title:'Confidence loop',section:'sessions',minutes:14,included:true,detail:'Run/walk loop with personal effort target.',how:'Students choose a run/walk pattern and try to keep it consistent.',cues:'Start calm, finish proud, use your plan.',safety:'Monitor heat, hydration and known medical needs.',progressions:'Older students record lap splits.',links:[{label:'WA Curriculum HPE',url:WA_HPE_CURRICULUM_URL}]},
+        {id:'xc-finish',title:'Finish chute practice',section:'cooldowns',minutes:5,included:true,detail:'Practise finishing, walking on and recovering safely.',how:'Students jog through a finish line, keep walking, then move to recovery zone.',cues:'Run through, do not stop on the line.',safety:'Keep finish chute clear.',progressions:'Add barcode scan/placing process later.',links:[{label:'World Athletics Kids',url:WORLD_ATHLETICS_KIDS_URL}]}
+      ]
+    },
+    {
+      id:'athletics-station-circuit',
+      title:'Athletics Station Circuit',
+      duration:45,
+      focus:'A full PE circuit across sprint, jump, throw, relay and teamwork stations.',
+      miniCoach:'Mini Coach: use station circuits when you need maximum participation and minimal waiting.',
+      curriculum:[
+        {label:'WA Curriculum HPE',url:WA_HPE_CURRICULUM_URL},
+        {label:'Track and field stations',url:PE_STATION_IDEAS_URL},
+        {label:'SPARK sample lessons',url:SPARK_PE_URL}
+      ],
+      activities:[
+        {id:'circuit-brief',title:'Station briefing',section:'starters',minutes:5,included:true,detail:'Explain rotations, safety zones and scoring/feedback method.',how:'Show every station before starting. Assign groups and start points.',cues:'Rotate on whistle, leave equipment ready.',safety:'Throwing stations need the clearest separation.',progressions:'Assign student station captains.',links:[{label:'SPARK sample lessons',url:SPARK_PE_URL}]},
+        {id:'circuit-sprint',title:'Sprint station',section:'sessions',minutes:8,included:true,detail:'Short 20m acceleration or 40m smooth sprint.',how:'Students run one at a time or in safe lanes, walk back, repeat.',cues:'Push, posture, run past line.',safety:'Use a run-off zone.',progressions:'Add reaction start.',links:[{label:'Track and field stations',url:PE_STATION_IDEAS_URL}]},
+        {id:'circuit-jump',title:'Jump station',section:'sessions',minutes:8,included:true,detail:'Standing long jump or short approach jump.',how:'Students jump into a landing zone and mark best safe jump.',cues:'Swing arms, take off strong, land soft.',safety:'Check surface before each rotation.',progressions:'Add five-step approach.',links:[{label:'World Athletics Kids',url:WORLD_ATHLETICS_KIDS_URL}]},
+        {id:'circuit-throw',title:'Throw station',section:'sessions',minutes:8,included:true,detail:'Foam javelin/vortex or beanbag throws into zones.',how:'Students throw from behind a line and retrieve on signal.',cues:'Side on, step, throw high.',safety:'All objects travel same direction.',progressions:'Add technique score plus distance score.',links:[{label:'Track and field stations',url:PE_STATION_IDEAS_URL}]},
+        {id:'circuit-relay-review',title:'Relay station and review',section:'cooldowns',minutes:16,included:true,detail:'Mini relay plus group reflection on best movement cue.',how:'Teams complete a short relay, then rotate through a two-minute reflection.',cues:'Communicate early, move safely, encourage.',safety:'Keep relay lanes clear.',progressions:'Students choose their strongest station for assessment.',links:[{label:'ASC Playing for Life',url:ASC_PLAYING_FOR_LIFE_URL}]}
+      ]
+    },
+    {
+      id:'inclusive-athletics-pe',
+      title:'Inclusive Athletics Adaptations',
+      duration:35,
+      focus:'Adapted running, jumping and throwing tasks for mixed ability classes.',
+      miniCoach:'Mini Coach: inclusion is not a separate lesson. Use this when you need multiple ways for students to access the same movement goal.',
+      curriculum:[
+        {label:'WA Curriculum HPE',url:WA_HPE_CURRICULUM_URL},
+        {label:'ASC Playing for Life',url:ASC_PLAYING_FOR_LIFE_URL},
+        {label:'Australian Curriculum HPE',url:AUSTRALIAN_HPE_URL}
+      ],
+      activities:[
+        {id:'inc-choice-warmup',title:'Choice warm-up pathway',section:'starters',minutes:6,included:true,detail:'Students choose walk, jog, wheel/roll, skip or side-step pathways.',how:'Set parallel lanes with the same start/finish. Students choose the movement they can do safely.',cues:'Same challenge, different pathway.',safety:'Keep lanes wide and surfaces accessible.',progressions:'Students switch pathways or add partner support.',links:[{label:'ASC Playing for Life',url:ASC_PLAYING_FOR_LIFE_URL}]},
+        {id:'inc-target-throw',title:'Multi-distance target throws',section:'sessions',minutes:9,included:true,detail:'Targets at different distances and heights for success choice.',how:'Students pick a target zone, throw safely, then adjust easier or harder.',cues:'Choose challenge, use technique, celebrate accuracy.',safety:'Use soft equipment and one throwing direction.',progressions:'Students design a fair scoring system.',links:[{label:'WA Curriculum HPE',url:WA_HPE_CURRICULUM_URL}]},
+        {id:'inc-jump-options',title:'Jump or reach options',section:'sessions',minutes:8,included:true,detail:'Standing jump, step-over, reach target or balance landing.',how:'Offer stations that train power, balance or coordination without one fixed outcome.',cues:'Strong shape, safe landing, personal best.',safety:'Use non-slip markers and allow supported balance.',progressions:'Students track their own improvement.',links:[{label:'Australian Curriculum HPE',url:AUSTRALIAN_HPE_URL}]},
+        {id:'inc-team-challenge',title:'Team points challenge',section:'sessions',minutes:8,included:true,detail:'Teams collect points from varied movement stations.',how:'Every station has multiple scoring options so all students contribute.',cues:'Pick your role, help your team, move safely.',safety:'Avoid ranking students by disability or support need.',progressions:'Students rotate leadership roles.',links:[{label:'ASC Playing for Life',url:ASC_PLAYING_FOR_LIFE_URL}]},
+        {id:'inc-reflect',title:'Inclusion reflection',section:'cooldowns',minutes:4,included:true,detail:'Students identify how adapting rules helped participation.',how:'Ask: what made the activity fair, safe and fun?',cues:'Fair does not always mean identical.',safety:'Keep feedback respectful and private.',progressions:'Students suggest one adaptation for next lesson.',links:[{label:'WA Curriculum HPE',url:WA_HPE_CURRICULUM_URL}]}
+      ]
+    },
+    {
+      id:'assessment-pb-trials',
+      title:'Athletics PB And Assessment Trials',
+      duration:45,
+      focus:'Structured, low-stress personal best collection across run, jump and throw events.',
+      miniCoach:'Mini Coach: PB days should be calm and procedural. Students need clear attempts, not chaos.',
+      curriculum:[
+        {label:'WA Curriculum HPE',url:WA_HPE_CURRICULUM_URL},
+        {label:'World Athletics Kids',url:WORLD_ATHLETICS_KIDS_URL},
+        {label:'Australian Curriculum HPE',url:AUSTRALIAN_HPE_URL}
+      ],
+      activities:[
+        {id:'pb-brief',title:'PB trial briefing',section:'starters',minutes:5,included:true,detail:'Explain attempts, recording, safety and encouragement expectations.',how:'Show the recording sheet/app process and explain that PB means personal best.',cues:'Do your best, record honestly, support others.',safety:'Make medical and heat procedures explicit.',progressions:'Student helpers can manage clipboards.',links:[{label:'WA Curriculum HPE',url:WA_HPE_CURRICULUM_URL}]},
+        {id:'pb-sprint',title:'Sprint timing trial',section:'sessions',minutes:10,included:true,detail:'Students complete one practice and one timed sprint.',how:'Run by division distance. Pair students for timing or use teacher timing.',cues:'Run through the finish.',safety:'Clear run-off zone.',progressions:'Add second attempt only if recovery is adequate.',links:[{label:'World Athletics Kids',url:WORLD_ATHLETICS_KIDS_URL}]},
+        {id:'pb-jump',title:'Long jump trial',section:'sessions',minutes:10,included:true,detail:'Three safe jumps with best attempt recorded.',how:'Use a take-off zone and measure from the closest landing mark.',cues:'Same run-up, safe landing.',safety:'One jumper at a time.',progressions:'Students record technique cue with result.',links:[{label:'Track and field stations',url:PE_STATION_IDEAS_URL}]},
+        {id:'pb-throw',title:'Vortex throw trial',section:'sessions',minutes:10,included:true,detail:'Three throws with best safe throw recorded.',how:'Students throw in order, retrieve together, then record best distance.',cues:'Step, throw, follow through.',safety:'Strict retrieval signal.',progressions:'Mark leading results in Sports tab later.',links:[{label:'World Athletics Kids',url:WORLD_ATHLETICS_KIDS_URL}]},
+        {id:'pb-record',title:'Record and celebrate',section:'cooldowns',minutes:10,included:true,detail:'Record PBs and recognise effort, technique and teamwork.',how:'Students check their recorded results and name an improvement.',cues:'Celebrate improvement and courage.',safety:'Keep public sharing opt-in and respectful.',progressions:'Create goal groups for future lessons.',links:[{label:'Australian Curriculum HPE',url:AUSTRALIAN_HPE_URL}]}
+      ]
+    },
+    {
+      id:'game-sense-athletics',
+      title:'Game Sense Athletics',
+      duration:40,
+      focus:'Play-based athletics tasks that develop decision-making, teamwork and movement confidence.',
+      miniCoach:'Mini Coach: use this when the class needs high energy and low pressure while still building athletics skills.',
+      curriculum:[
+        {label:'ASC Playing for Life',url:ASC_PLAYING_FOR_LIFE_URL},
+        {label:'ASC Sport Lesson Plans',url:ASC_SPORT_LESSON_PLANS_URL},
+        {label:'WA Curriculum HPE',url:WA_HPE_CURRICULUM_URL}
+      ],
+      activities:[
+        {id:'gs-tag-starts',title:'Tag starts',section:'starters',minutes:7,included:true,detail:'Short chase starts to practise reaction and acceleration.',how:'In pairs, front student starts on cue and back student chases for 10m.',cues:'React, push, stay in lane.',safety:'Pair similar speeds and use clear finish line.',progressions:'Change start positions.',links:[{label:'ASC Playing for Life',url:ASC_PLAYING_FOR_LIFE_URL}]},
+        {id:'gs-zone-jumps',title:'Zone jump scoring',section:'sessions',minutes:8,included:true,detail:'Students jump into scoring zones with personal challenge choices.',how:'Mark three zones. Students choose starting point and try to improve.',cues:'Swing, jump, land safely.',safety:'Do not crowd landing zones.',progressions:'Teams score improvement points.',links:[{label:'World Athletics Kids',url:WORLD_ATHLETICS_KIDS_URL}]},
+        {id:'gs-throw-bowling',title:'Throwing bowling',section:'sessions',minutes:8,included:true,detail:'Throw to knock over cones or land in hoops.',how:'Set targets at different distances. Students select the challenge level.',cues:'Aim, step, release, follow through.',safety:'Retrieve only on signal.',progressions:'Add team strategy around target choice.',links:[{label:'ASC Sport Lesson Plans',url:ASC_SPORT_LESSON_PLANS_URL}]},
+        {id:'gs-relay-puzzle',title:'Relay puzzle',section:'sessions',minutes:11,included:true,detail:'Teams complete short shuttle runs to collect puzzle pieces/cards.',how:'One runner at a time collects a card and returns for team problem solving.',cues:'Run safely, tag next runner, think together.',safety:'No diving for cards.',progressions:'Use athletics cue cards as the puzzle.',links:[{label:'ASC Playing for Life',url:ASC_PLAYING_FOR_LIFE_URL}]},
+        {id:'gs-review',title:'Game sense review',section:'cooldowns',minutes:6,included:true,detail:'Students explain a decision that helped their team.',how:'Ask teams what they changed to improve performance.',cues:'Good athletes think and move.',safety:'Use calm discussion after high-energy play.',progressions:'Students modify one rule for next round.',links:[{label:'Australian Curriculum HPE',url:AUSTRALIAN_HPE_URL}]}
+      ]
+    },
+    {
+      id:'wet-weather-athletics',
+      title:'Wet Weather Athletics Classroom/Gym',
+      duration:35,
+      focus:'Indoor-safe movement learning for days when oval training is not possible.',
+      miniCoach:'Mini Coach: wet weather lessons can still build vocabulary, rhythm, strength and safety habits.',
+      curriculum:[
+        {label:'WA Curriculum HPE',url:WA_HPE_CURRICULUM_URL},
+        {label:'SPARK sample lessons',url:SPARK_PE_URL},
+        {label:'ASC Playing for Life',url:ASC_PLAYING_FOR_LIFE_URL}
+      ],
+      activities:[
+        {id:'ww-space-check',title:'Indoor space check',section:'starters',minutes:4,included:true,detail:'Identify safe movement areas and equipment limits.',how:'Walk boundaries, mark no-go zones and set voice level expectations.',cues:'Small space, small movement, big control.',safety:'Remove chairs/bags and avoid slippery floors.',progressions:'Students help set station boundaries.',links:[{label:'SPARK sample lessons',url:SPARK_PE_URL}]},
+        {id:'ww-tech-circuit',title:'Technique shadow circuit',section:'sessions',minutes:9,included:true,detail:'Shadow sprint arms, jump take-off shapes and throw positions.',how:'Rotate through stations without running or releasing equipment.',cues:'Quality shapes, slow control.',safety:'No throwing objects indoors unless soft and approved.',progressions:'Add peer coach cue cards.',links:[{label:'WA Curriculum HPE',url:WA_HPE_CURRICULUM_URL}]},
+        {id:'ww-reaction',title:'Reaction and rhythm games',section:'sessions',minutes:8,included:true,detail:'Clap starts, mirror movement and foot rhythm drills.',how:'Students react to visual/audio cues and move in place or over short markers.',cues:'Ready shape, quick response, stop balanced.',safety:'Low-speed movements only.',progressions:'Students become callers/leaders.',links:[{label:'ASC Playing for Life',url:ASC_PLAYING_FOR_LIFE_URL}]},
+        {id:'ww-plan-event',title:'Design an event station',section:'sessions',minutes:8,included:true,detail:'Groups design a safe athletics station for the next outdoor lesson.',how:'Give each group run, jump or throw and ask for rules, safety and scoring.',cues:'Plan for fairness and safety.',safety:'Teacher approves all ideas before use.',progressions:'Best stations become next lesson rotations.',links:[{label:'Australian Curriculum HPE',url:AUSTRALIAN_HPE_URL}]},
+        {id:'ww-share',title:'Share and select',section:'cooldowns',minutes:6,included:true,detail:'Groups explain one station and one safety rule.',how:'Keep presentations to 30 seconds and record useful ideas.',cues:'Clear, simple, safe.',safety:'No demonstrations that need speed indoors.',progressions:'Save as Programming notes.',links:[{label:'WA Curriculum HPE',url:WA_HPE_CURRICULUM_URL}]}
+      ]
+    },
+    {
+      id:'upper-primary-athletics-unit',
+      title:'Upper Primary 6-Lesson Athletics Unit',
+      duration:50,
+      focus:'A unit-style overview lesson for Years 5-6 covering sprint, relay, jump, throw and pacing.',
+      miniCoach:'Mini Coach: use this as a planning shell. It helps map a multi-week athletics block, not just one session.',
+      curriculum:[
+        {label:'WA Curriculum HPE',url:WA_HPE_CURRICULUM_URL},
+        {label:'World Athletics Kids',url:WORLD_ATHLETICS_KIDS_URL},
+        {label:'ASC Sport Lesson Plans',url:ASC_SPORT_LESSON_PLANS_URL}
+      ],
+      activities:[
+        {id:'unit-map',title:'Unit map and success criteria',section:'starters',minutes:8,included:true,detail:'Show students the athletics block and what success looks like.',how:'List lessons: sprint, relay, jump, throw, pacing, PB trials. Students choose a personal focus.',cues:'Technique, effort, safety, teamwork.',safety:'Explain that trials are staff-managed and inclusive.',progressions:'Students add a personal goal card.',links:[{label:'WA Curriculum HPE',url:WA_HPE_CURRICULUM_URL}]},
+        {id:'unit-skill-sample',title:'Skill sample rotation',section:'sessions',minutes:18,included:true,detail:'Short samples of sprint, jump and throw stations.',how:'Run three six-minute stations with quick cues only.',cues:'Try the cue, notice what changes.',safety:'Throw station has separate space and retrieval signal.',progressions:'Students rate confidence for each event.',links:[{label:'World Athletics Kids',url:WORLD_ATHLETICS_KIDS_URL}]},
+        {id:'unit-peer-coach',title:'Peer coaching cards',section:'sessions',minutes:10,included:true,detail:'Students use simple cue cards to coach a partner.',how:'Give one cue per event. Partner watches and gives one helpful comment.',cues:'One cue at a time; be specific and kind.',safety:'Teacher models respectful feedback.',progressions:'Students write their own cue card.',links:[{label:'Australian Curriculum HPE',url:AUSTRALIAN_HPE_URL}]},
+        {id:'unit-mini-event',title:'Mini event choice',section:'sessions',minutes:8,included:true,detail:'Students choose one event to practise with feedback.',how:'Open stations and direct students to their chosen event.',cues:'Choose the event that matches your goal.',safety:'Cap numbers per station.',progressions:'Record goal groups for future lessons.',links:[{label:'ASC Sport Lesson Plans',url:ASC_SPORT_LESSON_PLANS_URL}]},
+        {id:'unit-exit-ticket',title:'Exit ticket',section:'cooldowns',minutes:6,included:true,detail:'Students write one event goal and one safety rule.',how:'Use sticky notes or digital notes.',cues:'Specific goals help training.',safety:'Collect notes privately if confidence is low.',progressions:'Use goals to assign training later.',links:[{label:'WA Curriculum HPE',url:WA_HPE_CURRICULUM_URL}]}
+      ]
+    }
+  ]);
+
+  function clonePlan(plan){return JSON.parse(JSON.stringify(plan));}
+  function resourceSessionPlans(){
+    var saved=load(RESOURCE_SESSION_PLANS_KEY,{});
+    return RESOURCE_SESSION_TEMPLATES.map(function(template){
+      var override=saved[template.id]||{};
+      var merged=clonePlan(template);
+      if(override.duration){merged.duration=Number(override.duration)||merged.duration;}
+      if(Array.isArray(override.activities)){
+        merged.activities=merged.activities.map(function(activity){
+          var edited=override.activities.find(function(row){return row.id===activity.id;})||{};
+          return Object.assign({},activity,{
+            included:edited.included!==undefined?!!edited.included:activity.included,
+            minutes:edited.minutes!==undefined?Number(edited.minutes)||0:activity.minutes,
+            section:edited.section||activity.section||'sessions'
+          });
+        });
+      }
+      merged.sections=resourcePlanSections(merged,override.sections);
+      return merged;
+    });
+  }
+
+  function activeResourceSession(){
+    return resourceSessionPlans().find(function(plan){return plan.id===activeResourceSessionId;})||resourceSessionPlans()[0];
+  }
+
+  function resourceIncludedMinutes(plan){
+    return plan.activities.filter(function(activity){return activity.included;}).reduce(function(total,activity){return total+Number(activity.minutes||0);},0);
+  }
+
+  function resourceSectionMinutes(plan,sectionId){
+    return plan.activities.filter(function(activity){return activity.included&&(activity.section||'sessions')===sectionId;}).reduce(function(total,activity){return total+Number(activity.minutes||0);},0);
+  }
+
+  function resourcePlanSections(plan,overrides){
+    var saved=Array.isArray(overrides)?overrides:[];
+    return RESOURCE_PLAN_SECTIONS.map(function(section){
+      var edited=saved.find(function(row){return row.id===section.id;})||{};
+      return {
+        id:section.id,
+        title:section.title,
+        target:edited.target!==undefined?Number(edited.target)||0:section.defaultTarget,
+        note:edited.note||'',
+        placeholder:section.placeholder
+      };
+    });
+  }
+
+  function resourceMiniCoachRecommendations(plan){
+    var notes=[];
+    var selected=resourceIncludedMinutes(plan);
+    var included=plan.activities.filter(function(activity){return activity.included;});
+    var includedText=included.map(function(activity){return (activity.title+' '+activity.detail+' '+(activity.how||'')+' '+(activity.cues||'')).toLowerCase();}).join(' ');
+    plan.sections.forEach(function(section){
+      var actual=resourceSectionMinutes(plan,section.id);
+      if(actual===0){notes.push(section.title+' is empty. Add or tick at least one activity so the plan has a clear '+section.title.toLowerCase()+' block.');}
+      else if(section.target&&actual>section.target+3){notes.push(section.title+' is '+(actual-section.target)+' minutes over target. Consider trimming or moving one activity.');}
+      else if(section.target&&actual<section.target-3){notes.push(section.title+' is '+(section.target-actual)+' minutes under target. Add a cue, transition, or reflection task if needed.');}
+    });
+    if(/\bsprint|acceleration|start|speed/.test(includedText)&&!/\brelay|baton|exchange/.test(includedText)){notes.push('Because you have sprint work selected, a short relay exchange or reaction game would pair well without adding too much load.');}
+    if(/\bthrow|vortex|javelin/.test(includedText)&&!/\bsafety|retrieval|wait line/.test(includedText)){notes.push('Throwing is selected, so add a safety routine or retrieval signal before any distance attempts.');}
+    if(/\blong jump|jump|landing/.test(includedText)&&!/\blanding|stick/.test(includedText)){notes.push('Jump work pairs best with a landing-shape starter before measured attempts.');}
+    if(/\bpacing|cross country|400m|endurance/.test(includedText)&&/\bsprint|maximum/.test(includedText)){notes.push('This mixes endurance and speed. Keep sprint reps short and make the pacing block controlled rather than maximal.');}
+    if(included.length>=6){notes.push('You have a busy lesson. Consider opening the chat and asking “what should I cut?” if time gets tight.');}
+    if(selected>Number(plan.duration||0)){notes.push('Selected activities are longer than the session length. Reduce minutes or increase the session length.');}
+    if(selected<=Number(plan.duration||0)&&!notes.length){notes.push('This balance looks workable. Keep transitions tight and use the notes boxes to remind staff what to emphasise.');}
+    return notes;
+  }
+
+  function resourcePlanSearchText(plan){
+    return [
+      plan.title,plan.focus,plan.miniCoach,
+      plan.curriculum.map(function(link){return link.label;}).join(' '),
+      plan.activities.map(function(activity){return [activity.title,activity.detail,activity.how,activity.cues,activity.safety,activity.progressions].join(' ');}).join(' ')
+    ].join(' ').toLowerCase();
+  }
+
+  function resourceKeywordScore(text,query){
+    var words=String(query||'').toLowerCase().split(/[^a-z0-9]+/).filter(function(word){return word.length>2;});
+    return words.reduce(function(score,word){return score+(text.indexOf(word)!==-1?1:0);},0);
+  }
+
+  function resourceCoachPairings(plan){
+    var text=resourcePlanSearchText(plan);
+    var pairings=[];
+    function add(label,reason){
+      if(!pairings.some(function(item){return item.label===label;})){pairings.push({label:label,reason:reason});}
+    }
+    if(/\bsprint|acceleration|start|speed/.test(text)){
+      add('Straight-Line Baton Relay','Sprint starts pair naturally with relay exchanges and team communication.');
+      add('Long Jump Primary Progression','Acceleration rhythm transfers well into a short long-jump run-up.');
+      add('Athletics PB And Assessment Trials','Use PB trials after students have practised sprint mechanics safely.');
+    }
+    if(/\bpacing|cross country|endurance|400m/.test(text)){
+      add('Cross Country Skills And Course Confidence','Pacing lessons connect directly to course confidence and effort choices.');
+      add('Middle Distance Pacing 100m, 200m, 400m','Use this to sharpen pacing without turning it into a max-effort session.');
+    }
+    if(/\bthrow|vortex|javelin/.test(text)){
+      add('Athletics Station Circuit','Vortex work fits well as one station inside a broader circuit.');
+      add('Athletics PB And Assessment Trials','Measured throws work best after a safety-routine lesson.');
+    }
+    if(/\bjump|landing|long jump/.test(text)){
+      add('Run, Jump, Throw Fundamentals','Use fundamental landing shapes before measured jumps.');
+      add('Athletics Station Circuit','Jump stations pair well with sprint and throw stations for high participation.');
+    }
+    if(/\bball|teamwork|pass|tunnel|leader/.test(text)){
+      add('Game Sense Athletics','Ball games pair with game-sense activities because both teach decisions and teamwork.');
+      add('Inclusive Athletics Adaptations','Use adaptations to keep ball-game roles fair across mixed abilities.');
+    }
+    if(!pairings.length){
+      add('Athletics Station Circuit','A station circuit is the safest default pairing when the lesson goal is broad.');
+      add('Run, Jump, Throw Fundamentals','Use fundamentals when a class needs a reset before specialised event work.');
+    }
+    return pairings.slice(0,4);
+  }
+
+  function setResourceMiniCoachOpen(open){
+    if(!resourceMiniCoachWidgetEl||!resourceMiniCoachToggleEl||!resourceMiniCoachPopoverEl){return;}
+    resourceMiniCoachWidgetEl.classList.toggle('open',!!open);
+    resourceMiniCoachToggleEl.setAttribute('aria-expanded',open?'true':'false');
+    resourceMiniCoachPopoverEl.hidden=!open;
+  }
+
+  function updateResourceMiniCoachWidget(plan){
+    if(!resourceMiniCoachWidgetEl||!resourceMiniCoachSessionEl||!resourceMiniCoachSummaryEl||!resourceMiniCoachNotesEl){return;}
+    var notes=resourceMiniCoachRecommendations(plan);
+    resourceMiniCoachSessionEl.textContent=plan.title;
+    resourceMiniCoachSummaryEl.textContent=plan.miniCoach.replace(/^Mini Coach:\s*/,'');
+    resourceMiniCoachNotesEl.innerHTML=notes.map(function(note){return '<li>'+escapeHtml(note)+'</li>';}).join('');
+    if(resourceMiniCoachActionsEl){
+      resourceMiniCoachActionsEl.innerHTML='<strong>Quick help</strong><div>'+resourceMiniCoachQuickActions(plan).map(function(action){
+        return '<button type="button" data-mini-coach-question="'+escapeAttr(action.prompt)+'">'+escapeHtml(action.label)+'</button>';
+      }).join('')+'</div>';
+      Array.prototype.forEach.call(resourceMiniCoachActionsEl.querySelectorAll('[data-mini-coach-question]'),function(btn){
+        btn.addEventListener('click',function(){resourceMiniCoachAsk(btn.getAttribute('data-mini-coach-question')||'');});
+      });
+    }
+    if(resourceMiniCoachPairingsEl){
+      resourceMiniCoachPairingsEl.innerHTML='<strong>Pairs well with</strong><div>'+resourceCoachPairings(plan).map(function(item){
+        return '<button type="button" data-mini-coach-question="How should I pair '+escapeAttr(plan.title)+' with '+escapeAttr(item.label)+'?">'+escapeHtml(item.label)+'</button>';
+      }).join('')+'</div>';
+      Array.prototype.forEach.call(resourceMiniCoachPairingsEl.querySelectorAll('[data-mini-coach-question]'),function(btn){
+        btn.addEventListener('click',function(){
+          resourceMiniCoachAsk(btn.getAttribute('data-mini-coach-question')||'');
+        });
+      });
+    }
+  }
+
+  function resourceMiniCoachQuickActions(plan){
+    var title=plan.title;
+    return [
+      {label:'Build program',prompt:'Make me a 4 week program based on '+title},
+      {label:'Safety check',prompt:'Give me a safety check for '+title},
+      {label:'Differentiate',prompt:'How can I differentiate '+title+' for mixed ability students?'},
+      {label:'Equipment',prompt:'What equipment and setup do I need for '+title+'?'},
+      {label:'Assessment',prompt:'How should I assess or record progress for '+title+'?'},
+      {label:'Wet weather',prompt:'Give me a wet weather backup for '+title}
+    ];
+  }
+
+  function resourceMiniCoachSearchPlans(query){
+    return resourceSessionPlans().map(function(plan){
+      return {plan:plan,score:resourceKeywordScore(resourcePlanSearchText(plan),query)};
+    }).filter(function(row){return row.score>0;}).sort(function(a,b){return b.score-a.score;}).slice(0,4).map(function(row){return row.plan;});
+  }
+
+  function resourceMiniCoachGoalTags(goal){
+    var q=String(goal||'').toLowerCase();
+    var tags=[];
+    if(/\bsprint|50m|75m|100m|200m|speed|acceleration/.test(q)){tags.push('sprint','speed');}
+    if(/\brelay|baton/.test(q)){tags.push('relay','teamwork');}
+    if(/\bcross country|endurance|distance|400m|800m|pacing|stamina/.test(q)){tags.push('pacing','cross country','endurance');}
+    if(/\blong jump|jump|landing/.test(q)){tags.push('jump');}
+    if(/\bthrow|vortex|javelin|shot|discus/.test(q)){tags.push('throw');}
+    if(/\bball|tunnel|leader|pass/.test(q)){tags.push('ball game','teamwork');}
+    if(/\binclusive|mixed ability|confidence|beginner/.test(q)){tags.push('inclusive','fundamentals');}
+    if(/\bpb|trial|assess|carnival|team/.test(q)){tags.push('assessment','carnival');}
+    if(/\bwet|rain|indoor|classroom|gym/.test(q)){tags.push('wet weather');}
+    if(!tags.length){tags.push('fundamentals','athletics');}
+    return Array.from(new Set(tags));
+  }
+
+  function resourceMiniCoachWeeks(goal){
+    var match=String(goal||'').match(/(\d+)\s*(?:week|wk)/i);
+    var weeks=match?Math.max(1,Math.min(10,Number(match[1]))):4;
+    return weeks;
+  }
+
+  function resourceMiniCoachPlanScore(plan,tags,goal){
+    var text=resourcePlanSearchText(plan);
+    var score=resourceKeywordScore(text,goal);
+    tags.forEach(function(tag){if(text.indexOf(tag)!==-1){score+=3;}});
+    if(/foundation|fundamental/.test(text)){score+=1;}
+    if(/assessment|pb|trial/.test(text)&&tags.indexOf('assessment')!==-1){score+=2;}
+    return score;
+  }
+
+  function resourceMiniCoachBuildProgram(goal){
+    var weeks=resourceMiniCoachWeeks(goal);
+    var tags=resourceMiniCoachGoalTags(goal);
+    var ranked=resourceSessionPlans().map(function(plan){
+      return {plan:plan,score:resourceMiniCoachPlanScore(plan,tags,goal)};
+    }).sort(function(a,b){return b.score-a.score;}).map(function(row){return row.plan;});
+    var fallbackTitles=['Run, Jump, Throw Fundamentals','Athletics Station Circuit','Athletics PB And Assessment Trials'];
+    fallbackTitles.forEach(function(title){
+      var plan=resourceSessionPlans().find(function(item){return item.title===title;});
+      if(plan&&ranked.indexOf(plan)===-1){ranked.push(plan);}
+    });
+    var selected=[];
+    ranked.forEach(function(plan){
+      if(selected.length<Math.min(weeks,6)&&selected.indexOf(plan)===-1){selected.push(plan);}
+    });
+    while(selected.length<weeks){
+      selected.push(selected[selected.length%Math.max(1,selected.length)]||resourceSessionPlans()[0]);
+    }
+    var sessions=[];
+    for(var i=0;i<weeks;i++){
+      var source=selected[i%selected.length];
+      var cloned=clonePlan(source);
+      var includeLimit=i===weeks-1?5:4;
+      var activities=cloned.activities.filter(function(activity){return activity.included;}).slice(0,includeLimit);
+      if(i===weeks-1&&resourcePlanSearchText(source).indexOf('assessment')===-1){
+        var assessment=resourceSessionPlans().find(function(plan){return plan.id==='assessment-pb-trials';});
+        if(assessment){source=assessment; cloned=clonePlan(assessment); activities=cloned.activities.filter(function(activity){return activity.included;}).slice(0,5);}
+      }
+      sessions.push({
+        week:i+1,
+        title:(weeks>1?'Week '+(i+1)+': ':'')+source.title,
+        sourceId:source.id,
+        sourceTitle:source.title,
+        focus:source.focus,
+        duration:source.duration,
+        activities:activities.map(function(activity){return {title:activity.title,minutes:activity.minutes,detail:activity.detail,cues:activity.cues||'',safety:activity.safety||''};}),
+        safety:activities.map(function(activity){return activity.safety;}).filter(Boolean)[0]||'Keep clear boundaries, hydrate, and adjust intensity to student readiness.'
+      });
+    }
+    return {
+      id:'mini-coach-program-'+Date.now(),
+      goal:String(goal||'').trim(),
+      weeks:weeks,
+      tags:tags,
+      sessions:sessions,
+      created_at:new Date().toISOString()
+    };
+  }
+
+  function resourceMiniCoachProgramSummary(program){
+    return 'I drafted a '+program.weeks+' week program for: '+program.goal+'. It uses '+program.sessions.map(function(session){return session.sourceTitle;}).filter(function(value,index,self){return self.indexOf(value)===index;}).join(', ')+'. Review it, then apply it to the editable planner if it fits.';
+  }
+
+  function renderResourceMiniCoachProgram(program){
+    if(!resourceMiniCoachProgramEl){return;}
+    if(!program){resourceMiniCoachProgramEl.hidden=true;resourceMiniCoachProgramEl.innerHTML='';return;}
+    resourceMiniCoachProgramEl.hidden=false;
+    resourceMiniCoachProgramEl.innerHTML='<strong>Generated program</strong><p>'+escapeHtml(program.goal)+'</p>'+
+      '<div class="resource-mini-coach-program-list">'+program.sessions.map(function(session){
+        return '<details><summary>'+escapeHtml(session.title)+' <span>'+Number(session.duration||0)+' min</span></summary>'+
+          '<p>'+escapeHtml(session.focus)+'</p>'+
+          '<ul>'+session.activities.map(function(activity){return '<li><strong>'+escapeHtml(activity.title)+'</strong> '+Number(activity.minutes||0)+' min - '+escapeHtml(activity.detail)+'</li>';}).join('')+'</ul>'+
+          '<small>Safety: '+escapeHtml(session.safety)+'</small>'+
+        '</details>';
+      }).join('')+'</div>'+
+      '<div class="resource-mini-coach-program-actions"><button type="button" id="apply-mini-coach-program-btn">Apply first session</button><button type="button" id="copy-mini-coach-program-btn">Copy summary</button></div>';
+    var applyBtn=document.getElementById('apply-mini-coach-program-btn');
+    var copyBtn=document.getElementById('copy-mini-coach-program-btn');
+    if(applyBtn){applyBtn.addEventListener('click',applyMiniCoachProgramFirstSession);}
+    if(copyBtn){copyBtn.addEventListener('click',copyMiniCoachProgramSummary);}
+  }
+
+  function applyMiniCoachProgramFirstSession(){
+    if(!resourceMiniCoachGeneratedProgram||!resourceMiniCoachGeneratedProgram.sessions.length){return;}
+    activeResourceSessionId=resourceMiniCoachGeneratedProgram.sessions[0].sourceId;
+    renderResourceSessionPlanner();
+    resourceMiniCoachChatHistory.push({role:'coach',text:'Applied the first generated session to the editable planner. You can now adjust timings, tick activities, drag sections and save it.'});
+    renderResourceMiniCoachChat();
+    setResourceMiniCoachOpen(true);
+  }
+
+  function copyMiniCoachProgramSummary(){
+    if(!resourceMiniCoachGeneratedProgram){return;}
+    var text=resourceMiniCoachProgramSummary(resourceMiniCoachGeneratedProgram)+'\n'+resourceMiniCoachGeneratedProgram.sessions.map(function(session){
+      return session.title+' - '+session.focus+' - '+session.activities.map(function(activity){return activity.title+' ('+activity.minutes+' min)';}).join(', ');
+    }).join('\n');
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).catch(function(){});
+    }
+    resourceMiniCoachChatHistory.push({role:'coach',text:'Program summary prepared. If clipboard access is available, it has been copied.'});
+    renderResourceMiniCoachChat();
+  }
+
+  function resourceMiniCoachAnswer(question,plan){
+    var q=String(question||'').toLowerCase();
+    var selected=plan.activities.filter(function(activity){return activity.included;});
+    var selectedTitles=selected.map(function(activity){return activity.title;}).join(', ')||'nothing selected yet';
+    if(/\b(make|build|create|generate|write|draft)\b.*\b(program|plan|unit|sessions|lesson block)\b|\bprogram for\b|\bplan for\b/.test(q)){
+      resourceMiniCoachGeneratedProgram=resourceMiniCoachBuildProgram(question);
+      renderResourceMiniCoachProgram(resourceMiniCoachGeneratedProgram);
+      return resourceMiniCoachProgramSummary(resourceMiniCoachGeneratedProgram);
+    }
+    if(/\bsprint|50|75|100|speed/.test(q)){return 'For sprints, choose Sprint Mechanics first, then pair it with Straight-Line Baton Relay, Long Jump Primary Progression, or PB Trials. Keep efforts short, give full walk-back recovery, and avoid too many max reps.';}
+    if(/\bthrow|vortex/.test(q)){return 'For Vortex or throws, start with safety routine, side-on shapes, then controlled zone throws. Only measure after retrieval rules are automatic.';}
+    if(/\bjump|long/.test(q)){return 'For long jump, pair landing shapes with five-step run-up rhythm. Measure only after students can land safely and repeat a controlled take-off.';}
+    if(/\bpair|with|combine|match/.test(q)){
+      return 'For '+plan.title+', I would pair it with '+resourceCoachPairings(plan).map(function(item){return item.label+' because '+item.reason.toLowerCase();}).join(' ');
+    }
+    if(/\bcut|short|time|too long|trim/.test(q)){
+      var over=resourceIncludedMinutes(plan)-Number(plan.duration||0);
+      if(over>0){return 'You are '+over+' minutes over. Keep the starter, keep the safest main activity, then trim the lowest-priority repeated practice block first. Current selected activities: '+selectedTitles+'.';}
+      return 'You are within the session length. If you need to shorten it, cut one repeated practice block before cutting safety, warm-up, or cooldown.';
+    }
+    if(/\bsafety|risk|safe|medical/.test(q)){
+      return 'Safety focus for this lesson: keep clear boundaries, avoid max efforts without recovery, and preserve any activity marked around retrieval, landing, finish flow, or medical checks. For the selected lesson, do not cut safety routines before technical practice.';
+    }
+    if(/\bdifferentiate|inclusive|mixed ability|support|extension|easier|harder/.test(q)){
+      return 'Differentiate by changing distance, speed, object weight, target size, recovery time and role. Keep the same learning goal, but offer choices: supported movement pathway, standard challenge, and extension challenge. Avoid public ranking; track personal bests and effort cues.';
+    }
+    if(/\bequipment|setup|cones|gear|what do i need/.test(q)){
+      return 'Setup checklist: cones for boundaries, clear run-off space, first aid/medical notes, water point, whistle/timer, clipboard or device, and event-specific gear. For sprints use lanes and finish markers. For throws use a wait line, throw line and retrieval signal. For jumps check the landing surface first.';
+    }
+    if(/\bassess|assessment|record|rubric|progress|pb/.test(q)){
+      return 'Assessment can be simple: 1 technique cue observed, 1 safety behaviour, 1 participation/teamwork note, and optional PB result. Record progress after technique practice, not before. For younger students, use “safe / developing / confident” rather than over-measuring.';
+    }
+    if(/\bwet weather|rain|indoor|gym|classroom/.test(q)){
+      return 'Wet-weather backup: use technique shadows, reaction games, rhythm drills, station design, cue-card peer coaching and goal setting. Avoid full throws or sprints indoors unless the space is approved and equipment is soft.';
+    }
+    if(/\bbrainstorm|ideas|functions|what else|features/.test(q)){
+      return 'Mini Coach could also help with: automatic unit plans, equipment lists, safety risk prompts, differentiation options, PB/assessment rubrics, wet-weather swaps, parent-safe summaries, student cue cards, lesson reflection questions, team selection notes, and next-session recommendations.';
+    }
+    if(/\bwarm|starter|start/.test(q)){
+      return 'A good starter should prepare the exact skill. Sprint lessons suit ankling, A-skips and reaction starts. Jump lessons suit landing shapes. Throw lessons suit no-equipment safety rehearsal. Pacing lessons suit talk-test jogging.';
+    }
+    if(/\bcurriculum|wa|hpe|link/.test(q)){
+      return 'This library maps back to WA Curriculum HPE movement learning, active choices, teamwork and safe participation. Open the source chips in each lesson leg for the exact curriculum/resource family.';
+    }
+    if(/\bselect|recommend|best|suit|choose|lesson/.test(q)){
+      var matches=resourceMiniCoachSearchPlans(question);
+      if(matches.length){return 'Best catalogue matches: '+matches.map(function(match){return match.title+' - '+match.focus;}).join(' | ');}
+    }
+    return 'Based on the current lesson, you have selected '+selectedTitles+'. My next best action is: '+resourceMiniCoachRecommendations(plan)[0]+' You can ask about pairings, safety, warm-ups, timing, curriculum, or which lesson suits a specific event.';
+  }
+
+  function renderResourceMiniCoachChat(){
+    if(!resourceMiniCoachChatLogEl){return;}
+    resourceMiniCoachChatLogEl.innerHTML=resourceMiniCoachChatHistory.slice(-8).map(function(msg){
+      return '<div class="resource-mini-coach-message resource-mini-coach-message--'+escapeAttr(msg.role)+'"><strong>'+escapeHtml(msg.role==='coach'?'Mini Coach':'Coach')+'</strong><p>'+escapeHtml(msg.text)+'</p></div>';
+    }).join('');
+    resourceMiniCoachChatLogEl.scrollTop=resourceMiniCoachChatLogEl.scrollHeight;
+  }
+
+  function resourceMiniCoachAsk(question){
+    var clean=String(question||'').trim();
+    if(!clean){return;}
+    var plan=currentResourcePlanFromDom();
+    resourceMiniCoachChatHistory.push({role:'user',text:clean});
+    resourceMiniCoachChatHistory.push({role:'coach',text:resourceMiniCoachAnswer(clean,plan)});
+    renderResourceMiniCoachChat();
+    if(resourceMiniCoachChatInputEl){resourceMiniCoachChatInputEl.value='';}
+    setResourceMiniCoachOpen(true);
+  }
+
+  function currentResourcePlanFromDom(){
+    var plan=activeResourceSession();
+    var sections=RESOURCE_PLAN_SECTIONS.map(function(section){
+      var targetEl=document.querySelector('.resource-section-target[data-section-id="'+section.id+'"]');
+      var noteEl=document.querySelector('.resource-section-note[data-section-id="'+section.id+'"]');
+      return {id:section.id,title:section.title,target:targetEl?Math.max(0,Number(targetEl.value||0)):section.defaultTarget,note:noteEl?noteEl.value.trim():'',placeholder:section.placeholder};
+    });
+    var activities=plan.activities.map(function(activity){
+      var includeEl=document.querySelector('.resource-activity-include[data-activity-id="'+activity.id+'"]');
+      var minuteEl=document.querySelector('.resource-activity-minutes[data-activity-id="'+activity.id+'"]');
+      var rowEl=document.querySelector('.resource-activity-row[data-activity-id="'+activity.id+'"]');
+      var sectionEl=rowEl?rowEl.closest('.resource-section-dropzone'):null;
+      return Object.assign({},activity,{
+        included:includeEl?includeEl.checked:activity.included,
+        minutes:minuteEl?Math.max(0,Number(minuteEl.value||0)):activity.minutes,
+        section:sectionEl?sectionEl.getAttribute('data-resource-section'):(activity.section||'sessions')
+      });
+    });
+    return Object.assign({},plan,{sections:sections,activities:activities,duration:Number(document.getElementById('resource-session-duration').value||plan.duration)});
+  }
+
+  function updateResourceSectionSummary(){
+    var plan=currentResourcePlanFromDom();
+    plan.sections.forEach(function(section){
+      var zone=document.querySelector('.resource-section-dropzone[data-resource-section="'+section.id+'"]');
+      var label=zone&&zone.querySelector('.resource-section-head span');
+      if(label){label.textContent=resourceSectionMinutes(plan,section.id)+' / '+Number(section.target||0)+' min';}
+    });
+    var footer=document.querySelector('.resource-session-footer span');
+    if(footer){footer.textContent=resourceIncludedMinutes(plan)+' selected minutes of '+Number(plan.duration||0)+' planned';}
+    updateResourceMiniCoachWidget(plan);
+  }
+
+  function resourceActivityRows(plan,sectionId){
+    var rows=plan.activities.filter(function(activity){return (activity.section||'sessions')===sectionId;});
+    if(!rows.length){return '<p class="resource-empty-drop">Drag an activity into this section.</p>';}
+    return rows.map(function(activity){
+      var links=Array.isArray(activity.links)&&activity.links.length?activity.links:plan.curriculum;
+      var linkHtml=links.map(function(link){return '<a href="'+escapeAttr(link.url)+'" target="_blank" rel="noopener">'+escapeHtml(link.label)+'</a>';}).join('');
+      var breakdown=[
+        activity.how?'<p><strong>How:</strong> '+escapeHtml(activity.how)+'</p>':'',
+        activity.cues?'<p><strong>Cues:</strong> '+escapeHtml(activity.cues)+'</p>':'',
+        activity.safety?'<p><strong>Safety:</strong> '+escapeHtml(activity.safety)+'</p>':'',
+        activity.progressions?'<p><strong>Progression:</strong> '+escapeHtml(activity.progressions)+'</p>':''
+      ].join('');
+      return '<div class="resource-activity-row" draggable="true" data-activity-id="'+escapeAttr(activity.id)+'">'+
+        '<input type="checkbox" class="resource-activity-include" data-activity-id="'+escapeAttr(activity.id)+'" '+(activity.included?'checked':'')+' aria-label="Include '+escapeAttr(activity.title)+'" />'+
+        '<details class="resource-activity-detail"><summary><strong>'+escapeHtml(activity.title)+'</strong><small>'+escapeHtml(activity.detail)+'</small></summary><div class="resource-activity-breakdown">'+breakdown+'<div class="resource-activity-links">'+linkHtml+'</div></div></details>'+
+        '<input type="number" class="resource-activity-minutes" data-activity-id="'+escapeAttr(activity.id)+'" min="0" step="1" value="'+Number(activity.minutes||0)+'" aria-label="Minutes for '+escapeAttr(activity.title)+'" />'+
+      '</div>';
+    }).join('');
+  }
+
+  function curriculumChips(plan){
+    return plan.curriculum.map(function(item){
+      return '<a class="resource-curriculum-chip" href="'+escapeAttr(item.url)+'" target="_blank" rel="noopener">'+escapeHtml(item.label)+'</a>';
+    }).join('');
+  }
+
+  function renderResourceSessionPlanner(){
+    if(!resourceSessionListEl||!resourceSessionDetailEl){return;}
+    var plans=resourceSessionPlans();
+    var active=plans.find(function(plan){return plan.id===activeResourceSessionId;})||plans[0];
+    activeResourceSessionId=active.id;
+    resourceSessionListEl.innerHTML=plans.map(function(plan){
+      return '<button type="button" class="'+(plan.id===active.id?'resource-session-tab active':'resource-session-tab')+'" data-resource-session="'+escapeAttr(plan.id)+'">'+
+        '<strong>'+escapeHtml(plan.title)+'</strong><span>'+resourceIncludedMinutes(plan)+'/'+Number(plan.duration||0)+' min</span></button>';
+    }).join('');
+    resourceSessionDetailEl.innerHTML=
+      '<article class="resource-session-panel">'+
+        '<div class="resource-session-head"><div><h3>'+escapeHtml(active.title)+'</h3><p>'+escapeHtml(active.focus)+'</p></div>'+
+        '<label>Session length <input id="resource-session-duration" type="number" min="5" step="5" value="'+Number(active.duration||0)+'" /></label></div>'+
+        '<div class="resource-curriculum-links">'+curriculumChips(active)+'</div>'+
+        '<div class="resource-section-grid">'+active.sections.map(function(section){
+          return '<section class="resource-section-dropzone" data-resource-section="'+escapeAttr(section.id)+'">'+
+            '<div class="resource-section-head"><h4>'+escapeHtml(section.title)+'</h4><span>'+resourceSectionMinutes(active,section.id)+' / '+Number(section.target||0)+' min</span></div>'+
+            '<label>Section target minutes <input type="number" class="resource-section-target" data-section-id="'+escapeAttr(section.id)+'" min="0" step="1" value="'+Number(section.target||0)+'" /></label>'+
+            '<label>Coach notes <textarea class="resource-section-note" data-section-id="'+escapeAttr(section.id)+'" rows="3" placeholder="'+escapeAttr(section.placeholder)+'">'+escapeHtml(section.note||'')+'</textarea></label>'+
+            '<div class="resource-activity-list">'+resourceActivityRows(active,section.id)+'</div>'+
+          '</section>';
+        }).join('')+'</div>'+
+        '<div class="resource-session-footer"><span>'+resourceIncludedMinutes(active)+' selected minutes of '+Number(active.duration||0)+' planned</span><button id="save-resource-session-plan-btn" type="button">Save session plan</button></div>'+
+      '</article>';
+    Array.prototype.forEach.call(resourceSessionListEl.querySelectorAll('[data-resource-session]'),function(btn){
+      btn.addEventListener('click',function(){activeResourceSessionId=btn.getAttribute('data-resource-session');renderResourceSessionPlanner();});
+    });
+    document.getElementById('save-resource-session-plan-btn').addEventListener('click',saveResourceSessionPlan);
+    bindResourceDragDrop();
+    updateResourceMiniCoachWidget(active);
+  }
+
+  function saveResourceSessionPlan(){
+    var plan=currentResourcePlanFromDom();
+    var saved=load(RESOURCE_SESSION_PLANS_KEY,{});
+    var activities=plan.activities.map(function(activity){return {id:activity.id,included:activity.included,minutes:activity.minutes,section:activity.section};});
+    var sectionRows=plan.sections.map(function(section){return {id:section.id,target:section.target,note:section.note};});
+    saved[plan.id]={duration:plan.duration,sections:sectionRows,activities:activities,updated_at:new Date().toISOString()};
+    save(RESOURCE_SESSION_PLANS_KEY,saved);
+    renderResourceSessionPlanner();
+    showResult(resourcePlanSaveStatusEl,{success:true,message:'Session plan saved.',session:plan.title,total_minutes:activities.filter(function(row){return row.included;}).reduce(function(total,row){return total+Number(row.minutes||0);},0)});
+  }
+
+  function resourceActivityDragStart(e){
+    var row=e.currentTarget;
+    e.dataTransfer.setData('text/plain',row.getAttribute('data-activity-id'));
+    e.dataTransfer.effectAllowed='move';
+  }
+
+  function resourceActivityDrop(e){
+    e.preventDefault();
+    var activityId=e.dataTransfer.getData('text/plain');
+    var target=e.currentTarget.querySelector('.resource-activity-list');
+    var row=document.querySelector('.resource-activity-row[data-activity-id="'+activityId+'"]');
+    if(target&&row){target.appendChild(row);}
+    e.currentTarget.classList.remove('drag-over');
+    updateResourceSectionSummary();
+  }
+
+  function bindResourceDragDrop(){
+    Array.prototype.forEach.call(document.querySelectorAll('.resource-activity-row'),function(row){
+      row.addEventListener('dragstart',resourceActivityDragStart);
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('.resource-section-dropzone'),function(zone){
+      zone.addEventListener('dragover',function(e){e.preventDefault();zone.classList.add('drag-over');});
+      zone.addEventListener('dragleave',function(){zone.classList.remove('drag-over');});
+      zone.addEventListener('drop',resourceActivityDrop);
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('.resource-section-target,.resource-section-note,.resource-activity-include,.resource-activity-minutes,#resource-session-duration'),function(input){
+      input.addEventListener('input',updateResourceSectionSummary);
+      input.addEventListener('change',updateResourceSectionSummary);
+    });
+  }
+
+  renderResourceSessionPlanner();
+  if(resourceMiniCoachToggleEl){
+    resourceMiniCoachToggleEl.addEventListener('click',function(){
+      setResourceMiniCoachOpen(resourceMiniCoachPopoverEl?resourceMiniCoachPopoverEl.hidden:true);
+    });
+  }
+  if(resourceMiniCoachCloseEl){
+    resourceMiniCoachCloseEl.addEventListener('click',function(){setResourceMiniCoachOpen(false);});
+  }
+  if(resourceMiniCoachChatFormEl){
+    resourceMiniCoachChatFormEl.addEventListener('submit',function(e){
+      e.preventDefault();
+      resourceMiniCoachAsk(resourceMiniCoachChatInputEl?resourceMiniCoachChatInputEl.value:'');
+    });
   }
 
   var printProgramResourcesBtn=document.getElementById('print-program-resources-btn');
@@ -1499,7 +2606,6 @@
       refreshStudentViews();
       addStudentResultEl.hidden=true;
       renderBarcodeConfirmation(student);
-      printStudentBarcodeCard(student);
     });
   });
 
@@ -1519,6 +2625,9 @@
   var athleticsEventModalStatusEl=document.getElementById('athletics-event-modal-status');
   var athleticsTeamStudentListEl=document.getElementById('athletics-team-student-list');
   var athleticsTeamResultEl=document.getElementById('athletics-team-result');
+  var selectVisibleAthletesBtn=document.getElementById('select-visible-athletes-btn');
+  var selectApprovedAthletesBtn=document.getElementById('select-approved-athletes-btn');
+  var clearVisibleAthletesBtn=document.getElementById('clear-visible-athletes-btn');
   var sportsChecklistSummaryEl=document.getElementById('sports-checklist-summary');
   var sportsEventsSummaryEl=document.getElementById('sports-events-summary');
   var sportsResultsSummaryEl=document.getElementById('sports-results-summary');
@@ -1767,6 +2876,38 @@
     return rows.filter(function(studentId){return eligible[studentId];});
   }
 
+  function athleticsTeamCheckboxes(){
+    return Array.prototype.slice.call(document.querySelectorAll('.athletics-team-student-check'));
+  }
+
+  function updateAthleticsTeamPendingSummary(){
+    if(!currentAthleticsTeamEvent){return;}
+    var checkboxes=athleticsTeamCheckboxes();
+    var selected=checkboxes.filter(function(input){return input.checked;});
+    var approvedSelected=selected.filter(function(input){return input.dataset.consent==='granted';}).length;
+    if(athleticsTeamSummaryEl){
+      athleticsTeamSummaryEl.innerHTML=
+        '<span>'+selected.length+' selected</span>'+
+        '<span>'+checkboxes.length+' shown</span>'+
+        '<span>'+approvedSelected+' selected approved</span>';
+    }
+    if(athleticsEventModalStatusEl){
+      athleticsEventModalStatusEl.innerHTML=
+        '<strong>'+escapeHtml(currentAthleticsTeamEvent.name)+'</strong>'+
+        '<span>'+escapeHtml(selectedDivisionForCurrentEvent()||'All divisions')+'</span>'+
+        '<span>'+selected.length+' pending save</span>'+
+        '<span>'+approvedSelected+' approved</span>';
+    }
+  }
+
+  function setVisibleAthleteChecks(mode){
+    athleticsTeamCheckboxes().forEach(function(input){
+      input.checked=mode==='approved'?input.dataset.consent==='granted':mode==='select';
+    });
+    if(athleticsTeamResultEl){athleticsTeamResultEl.hidden=true;}
+    updateAthleticsTeamPendingSummary();
+  }
+
   function renderAthleticsTeamModal(){
     if(!currentAthleticsTeamEvent||!athleticsTeamStudentListEl){return;}
     var event=currentAthleticsTeamEvent;
@@ -1801,10 +2942,12 @@
     }
     if(!eligible.length){
       athleticsTeamStudentListEl.innerHTML='<p class="empty-note">No students match this event division yet.</p>';
+      updateAthleticsTeamPendingSummary();
       return;
     }
     if(!filtered.length){
       athleticsTeamStudentListEl.innerHTML='<p class="empty-note">No eligible students match that search.</p>';
+      updateAthleticsTeamPendingSummary();
       return;
     }
     athleticsTeamStudentListEl.innerHTML=filtered.map(function(student){
@@ -1813,7 +2956,7 @@
       var pb=studentPbForEvent(student.id,event.id);
       var meta=[student.year,student.cls,divisionForStudent(student),student.house||student.team||'No house/team'].filter(Boolean).join(' · ');
       return '<label class="athletics-team-student-option">'+
-        '<input type="checkbox" class="athletics-team-student-check" value="'+escapeAttr(student.id)+'"'+checked+' />'+
+        '<input type="checkbox" class="athletics-team-student-check" value="'+escapeAttr(student.id)+'" data-consent="'+escapeAttr(consentStatus)+'"'+checked+' />'+
         '<span><strong>'+escapeHtml(student.name)+'</strong><small>'+escapeHtml(meta)+'</small></span>'+
         '<span class="athletics-team-row-meta">'+
           '<em class="'+consentBadgeClass(consentStatus)+'">'+consentLabel(consentStatus)+'</em>'+
@@ -1821,6 +2964,13 @@
         '</span>'+
       '</label>';
     }).join('');
+    athleticsTeamCheckboxes().forEach(function(input){
+      input.addEventListener('change',function(){
+        if(athleticsTeamResultEl){athleticsTeamResultEl.hidden=true;}
+        updateAthleticsTeamPendingSummary();
+      });
+    });
+    updateAthleticsTeamPendingSummary();
   }
 
   function openAthleticsTeamModal(eventId,trigger){
@@ -1865,8 +3015,8 @@
       rows[key]=selected;
       saveAthleticsTeamSelections(rows);
     },'Local athletics team selection blocked.').then(function(result){
-      if(!result.ok){showResult(athleticsTeamResultEl,{success:false,error:result.error||result.reason||'Team save failed.'});return;}
-      showResult(athleticsTeamResultEl,{success:true,message:'Team saved. The summary list has been updated.',event:currentAthleticsTeamEvent.name,selected_students:selected.length,backend:result.local?'local':'synced'});
+      if(!result.ok){showInlineStatus(athleticsTeamResultEl,false,result.error||result.reason||'Team save failed.','Check the selected students and try again.');return;}
+      showInlineStatus(athleticsTeamResultEl,true,'Team saved.','Summary updated · '+selected.length+' selected · '+(result.local?'local':'synced'));
       renderInterschoolAthleticsEvents();
       renderAthleticsTeamOverview();
       refreshSportsCommandSummary();
@@ -2012,7 +3162,7 @@
     });
     var changed=getStudents().filter(function(student){return Object.prototype.hasOwnProperty.call(statuses,student.id);});
     var guard=liveRosterGuard();
-    if(!guard.ok){showResult(athleticsTeamResultEl,{success:false,error:guard.message||'Local athletics consent blocked.'});return;}
+    if(!guard.ok){showInlineStatus(athleticsTeamResultEl,false,guard.message||'Local athletics consent blocked.','Consent checklist was not saved.');return;}
     var access=window.RunClubBackend&&window.RunClubBackend.backendDataAccess;
     var writes=(guard.live&&access&&access.setAthleticsConsentStatus)?changed.map(function(student){
       return access.setAthleticsConsentStatus({
@@ -2024,7 +3174,7 @@
     }):[Promise.resolve({ok:true,local:true})];
     Promise.all(writes).then(function(results){
       var failed=results.find(function(result){return !result.ok;});
-      if(failed){showResult(athleticsTeamResultEl,{success:false,error:failed.error||failed.reason||'Consent save failed.'});return;}
+      if(failed){showInlineStatus(athleticsTeamResultEl,false,failed.error||failed.reason||'Consent save failed.','Consent checklist was not saved.');return;}
       saveStudents(students);
       saveAthleticsConsentSelections(selected);
       renderAthleticsConsentSummary();
@@ -2032,7 +3182,7 @@
       renderAthleticsTeamOverview();
       refreshSportsCommandSummary();
       closeAthleticsConsentModal();
-      showResult(athleticsTeamResultEl,{success:true,message:'Athletics consent checklist saved.',students:changed.length,backend:guard.live?'synced':'local'});
+      showInlineStatus(athleticsTeamResultEl,true,'Athletics consent checklist saved.',changed.length+' students checked · '+(guard.live?'synced':'local'));
     });
   }
 
@@ -2051,7 +3201,7 @@
     },function(){
       saveStudents(students);
     },'Local athletics consent blocked.').then(function(result){
-      if(!result.ok){showResult(athleticsTeamResultEl,{success:false,error:result.error||result.reason||'Consent save failed.'});return;}
+      if(!result.ok){showInlineStatus(athleticsTeamResultEl,false,result.error||result.reason||'Consent save failed.','Student consent was not updated.');return;}
       renderAthleticsConsentSummary();
       renderAthleticsConsentList();
       renderAthleticsTeamOverview();
@@ -2079,6 +3229,9 @@
   if(athleticsTeamSearchEl){
     athleticsTeamSearchEl.addEventListener('input',renderAthleticsTeamModal);
   }
+  if(selectVisibleAthletesBtn){selectVisibleAthletesBtn.addEventListener('click',function(){setVisibleAthleteChecks('select');});}
+  if(selectApprovedAthletesBtn){selectApprovedAthletesBtn.addEventListener('click',function(){setVisibleAthleteChecks('approved');});}
+  if(clearVisibleAthletesBtn){clearVisibleAthletesBtn.addEventListener('click',function(){setVisibleAthleteChecks('clear');});}
   var athleticsDivisionFilterEl=document.getElementById('athletics-division-filter');
   if(athleticsDivisionFilterEl){
     athleticsDivisionFilterEl.addEventListener('change',renderAthleticsTeamModal);
@@ -2099,12 +3252,12 @@
   }
   function exportAthleticsTeamListCsv(){
     dlCsv('interschool-team-list-'+new Date().toISOString().slice(0,10)+'.csv',athleticsTeamCsvRows(),['student','year','class','division','event','pb','leading','consent']);
-    showResult(athleticsTeamResultEl,{success:true,message:'Team list CSV exported.'});
+    showInlineStatus(athleticsTeamResultEl,true,'Team list CSV exported.','Download created from the current selections.');
   }
   function printAthleticsTeamList(){
     var rows=athleticsTeamCsvRows();
-    if(!rows.length){showResult(athleticsTeamResultEl,{success:false,error:'No team selections to print yet.'});return;}
-    printWindow('Interschool Team List','<h1>Gwynne Park Run Club - Interschool Team List</h1>'+reportRowsTable(rows,[{key:'student',label:'Student'},{key:'year',label:'Year'},{key:'class',label:'Class'},{key:'division',label:'Division'},{key:'event',label:'Event'},{key:'pb',label:'PB'},{key:'consent',label:'Consent'}]));
+    if(!rows.length){showInlineStatus(athleticsTeamResultEl,false,'No team selections to print yet.','Save at least one event team first.');return;}
+    printWindow('Interschool Team List','<h1>Corso - Interschool Team List</h1>'+reportRowsTable(rows,[{key:'student',label:'Student'},{key:'year',label:'Year'},{key:'class',label:'Class'},{key:'division',label:'Division'},{key:'event',label:'Event'},{key:'pb',label:'PB'},{key:'consent',label:'Consent'}]));
   }
   var exportAthleticsTeamListBtn=document.getElementById('export-athletics-team-list-btn');
   if(exportAthleticsTeamListBtn){exportAthleticsTeamListBtn.addEventListener('click',exportAthleticsTeamListCsv);}
@@ -2315,8 +3468,8 @@
     var student=getStudents().find(function(s){return s.id===athleticsResultStudentEl.value;});
     var event=athleticsEventById(athleticsEventSelectEl.value);
     var numeric=resultNumber(athleticsResultValueEl.value);
-    if(!student||numeric==null){showResult(athleticsResultOutputEl,{success:false,error:'Choose a student and enter a valid result.'});return;}
-    if(!studentEligibleForAthleticsEvent(student,event,'')){showResult(athleticsResultOutputEl,{success:false,error:student.name+' is not eligible for '+event.name+'. Choose a student from the correct division.'});return;}
+    if(!student||numeric==null){showInlineStatus(athleticsResultOutputEl,false,'Choose a student and enter a valid result.','No result was saved.');return;}
+    if(!studentEligibleForAthleticsEvent(student,event,'')){showInlineStatus(athleticsResultOutputEl,false,student.name+' is not eligible for '+event.name+'.','Choose a student from the correct division.');return;}
     var attempts=[fieldAttempt1El.value,fieldAttempt2El.value,fieldAttempt3El.value].map(function(value){return String(value||'').trim();}).filter(Boolean);
     var row={
       id:'athletics-result-'+Date.now(),
@@ -2358,8 +3511,8 @@
       rows.push(row);
       saveAthleticsResults(rows);
     },'Local athletics result blocked.').then(function(result){
-      if(!result.ok){showResult(athleticsResultOutputEl,{success:false,error:result.error||result.reason||'Result save failed.'});return;}
-      showResult(athleticsResultOutputEl,{success:true,message:row.personal_best?'Result saved - new PB.':'Result saved.',result:row,backend:result.local?'local':'synced'});
+      if(!result.ok){showInlineStatus(athleticsResultOutputEl,false,result.error||result.reason||'Result save failed.','No result was saved.');return;}
+      showInlineStatus(athleticsResultOutputEl,true,row.personal_best?'Result saved - new PB.':'Result saved.',student.name+' · '+event.name+' · '+resultDisplay(row)+' · '+(result.local?'local':'synced'));
       athleticsResultFormEl.reset();
       populateAthleticsEvents();
       renderPBTracking();
@@ -2537,18 +3690,151 @@
   // === EVENTS ===
   var eventResultEl=document.getElementById('event-result');
   var eventsListEl=document.getElementById('events-list');
+  var eventCalendarGridEl=document.getElementById('event-calendar-grid');
+  var eventCalendarTitleEl=document.getElementById('event-calendar-title');
+  var eventCalendarPrevEl=document.getElementById('event-calendar-prev');
+  var eventCalendarNextEl=document.getElementById('event-calendar-next');
+  var eventCalendarTodayEl=document.getElementById('event-calendar-today');
+  var waHolidayNextEl=document.getElementById('wa-holiday-next');
+  var waHolidayListEl=document.getElementById('wa-holiday-list');
+  var eventCalendarDate=new Date();
+  eventCalendarDate.setDate(1);
+  var WA_SCHOOL_TERMS=[
+    {year:2026,term:'Term 1',start:'2026-02-02',end:'2026-04-02'},
+    {year:2026,term:'Term 2',start:'2026-04-20',end:'2026-07-03'},
+    {year:2026,term:'Term 3',start:'2026-07-20',end:'2026-09-25'},
+    {year:2026,term:'Term 4',start:'2026-10-12',end:'2026-12-17'},
+    {year:2027,term:'Term 1',start:'2027-02-01',end:'2027-04-09'},
+    {year:2027,term:'Term 2',start:'2027-04-26',end:'2027-07-02'},
+    {year:2027,term:'Term 3',start:'2027-07-19',end:'2027-09-24'},
+    {year:2027,term:'Term 4',start:'2027-10-11',end:'2027-12-16'},
+    {year:2028,term:'Term 1',start:'2028-02-02',end:'2028-04-07'},
+    {year:2028,term:'Term 2',start:'2028-04-24',end:'2028-06-30'},
+    {year:2028,term:'Term 3',start:'2028-07-17',end:'2028-09-22'},
+    {year:2028,term:'Term 4',start:'2028-10-09',end:'2028-12-14'}
+  ];
+  var WA_SCHOOL_HOLIDAYS=[
+    {name:'Autumn school holidays',start:'2026-04-03',end:'2026-04-19'},
+    {name:'Winter school holidays',start:'2026-07-04',end:'2026-07-19'},
+    {name:'Spring school holidays',start:'2026-09-26',end:'2026-10-11'},
+    {name:'Summer school holidays',start:'2026-12-18',end:'2027-01-31'},
+    {name:'Autumn school holidays',start:'2027-04-10',end:'2027-04-25'},
+    {name:'Winter school holidays',start:'2027-07-03',end:'2027-07-18'},
+    {name:'Spring school holidays',start:'2027-09-25',end:'2027-10-10'},
+    {name:'Summer school holidays',start:'2027-12-17',end:'2028-02-01'},
+    {name:'Autumn school holidays',start:'2028-04-08',end:'2028-04-23'},
+    {name:'Winter school holidays',start:'2028-07-01',end:'2028-07-16'},
+    {name:'Spring school holidays',start:'2028-09-23',end:'2028-10-08'},
+    {name:'Summer school holidays',start:'2028-12-15',end:'2029-01-30'}
+  ];
+
+  function dateFromIso(value){
+    var parts=String(value||'').split('-').map(Number);
+    return new Date(parts[0]||1970,(parts[1]||1)-1,parts[2]||1);
+  }
+
+  function isoDate(date){
+    var y=date.getFullYear();
+    var m=String(date.getMonth()+1).padStart(2,'0');
+    var d=String(date.getDate()).padStart(2,'0');
+    return y+'-'+m+'-'+d;
+  }
+
+  function formatShortDate(value){
+    return dateFromIso(value).toLocaleDateString('en-AU',{day:'numeric',month:'short'});
+  }
+
+  function daysInclusive(start,end){
+    return Math.round((dateFromIso(end)-dateFromIso(start))/86400000)+1;
+  }
+
+  function holidayForDate(iso){
+    return WA_SCHOOL_HOLIDAYS.find(function(item){return iso>=item.start&&iso<=item.end;})||null;
+  }
+
+  function termForDate(iso){
+    return WA_SCHOOL_TERMS.find(function(item){return iso>=item.start&&iso<=item.end;})||null;
+  }
+
+  function renderWaHolidaySummary(){
+    if(!waHolidayNextEl||!waHolidayListEl){return;}
+    var today=isoDate(new Date());
+    var nextBreak=WA_SCHOOL_HOLIDAYS.find(function(item){return item.end>=today;})||WA_SCHOOL_HOLIDAYS[WA_SCHOOL_HOLIDAYS.length-1];
+    var currentHoliday=holidayForDate(today);
+    var currentTerm=termForDate(today);
+    if(currentHoliday){
+      waHolidayNextEl.textContent='Currently in '+currentHoliday.name+' until '+formatShortDate(currentHoliday.end)+'.';
+    }else if(currentTerm){
+      waHolidayNextEl.textContent=currentTerm.term+' is running now. Next break starts '+formatShortDate(nextBreak.start)+'.';
+    }else if(nextBreak){
+      waHolidayNextEl.textContent='Next WA school break starts '+formatShortDate(nextBreak.start)+' and runs for '+daysInclusive(nextBreak.start,nextBreak.end)+' days.';
+    }
+    waHolidayListEl.innerHTML=WA_SCHOOL_HOLIDAYS.map(function(item){
+      var active=today>=item.start&&today<=item.end;
+      return '<div class="'+(active?'wa-holiday-item wa-holiday-item--active':'wa-holiday-item')+'"><strong>'+escapeHtml(item.name)+'</strong><span>'+escapeHtml(formatShortDate(item.start))+' - '+escapeHtml(formatShortDate(item.end))+' · '+daysInclusive(item.start,item.end)+' days</span></div>';
+    }).join('');
+  }
+
+  function renderEventCalendar(){
+    if(!eventCalendarGridEl||!eventCalendarTitleEl){return;}
+    var month=eventCalendarDate.getMonth();
+    var year=eventCalendarDate.getFullYear();
+    var events=load(K.events,[]);
+    var eventsByDate={};
+    events.forEach(function(event){
+      if(!eventsByDate[event.date]){eventsByDate[event.date]=[];}
+      eventsByDate[event.date].push(event);
+    });
+    var first=new Date(year,month,1);
+    var startOffset=first.getDay();
+    var daysInMonth=new Date(year,month+1,0).getDate();
+    var cells=[];
+    var weekdays=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    eventCalendarTitleEl.textContent=first.toLocaleDateString('en-AU',{month:'long',year:'numeric'});
+    weekdays.forEach(function(day){cells.push('<div class="event-calendar-weekday">'+day+'</div>');});
+    for(var blank=0;blank<startOffset;blank+=1){cells.push('<div class="event-calendar-day event-calendar-day--empty" aria-hidden="true"></div>');}
+    for(var dayNum=1;dayNum<=daysInMonth;dayNum+=1){
+      var date=new Date(year,month,dayNum);
+      var iso=isoDate(date);
+      var holiday=holidayForDate(iso);
+      var dayEvents=eventsByDate[iso]||[];
+      var todayClass=iso===isoDate(new Date())?' event-calendar-day--today':'';
+      var holidayClass=holiday?' event-calendar-day--holiday':'';
+      cells.push(
+        '<article class="event-calendar-day'+todayClass+holidayClass+'">'+
+          '<strong>'+dayNum+'</strong>'+
+          (holiday?'<span class="calendar-pill calendar-pill--holiday">'+escapeHtml(holiday.name.replace(' school holidays',''))+'</span>':'')+
+          dayEvents.slice(0,3).map(function(event){return '<span class="calendar-pill calendar-pill--event">'+escapeHtml(event.type)+': '+escapeHtml(event.name)+'</span>';}).join('')+
+          (dayEvents.length>3?'<span class="calendar-pill">+'+(dayEvents.length-3)+' more</span>':'')+
+        '</article>'
+      );
+    }
+    eventCalendarGridEl.innerHTML=cells.join('');
+    renderWaHolidaySummary();
+  }
 
   function renderEvents(){
     var events=load(K.events,[]);
     if(!events.length){eventsListEl.innerHTML='<p style="color:#888;font-size:0.85rem;">No events created yet.</p>';return;}
-    var html='<ul style="padding:0;list-style:none;margin:0;">';
+    var html='<ul class="program-event-items">';
     events.slice().reverse().forEach(function(e){
-      html+='<li style="padding:0.4rem 0;border-bottom:1px solid #f0f0f0;font-size:0.85rem;"><strong>'+e.name+'</strong> – '+e.type+' – '+e.date+'</li>';
+      html+='<li><strong>'+escapeHtml(e.name)+'</strong><span>'+escapeHtml(e.type)+' · '+escapeHtml(e.date)+'</span></li>';
     });
     html+='</ul>';
     eventsListEl.innerHTML=html;
   }
   renderEvents();
+  renderEventCalendar();
+
+  if(eventCalendarPrevEl){
+    eventCalendarPrevEl.addEventListener('click',function(){eventCalendarDate.setMonth(eventCalendarDate.getMonth()-1);renderEventCalendar();});
+  }
+  if(eventCalendarNextEl){
+    eventCalendarNextEl.addEventListener('click',function(){eventCalendarDate.setMonth(eventCalendarDate.getMonth()+1);renderEventCalendar();});
+  }
+  if(eventCalendarTodayEl){
+    eventCalendarTodayEl.addEventListener('click',function(){eventCalendarDate=new Date();eventCalendarDate.setDate(1);renderEventCalendar();});
+  }
 
   document.getElementById('create-event-btn').addEventListener('click',function(){
     var name=document.getElementById('event-name').value.trim();
@@ -2560,6 +3846,9 @@
     save(K.events,events);
     showResult(eventResultEl,{success:true,message:'Event created: '+name});
     renderEvents();
+    eventCalendarDate=dateFromIso(date);
+    eventCalendarDate.setDate(1);
+    renderEventCalendar();
     document.getElementById('event-name').value='';
   });
 
@@ -2609,16 +3898,45 @@
     students.forEach(function(s){
       var earned=milestoneThresholds().filter(function(m){return s.laps>=m;});
       if(earned.length){
-        html+='<div style="margin-bottom:0.75rem;padding:0.75rem;border-radius:0.5rem;background:#fff8e1;border:1px solid #f59e0b;">';
-        html+='<strong>'+s.name+'</strong> ('+s.year+', '+s.cls+')<br>';
+        html+='<div class="award-student-card">';
+        html+='<strong>'+escapeHtml(s.name)+'</strong> ('+escapeHtml(s.year)+', '+escapeHtml(s.cls)+')<br>';
         earned.forEach(function(m){
-          html+='<span class="award-badge">&#127942; '+milestoneLabel(m)+'</span>';
+          html+='<button type="button" class="award-badge award-certificate-pill" data-award-student="'+escapeAttr(s.id)+'" data-award-milestone="'+escapeAttr(String(m))+'" title="Open printable certificate for '+escapeAttr(s.name)+' - '+escapeAttr(milestoneLabel(m))+'">&#127942; '+escapeHtml(milestoneLabel(m))+'</button>';
         });
         html+='</div>';
       }
     });
     awardsDisplayEl.innerHTML=html||'<p style="color:#888;font-size:0.85rem;">No milestone awards yet. Start scanning!</p>';
   }
+
+  function certificateHtmlForAward(student,milestone){
+    var label=milestoneLabel(milestone);
+    return '<section class="certificate-preview" style="border:4px solid #c99722;border-radius:18px;padding:2.4rem;margin:0 auto 1.5rem;max-width:820px;text-align:center;page-break-after:always;background:linear-gradient(145deg,#ffffff,#fff8dd);">'+
+      '<p style="letter-spacing:0.18em;text-transform:uppercase;color:#8a6415;font-weight:800;margin:0 0 0.5rem;">Corso</p>'+
+      '<h1 style="color:#071426;font-size:2rem;margin:0.2rem 0;">Run Club Achievement Certificate</h1>'+
+      '<p style="color:#64748b;margin:0 0 1.25rem;">Every lap counts</p>'+
+      '<p style="font-size:1rem;color:#64748b;margin:0;">Presented to</p>'+
+      '<h2 style="font-size:2.35rem;color:#003880;margin:0.25rem 0 0.6rem;">'+escapeHtml(student.name)+'</h2>'+
+      '<p style="font-size:1.1rem;margin:0 0 1rem;">'+escapeHtml(student.year)+' - Class '+escapeHtml(student.cls)+'</p>'+
+      '<div style="display:inline-block;border:1px solid rgba(201,151,34,0.58);border-radius:999px;background:#fff4bf;color:#4f3100;padding:0.55rem 1rem;font-weight:900;">&#127942; '+escapeHtml(label)+'</div>'+
+      '<p style="font-size:1rem;margin:1.2rem 0 0;">Total laps: <strong>'+Number(student.laps||0)+'</strong> · '+lapsTokm(student.laps||0).toFixed(2)+' km</p>'+
+      '<p style="margin-top:2rem;color:#64748b;font-size:0.86rem;">Printed '+new Date().toLocaleDateString('en-AU')+'</p>'+
+    '</section>';
+  }
+
+  function printSingleAwardCertificate(studentId,milestone){
+    var student=getStudents().find(function(s){return s.id===studentId;});
+    var milestoneNumber=Number(milestone);
+    if(!student||!isFinite(milestoneNumber)){return;}
+    printWindow(student.name+' - '+milestoneLabel(milestoneNumber)+' Certificate',certificateHtmlForAward(student,milestoneNumber));
+  }
+
+  awardsDisplayEl.addEventListener('click',function(e){
+    var pill=e.target.closest('.award-certificate-pill');
+    if(!pill){return;}
+    printSingleAwardCertificate(pill.getAttribute('data-award-student'),pill.getAttribute('data-award-milestone'));
+  });
+
   renderAwards();
   renderCustomMilestones();
   customMilestoneFormEl.addEventListener('submit',saveCustomMilestones);
@@ -2680,18 +3998,13 @@
   document.getElementById('refresh-awards-btn').addEventListener('click',renderAwards);
   document.getElementById('print-certificates-btn').addEventListener('click',function(){
     var students=getStudents();
-    var win=window.open('','_blank');
-    var html='<html><head><title>Award Certificates</title><style>body{font-family:sans-serif;padding:2rem;} .cert{border:3px solid gold;padding:2rem;margin:1rem 0;text-align:center;page-break-after:always;} h2{color:#0c5aa8;} .badge{display:inline-block;padding:0.3rem 0.8rem;border-radius:999px;background:#fff8e1;border:1px solid #f59e0b;margin:0.2rem;font-size:0.9rem;}</style></head><body>';
+    var html='';
     students.forEach(function(s){
       var earned=milestoneThresholds().filter(function(m){return s.laps>=m;});
-      if(earned.length){
-        html+='<div class="cert"><h2>&#127942; Run Club Achievement Certificate</h2><h3>'+s.name+'</h3><p>'+s.year+' – Class '+s.cls+'</p><p>Total laps: <strong>'+s.laps+'</strong> ('+lapsTokm(s.laps).toFixed(2)+' km)</p>';
-        earned.forEach(function(m){html+='<span class="badge">&#127942; '+milestoneLabel(m)+'</span>';});
-        html+='<p style="margin-top:1rem;color:#888;font-size:0.8rem;">Gwynne Park Run Club • 2026</p></div>';
-      }
+      earned.forEach(function(m){html+=certificateHtmlForAward(s,m);});
     });
-    html+='</body></html>';
-    win.document.write(html); win.document.close(); win.print();
+    if(!html){return;}
+    printWindow('Award Certificates',html);
   });
 
   // CHALLENGES
@@ -2839,6 +4152,11 @@
   var multiSchoolSummaryListEl=document.getElementById('multi-school-summary-list');
   var brandingFormEl=document.getElementById('branding-settings-form');
   var brandingAppTitleEl=document.getElementById('branding-app-title');
+  var applyBrandingTitleBtn=document.getElementById('apply-branding-title-btn');
+  var applyBrandingColorsBtn=document.getElementById('apply-branding-colors-btn');
+  var brandingLogoUploadEl=document.getElementById('branding-logo-upload');
+  var brandingLogoPreviewEl=document.getElementById('branding-logo-preview');
+  var brandingLogoNoteEl=document.getElementById('branding-logo-note');
   var brandingSchoolBlueEl=document.getElementById('branding-school-blue');
   var brandingUniformGoldEl=document.getElementById('branding-uniform-gold');
   var brandingResultEl=document.getElementById('branding-settings-result');
@@ -2846,6 +4164,17 @@
   var backendReadinessBlockersEl=document.getElementById('backend-readiness-blockers');
   var launchReadinessChecklistEl=document.getElementById('launch-readiness-checklist');
   var printLaunchReadinessBtn=document.getElementById('print-launch-readiness-btn');
+  var vendorPostureStatusEl=document.getElementById('vendor-posture-status');
+  var vendorPostureCopyEl=document.getElementById('vendor-posture-copy');
+  var complianceAutoChecksListEl=document.getElementById('compliance-auto-checks-list');
+  var complianceChecklistListEl=document.getElementById('compliance-checklist-list');
+  var complianceDataMapEl=document.getElementById('compliance-data-map');
+  var complianceResultEl=document.getElementById('compliance-result');
+  var schoolSignupFormEl=document.getElementById('school-admin-signup-form');
+  var schoolSignupSummaryEl=document.getElementById('school-signup-summary');
+  var parentNoticePreviewEl=document.getElementById('parent-notice-preview');
+  var breachLogFormEl=document.getElementById('breach-log-form');
+  var breachLogListEl=document.getElementById('breach-log-list');
 
   function renderOnboarding(){
     var settings=programSettings();
@@ -2928,24 +4257,89 @@
   function renderBrandingSettings(){
     var settings=themeSettings();
     brandingAppTitleEl.value=settings.appTitle;
+    if(brandingLogoUploadEl){brandingLogoUploadEl.value='';}
+    if(brandingLogoPreviewEl){brandingLogoPreviewEl.src=settings.logoDataUrl||DEFAULT_BRAND_LOGO;}
+    if(brandingLogoNoteEl){brandingLogoNoteEl.textContent=settings.logoName?'Using uploaded emblem: '+settings.logoName:'Using the default Corso mark until a school emblem is uploaded.';}
     brandingSchoolBlueEl.value=settings.schoolBlue;
     brandingUniformGoldEl.value=settings.uniformGold;
   }
 
-  function saveBrandingSettings(e){
-    e.preventDefault();
-    var settings={appTitle:brandingAppTitleEl.value.trim()||'Gwynne Park Run Club',schoolBlue:brandingSchoolBlueEl.value||'#003880',uniformGold:brandingUniformGoldEl.value||'#c99722'};
+  function brandSettingsPayload(extra){
+    var current=themeSettings();
+    return Object.assign({},current,{
+      appTitle:brandingAppTitleEl.value.trim()||DEFAULT_BRAND_TITLE,
+      schoolBlue:brandingSchoolBlueEl.value||DEFAULT_SCHOOL_BLUE,
+      uniformGold:brandingUniformGoldEl.value||DEFAULT_UNIFORM_GOLD
+    },extra||{});
+  }
+
+  function persistBrandingSettings(settings,message){
     save(THEME_SETTINGS_KEY,settings);
     applyThemeSettings();
     renderBrandingSettings();
-    showResult(brandingResultEl,{success:true,message:'Theme and branding settings saved.',settings:settings});
+    showInlineStatus(brandingResultEl,true,message||'Theme and branding settings saved.','Name: '+settings.appTitle+' · Blue: '+settings.schoolBlue+' · Gold: '+settings.uniformGold);
+  }
+
+  function saveBrandingSettings(e){
+    e.preventDefault();
+    var file=brandingLogoUploadEl&&brandingLogoUploadEl.files&&brandingLogoUploadEl.files[0];
+    if(!file){
+      persistBrandingSettings(brandSettingsPayload(), 'Theme and branding settings saved.');
+      return;
+    }
+    if(!/^image\/(png|jpe?g|svg\+xml|webp)$/i.test(file.type)){
+      showInlineStatus(brandingResultEl,false,'Upload a PNG, JPG, SVG, or WebP emblem.','The school emblem was not changed.');
+      return;
+    }
+    if(file.size>750000){
+      showInlineStatus(brandingResultEl,false,'Keep the emblem under 750 KB for browser storage.','The school emblem was not changed.');
+      return;
+    }
+    var reader=new FileReader();
+    reader.onload=function(){
+      persistBrandingSettings(brandSettingsPayload({logoDataUrl:String(reader.result||DEFAULT_BRAND_LOGO),logoName:file.name}), 'Theme and branding settings saved with uploaded emblem.');
+    };
+    reader.onerror=function(){showInlineStatus(brandingResultEl,false,'Could not read that emblem file.','Try a PNG, JPG, SVG, or WebP under 750 KB.');};
+    reader.readAsDataURL(file);
+  }
+
+  function saveBrandingTitleOnly(){
+    persistBrandingSettings(brandSettingsPayload(), 'Run club name applied.');
+  }
+
+  function applyBrandColorTokens(settings){
+    document.documentElement.style.setProperty('--school-blue',settings.schoolBlue);
+    document.documentElement.style.setProperty('--school-blue-2','color-mix(in srgb, '+settings.schoolBlue+' 86%, #ffffff 14%)');
+    document.documentElement.style.setProperty('--school-blue-3','color-mix(in srgb, '+settings.schoolBlue+' 76%, #ffffff 24%)');
+    document.documentElement.style.setProperty('--obsidian-navy','color-mix(in srgb, '+settings.schoolBlue+' 72%, #071426 28%)');
+    document.documentElement.style.setProperty('--obsidian-navy-2','color-mix(in srgb, '+settings.schoolBlue+' 56%, #071426 44%)');
+    document.documentElement.style.setProperty('--obsidian-navy-3','color-mix(in srgb, '+settings.schoolBlue+' 82%, #ffffff 18%)');
+    document.documentElement.style.setProperty('--uniform-gold',settings.uniformGold);
+    document.documentElement.style.setProperty('--uniform-gold-dark','color-mix(in srgb, '+settings.uniformGold+' 74%, #071426 26%)');
+    document.documentElement.style.setProperty('--uniform-gold-soft','color-mix(in srgb, '+settings.uniformGold+' 28%, transparent)');
+    document.documentElement.style.setProperty('--uniform-gold-wash','color-mix(in srgb, '+settings.uniformGold+' 10%, transparent)');
+    document.documentElement.style.setProperty('--uniform-gold-hover','color-mix(in srgb, '+settings.uniformGold+' 22%, transparent)');
+    document.documentElement.style.setProperty('--gold-glass-wash','color-mix(in srgb, '+settings.uniformGold+' 8%, transparent)');
+    document.documentElement.style.setProperty('--gold-glass-line','color-mix(in srgb, '+settings.uniformGold+' 34%, transparent)');
+  }
+
+  function previewBrandingColors(){
+    applyBrandColorTokens(brandSettingsPayload());
+  }
+
+  function saveBrandingColorsOnly(){
+    persistBrandingSettings(brandSettingsPayload(), 'School colours applied.');
+  }
+
+  function clearBrandingLogo(){
+    persistBrandingSettings(brandSettingsPayload({logoDataUrl:DEFAULT_BRAND_LOGO,logoName:''}), 'Uploaded emblem cleared. Using the default Corso mark.');
   }
 
   function resetBrandingSettings(){
-    save(THEME_SETTINGS_KEY,{appTitle:'Gwynne Park Run Club',schoolBlue:'#003880',uniformGold:'#c99722'});
+    localStorage.removeItem(THEME_SETTINGS_KEY);
     applyThemeSettings();
     renderBrandingSettings();
-    showResult(brandingResultEl,{success:true,message:'Theme and branding reset to school defaults.'});
+    showInlineStatus(brandingResultEl,true,'Reset to Corso defaults.','Custom school name, colours and emblem overrides have been cleared.');
   }
 
   function backendBlockerLabel(blocker){
@@ -2963,8 +4357,111 @@
     return window.RUN_CLUB_CONFIG||{};
   }
 
+  function schoolSignupAttestationItems(){
+    return [
+      {id:'authorised',inputId:'signup-attest-authorised',label:'Authorised school representative',detail:'I confirm I am authorised to configure Corso for this school.'},
+      {id:'policy',inputId:'signup-attest-policy',label:'Policy and government standards alignment',detail:'I confirm this school will abide by Corso policy and applicable school, Department, privacy, child safety, and data-retention requirements.'},
+      {id:'parent_notice',inputId:'signup-attest-parent-notice',label:'Parent/guardian communication',detail:'I confirm required parent/guardian communication or consent has been completed where required.'},
+      {id:'data',inputId:'signup-attest-data',label:'Authorised student data only',detail:'I confirm student data entered into Corso is authorised for this run club and athletics purpose.'},
+      {id:'staff_access',inputId:'signup-attest-staff-access',label:'Staff access limited',detail:'I confirm access will be limited to authorised school staff and school-approved support pathways.'},
+      {id:'retention_breach',inputId:'signup-attest-retention-breach',label:'Retention and incident pathway',detail:'I confirm the school will manage retention, correction, deletion, and incident/breach response decisions.'}
+    ];
+  }
+
+  function schoolSignupRecord(){
+    return load(SCHOOL_SIGNUP_KEY,{});
+  }
+
+  function schoolSignupComplete(){
+    var record=schoolSignupRecord();
+    var checks=record.attestations||{};
+    return !!(record.school_name&&record.admin_name&&record.admin_email&&schoolSignupAttestationItems().every(function(item){return !!checks[item.id];}));
+  }
+
+  function collectSchoolSignupForm(){
+    var attestations={};
+    schoolSignupAttestationItems().forEach(function(item){
+      var input=document.getElementById(item.inputId);
+      attestations[item.id]=!!(input&&input.checked);
+    });
+    return {
+      school_name:(document.getElementById('signup-school-name').value||'').trim(),
+      site_code:(document.getElementById('signup-site-code').value||'').replace(/\D/g,'').slice(0,4),
+      admin_name:(document.getElementById('signup-admin-name').value||'').trim(),
+      admin_role:(document.getElementById('signup-admin-role').value||'').trim(),
+      admin_email:(document.getElementById('signup-admin-email').value||'').trim(),
+      review_date:document.getElementById('signup-review-date').value||'',
+      attestations:attestations,
+      saved_at:new Date().toISOString(),
+      saved_by:session.username||session.email||'coach'
+    };
+  }
+
+  function setSchoolSignupForm(record){
+    if(!schoolSignupFormEl){return;}
+    document.getElementById('signup-school-name').value=record.school_name||programSettings().schoolName||'';
+    document.getElementById('signup-site-code').value=record.site_code||publicConfig().siteCode||'';
+    document.getElementById('signup-admin-name').value=record.admin_name||'';
+    document.getElementById('signup-admin-role').value=record.admin_role||'';
+    document.getElementById('signup-admin-email').value=record.admin_email||'';
+    document.getElementById('signup-review-date').value=record.review_date||new Date().toISOString().slice(0,10);
+    var checks=record.attestations||{};
+    schoolSignupAttestationItems().forEach(function(item){
+      var input=document.getElementById(item.inputId);
+      if(input){input.checked=!!checks[item.id];}
+    });
+  }
+
+  function renderSchoolSignup(){
+    if(!schoolSignupFormEl){return;}
+    var record=schoolSignupRecord();
+    setSchoolSignupForm(record);
+    if(!schoolSignupSummaryEl){return;}
+    if(!record.saved_at){
+      schoolSignupSummaryEl.innerHTML='<p class="muted-copy">No school admin signup sheet has been saved yet.</p>';
+      return;
+    }
+    var complete=schoolSignupComplete();
+    var completed=schoolSignupAttestationItems().filter(function(item){return record.attestations&&record.attestations[item.id];}).length;
+    schoolSignupSummaryEl.innerHTML='<article class="breach-log-item">'+
+      '<strong>'+escapeHtml(complete?'Signup complete':'Signup saved - items still open')+'</strong>'+
+      '<span>'+escapeHtml(record.school_name||'School not set')+' · Site '+escapeHtml(record.site_code||'not set')+'</span>'+
+      '<p>'+escapeHtml(record.admin_name||'Admin not set')+' · '+escapeHtml(record.admin_role||'Role not set')+' · '+escapeHtml(record.admin_email||'Email not set')+'</p>'+
+      '<small>'+completed+' of '+schoolSignupAttestationItems().length+' attestations confirmed · Saved '+escapeHtml(new Date(record.saved_at).toLocaleString())+' by '+escapeHtml(record.saved_by||'coach')+'</small>'+
+    '</article>';
+  }
+
+  function saveSchoolSignup(e){
+    if(e){e.preventDefault();}
+    var record=collectSchoolSignupForm();
+    save(SCHOOL_SIGNUP_KEY,record);
+    renderSchoolSignup();
+    var readiness=window.RunClubBackend&&window.RunClubBackend.backendReadiness?window.RunClubBackend.backendReadiness():{};
+    renderLaunchReadiness(readiness);
+    renderVendorCompliancePosture(readiness);
+    if(complianceResultEl){
+      complianceResultEl.hidden=false;
+      complianceResultEl.textContent=schoolSignupComplete()?'School admin signup attestation saved.':'Signup sheet saved. Complete all required attestations before live use.';
+    }
+  }
+
+  function exportSchoolSignup(){
+    var record=schoolSignupRecord();
+    var pack={
+      exported_at:new Date().toISOString(),
+      purpose:'School admin signup and use attestation for Corso',
+      signup:record,
+      attestation_items:schoolSignupAttestationItems()
+    };
+    dl('corso-school-admin-signup.json',JSON.stringify(pack,null,2),'application/json');
+    if(complianceResultEl){complianceResultEl.hidden=false;complianceResultEl.textContent='School admin signup sheet exported.';}
+  }
+
   function launchReadinessItems(readiness){
     var config=publicConfig();
+    var complianceState=complianceChecklistState();
+    function reviewState(id){return complianceState[id]?'ready':'review';}
+    var signupReady=schoolSignupComplete();
     return [
       {state:config.demoMode===false?'ready':'blocked',label:'Demo mode disabled',detail:'Turn off demoMode before entering real student records.'},
       {state:config.syncEnabled===true?'ready':'blocked',label:'Backend sync enabled',detail:'syncEnabled must be true for cross-device live use.'},
@@ -2973,12 +4470,254 @@
       {state:config.supabaseUrl?'ready':'blocked',label:'Supabase project URL set',detail:'Use the public project URL only. Never paste service-role secrets here.'},
       {state:config.supabaseAnonKey?'ready':'blocked',label:'Supabase anon key set',detail:'Use the public anon key and rely on RLS/Edge Functions for protection.'},
       {state:readiness&&readiness.ready?'ready':'blocked',label:'Backend adapter can reach storage',detail:'REST and required Edge Function checks must pass before live use.'},
-      {state:'review',label:'School approval recorded',detail:'Confirm leadership approval, parent communication, and school privacy expectations outside the browser.'},
-      {state:'review',label:'Staff invite accounts prepared',detail:'Create invite-only owner/admin/coach accounts in Supabase Auth. Avoid public staff signup.'},
-      {state:'review',label:'RLS and role policies reviewed',detail:'Confirm school-scoped RLS policies and Edge Function secrets in the Supabase dashboard.'},
-      {state:'review',label:'Demo data cleared or exported',detail:'Export testing data, then clear demo rosters before entering real students.'},
+      {state:signupReady?'ready':'review',label:'School admin signup sheet saved',detail:'Record the authorised school contact, site code, and Corso use attestation before real student data is entered.'},
+      {state:reviewState('school-approval'),label:'School approval recorded',detail:'Confirm leadership approval, parent communication, and school privacy expectations outside the browser.'},
+      {state:reviewState('parent-notice'),label:'Parent collection notice prepared',detail:'Explain what is collected, why, who can see it, hosting location, exports, retention, and correction/deletion requests.'},
+      {state:reviewState('online-service'),label:'Online service and acceptable-use alignment checked',detail:'Confirm whether the school treats Corso as an online service requiring parent permission, acceptable-use wording, or Department review.'},
+      {state:reviewState('st4s-evidence'),label:'ST4S-style provider evidence prepared',detail:'Prepare privacy, security, online safety, interoperability, hosting, backup, and sub-processor notes for school review.'},
+      {state:'review',label:'Coach invite accounts prepared',detail:'Create invite-only coach accounts for each school in Supabase Auth. Platform admin access stays separate and owner-only.'},
+      {state:reviewState('live-backend'),label:'RLS and role policies reviewed',detail:'Confirm school-scoped RLS policies and Edge Function secrets in the Supabase dashboard.'},
+      {state:reviewState('breach-path'),label:'Information breach response path recorded',detail:'Identify the school contact pathway, evidence to preserve, notification decision process, and breach register expectations.'},
+      {state:reviewState('retention'),label:'Data retention and deletion schedule recorded',detail:'Set term/year retention for scans, reports, training, guardian access, audit logs, and medical safety notes.'},
+      {state:reviewState('demo-clear'),label:'Demo data cleared or exported',detail:'Export testing data, then clear demo rosters before entering real students.'},
       {state:'review',label:'Parent/student access boundaries checked',detail:'Parents see only linked children. Students see only their own profile. Schools see only their own students.'}
     ];
+  }
+
+  function complianceChecklistState(){
+    return load(COMPLIANCE_CHECKLIST_KEY,{});
+  }
+
+  function saveComplianceChecklistState(rows){
+    save(COMPLIANCE_CHECKLIST_KEY,rows||{});
+  }
+
+  function complianceReviewItems(){
+    return [
+      {id:'school-approval',label:'School approval recorded',detail:'Principal/leadership approval and school privacy expectations are documented.'},
+      {id:'parent-notice',label:'Parent collection notice prepared',detail:'Families can see what is collected, why, access boundaries, retention, and contact path.'},
+      {id:'online-service',label:'Online-service / acceptable-use alignment checked',detail:'School confirms whether Corso needs online-service permission wording or Department review.'},
+      {id:'st4s-evidence',label:'ST4S-style provider evidence prepared',detail:'Privacy, security, online safety, hosting, backup, and sub-processor notes are ready for review.'},
+      {id:'retention',label:'Retention and deletion schedule recorded',detail:'School has decided how long run club, training, guardian, audit, and safety records are kept.'},
+      {id:'breach-path',label:'Information breach response path recorded',detail:'School contact, escalation, evidence preservation, and notification decision process are known.'},
+      {id:'live-backend',label:'Live backend and RLS reviewed',detail:'Supabase URL, anon key, school ID, RLS, Edge Functions, and staff roles have been checked.'},
+      {id:'demo-clear',label:'Demo data cleared or exported',detail:'Testing data is exported or cleared before importing real student data.'}
+    ];
+  }
+
+  function complianceGatePassed(readiness){
+    var state=complianceChecklistState();
+    var allReviewed=complianceReviewItems().every(function(item){return !!state[item.id];});
+    return !!(schoolSignupComplete()&&allReviewed&&readiness&&readiness.realDataAllowed);
+  }
+
+  function technicalComplianceChecks(readiness){
+    var config=publicConfig();
+    return [
+      {id:'demo-mode-disabled',state:config.demoMode===false?'ready':'blocked',label:'Demo mode disabled',detail:'Universal demo access is off before real records are entered.'},
+      {id:'live-data-mode',state:config.liveDataMode===true?'ready':'blocked',label:'Live data mode enabled deliberately',detail:'Live data mode is only enabled after backend and school review.'},
+      {id:'backend-sync',state:config.syncEnabled===true?'ready':'blocked',label:'Backend sync enabled',detail:'Cross-device data writes are not relying on browser-only localStorage.'},
+      {id:'school-scope',state:config.schoolId?'ready':'blocked',label:'School scope ID configured',detail:'Records can be scoped to a single school.'},
+      {id:'public-supabase-config',state:(config.supabaseUrl&&config.supabaseAnonKey)?'ready':'blocked',label:'Public Supabase config present',detail:'Frontend has only URL/anon key, not service-role secrets.'},
+      {id:'backend-readiness',state:readiness&&readiness.realDataAllowed?'ready':'blocked',label:'Backend readiness gate passed',detail:'Backend adapter, live guards, and required checks allow real-data writes.'},
+      {id:'privacy-policy',state:document.querySelector('a[href="privacy-policy.html"]')?'ready':'review',label:'Privacy policy linked',detail:'Footer links to the privacy policy and parent-facing privacy language.'},
+      {id:'evidence-pack',state:'ready',label:'Evidence pack export available',detail:'Admin can export data map, notice, checklist, breach log, and source references.'}
+    ];
+  }
+
+  function vendorCompliancePostureStatus(readiness){
+    var technical=technicalComplianceChecks(readiness);
+    var blocked=technical.filter(function(item){return item.state==='blocked';}).length;
+    var state=complianceChecklistState();
+    var signoffComplete=complianceReviewItems().every(function(item){return !!state[item.id];});
+    if(blocked){return {state:'blocked',label:'Technical blockers remain',detail:'Fix the automated technical blockers before asking a school to sign off.'};}
+    if(!schoolSignupComplete()){return {state:'review',label:'Signup sheet required',detail:'Technical checks are clear. Record the school admin signup sheet and Corso use attestation before live student data is entered.'};}
+    if(!signoffComplete){return {state:'review',label:'Technically ready for school sign-off',detail:'Technical checks are clear. School approval, parent communication, retention, and breach-response sign-off still need to be recorded.'};}
+    return {state:'ready',label:'Ready for school approval record',detail:'Technical checks and school sign-off items are recorded. Export the evidence pack for the school review record.'};
+  }
+
+  function renderTechnicalComplianceChecks(readiness){
+    if(!complianceAutoChecksListEl){return;}
+    complianceAutoChecksListEl.innerHTML=technicalComplianceChecks(readiness).map(function(item){
+      var label=item.state==='ready'?'Auto-checked':item.state==='blocked'?'Blocked':'Review';
+      return '<article class="launch-readiness-item launch-readiness-item--'+escapeAttr(item.state)+'">'+
+        '<span class="launch-readiness-status">'+escapeHtml(label)+'</span>'+
+        '<div><strong>'+escapeHtml(item.label)+'</strong><p>'+escapeHtml(item.detail)+'</p></div>'+
+      '</article>';
+    }).join('');
+  }
+
+  function renderVendorCompliancePosture(readiness){
+    var status=vendorCompliancePostureStatus(readiness);
+    if(vendorPostureStatusEl){
+      vendorPostureStatusEl.textContent=status.label;
+      vendorPostureStatusEl.className='bookmark-pill vendor-posture-status vendor-posture-status--'+status.state;
+    }
+    if(vendorPostureCopyEl){vendorPostureCopyEl.textContent=status.detail;}
+    renderTechnicalComplianceChecks(readiness);
+  }
+
+  function renderComplianceChecklist(){
+    if(!complianceChecklistListEl){return;}
+    var state=complianceChecklistState();
+    complianceChecklistListEl.innerHTML=complianceReviewItems().map(function(item){
+      var checked=!!state[item.id];
+      return '<label class="compliance-checklist-item">'+
+        '<input type="checkbox" data-compliance-item="'+escapeAttr(item.id)+'" '+(checked?'checked':'')+' />'+
+        '<span><strong>'+escapeHtml(item.label)+'</strong><small>'+escapeHtml(item.detail)+'</small></span>'+
+      '</label>';
+    }).join('');
+    Array.prototype.forEach.call(complianceChecklistListEl.querySelectorAll('[data-compliance-item]'),function(input){
+      input.addEventListener('change',function(){
+        var rows=complianceChecklistState();
+        rows[input.dataset.complianceItem]=input.checked;
+        rows.updated_at=new Date().toISOString();
+        rows.updated_by=session.username||session.email||'coach';
+        saveComplianceChecklistState(rows);
+        if(complianceResultEl){
+          complianceResultEl.hidden=false;
+          complianceResultEl.textContent='Compliance checklist saved locally.';
+        }
+        var readiness=window.RunClubBackend&&window.RunClubBackend.backendReadiness?window.RunClubBackend.backendReadiness():{};
+        renderLaunchReadiness(readiness);
+        renderVendorCompliancePosture(readiness);
+      });
+    });
+  }
+
+  function complianceDataMapRows(){
+    return [
+      {area:'Student roster',fields:'Name, year, class, barcode/access code, optional house/team/pseudonym',purpose:'Run club identification, scanning, reports, certificates',access:'School staff; student own profile; linked parent/guardian view where appropriate',retention:'Set school term/year retention; delete or de-identify when student leaves.'},
+      {area:'Run participation',fields:'Lap scans, sessions, adjustments, distance totals, award progress',purpose:'Track attendance, progress, milestones, and audit changes',access:'School staff; student own profile; linked parent/guardian summaries',retention:'Keep for school-approved period; export before deletion if required.'},
+      {area:'Training assignments',fields:'Teacher-directed tasks, links, due dates, opened/completed status',purpose:'Support training follow-up without student self-reported activity claims',access:'School staff; assigned student; linked parent/guardian read-only visibility',retention:'Review termly; delete outdated tasks when no longer needed.'},
+      {area:'Medical safety notes',fields:'Asthma, anaphylaxis/allergies, medication carried, emergency note, health-plan supplied flag',purpose:'Practical run-club safety reference aligned with school health plans',access:'Authorised staff and linked guardian safety view only',retention:'Review each term and delete when not current or when student leaves.'},
+      {area:'Guardian access',fields:'Guardian link/code status, expiry, access log',purpose:'Ensure parents/guardians only see their linked child or children',access:'Authorised staff; guardian only after code/link verification',retention:'Expire/revoke links; keep access audit only for approved period.'},
+      {area:'Audit and exports',fields:'Scan audit, imports, manual adjustments, exports, incident notes',purpose:'Accountability, troubleshooting, and breach/incident evidence',access:'Authorised school staff and platform admin support only',retention:'Follow school recordkeeping and breach-response requirements.'}
+    ];
+  }
+
+  function renderComplianceDataMap(){
+    if(!complianceDataMapEl){return;}
+    complianceDataMapEl.innerHTML=miniReportTable('Compliance data map',complianceDataMapRows(),[
+      {key:'area',label:'Area'},
+      {key:'fields',label:'Fields'},
+      {key:'purpose',label:'Purpose'},
+      {key:'access',label:'Access'},
+      {key:'retention',label:'Retention decision'}
+    ]);
+  }
+
+  function parentCollectionNoticeText(){
+    var settings=programSettings();
+    return [
+      'Corso parent/guardian collection notice',
+      '',
+      'Our school is using Corso to help staff run and administer the school run club and related athletics activities.',
+      '',
+      'Information collected: student name, year group, class, barcode/access code, run club scans, lap totals, awards, teacher-directed training tasks, and limited safety notes where needed for run-club duty of care.',
+      '',
+      'Purpose: to track participation, support student progress, prepare awards/certificates, manage interschool athletics planning, and help staff run sessions safely.',
+      '',
+      'Access: school staff can see records for this school only. Students can see their own profile only. Linked parents/guardians can see only their own child or children.',
+      '',
+      'Advertising and sharing: Corso is not used for advertising, does not sell student data, and should not share data across schools.',
+      '',
+      'Storage and retention: demo mode stores data in the browser only. Production use requires school-approved backend storage, staff accounts, audit logs, and a school-approved retention/deletion schedule.',
+      '',
+      'Questions or correction/deletion requests should be directed to the school run club administrator.',
+      '',
+      'School/program: '+settings.schoolName
+    ].join('\n');
+  }
+
+  function renderParentCollectionNotice(){
+    if(!parentNoticePreviewEl){return;}
+    parentNoticePreviewEl.innerHTML=parentCollectionNoticeText().split('\n').map(function(line){
+      return line?'<p>'+escapeHtml(line)+'</p>':'<br />';
+    }).join('');
+  }
+
+  function printParentCollectionNotice(){
+    printWindow('Parent Collection Notice','<h1>Corso - Parent Collection Notice</h1><pre style="white-space:pre-wrap;font-family:Arial,sans-serif;line-height:1.5;">'+escapeHtml(parentCollectionNoticeText())+'</pre>');
+  }
+
+  function exportParentCollectionNotice(){
+    dl('corso-parent-collection-notice.txt',parentCollectionNoticeText(),'text/plain');
+    if(complianceResultEl){complianceResultEl.hidden=false;complianceResultEl.textContent='Parent notice text exported.';}
+  }
+
+  function breachLogRows(){
+    return load(BREACH_LOG_KEY,[]);
+  }
+
+  function saveBreachLogRows(rows){
+    save(BREACH_LOG_KEY,rows||[]);
+  }
+
+  function saveBreachLogEntry(e){
+    e.preventDefault();
+    var row={
+      id:'breach-'+Date.now(),
+      date:(document.getElementById('breach-log-date').value||new Date().toISOString().slice(0,10)),
+      status:document.getElementById('breach-log-status').value||'open',
+      affected:document.getElementById('breach-log-affected').value.trim(),
+      contact:document.getElementById('breach-log-contact').value.trim(),
+      notes:document.getElementById('breach-log-notes').value.trim(),
+      created_at:new Date().toISOString(),
+      staff:session.username||session.email||'coach'
+    };
+    if(!row.notes){
+      if(complianceResultEl){complianceResultEl.hidden=false;complianceResultEl.textContent='Add an issue/action note before saving.';}
+      return;
+    }
+    var rows=breachLogRows();
+    rows.push(row);
+    saveBreachLogRows(rows);
+    breachLogFormEl.reset();
+    document.getElementById('breach-log-date').value=new Date().toISOString().slice(0,10);
+    renderBreachLog();
+    if(complianceResultEl){complianceResultEl.hidden=false;complianceResultEl.textContent='Incident note saved locally.';}
+  }
+
+  function renderBreachLog(){
+    if(!breachLogListEl){return;}
+    var rows=breachLogRows().slice().reverse();
+    breachLogListEl.innerHTML=rows.length?rows.map(function(row){
+      return '<article class="breach-log-item"><strong>'+escapeHtml(row.date)+' - '+escapeHtml(row.status)+'</strong><span>'+escapeHtml(row.affected||'Affected records not specified')+'</span><p>'+escapeHtml(row.notes)+'</p><small>Contact: '+escapeHtml(row.contact||'not set')+' · Staff: '+escapeHtml(row.staff||'coach')+'</small></article>';
+    }).join(''):'<p class="muted-copy">No incident notes saved yet.</p>';
+  }
+
+  function printComplianceChecklist(){
+    var state=complianceChecklistState();
+    var rows=complianceReviewItems().map(function(item){return {status:state[item.id]?'Reviewed':'Not reviewed',item:item.label,detail:item.detail};});
+    printWindow('Compliance Readiness Checklist','<h1>Corso - Compliance Readiness Checklist</h1>'+reportRowsTable(rows,[{key:'status',label:'Status'},{key:'item',label:'Item'},{key:'detail',label:'Detail'}]));
+  }
+
+  function exportCompliancePack(){
+    var readiness=window.RunClubBackend&&window.RunClubBackend.backendReadiness?window.RunClubBackend.backendReadiness():{};
+    var pack={
+      exported_at:new Date().toISOString(),
+      school:programSettings().schoolName,
+      backend_readiness:readiness,
+      compliance_gate_passed:complianceGatePassed(readiness),
+      vendor_posture_status:vendorCompliancePostureStatus(readiness),
+      school_admin_signup:schoolSignupRecord(),
+      school_admin_signup_items:schoolSignupAttestationItems(),
+      technical_checks:technicalComplianceChecks(readiness),
+      checklist_state:complianceChecklistState(),
+      checklist_items:complianceReviewItems(),
+      data_map:complianceDataMapRows(),
+      parent_notice:parentCollectionNoticeText(),
+      breach_log:breachLogRows(),
+      sources:[
+        'https://www.education.wa.edu.au/web/policies/-/students-online-in-public-schools-procedures',
+        'https://www.education.wa.edu.au/web/policies/-/information-breach-procedures',
+        'https://www.oaic.gov.au/privacy/australian-privacy-principles',
+        'https://st4s.edu.au/'
+      ]
+    };
+    dl('corso-compliance-evidence-pack.json',JSON.stringify(pack,null,2),'application/json');
+    if(complianceResultEl){complianceResultEl.hidden=false;complianceResultEl.textContent='Compliance evidence pack exported.';}
   }
 
   function renderLaunchReadiness(readiness){
@@ -2998,7 +4737,7 @@
     var rows=launchReadinessItems(readiness).map(function(item){
       return {status:item.state==='ready'?'Ready':item.state==='blocked'?'Blocked':'Manual review',item:item.label,detail:item.detail};
     });
-    printWindow('Launch Readiness Checklist','<h1>Gwynne Park Run Club - Launch Readiness Checklist</h1>'+reportRowsTable(rows,[{key:'status',label:'Status'},{key:'item',label:'Item'},{key:'detail',label:'Detail'}]));
+    printWindow('Launch Readiness Checklist','<h1>Corso - Launch Readiness Checklist</h1>'+reportRowsTable(rows,[{key:'status',label:'Status'},{key:'item',label:'Item'},{key:'detail',label:'Detail'}]));
   }
 
   function renderBackendReadiness(){
@@ -3012,6 +4751,7 @@
     var blockers=readiness.blockers&&readiness.blockers.length?readiness.blockers:['live-data-mode-disabled'];
     backendReadinessBlockersEl.innerHTML=blockers.map(function(blocker){return '<li>'+escapeHtml(backendBlockerLabel(blocker))+'</li>';}).join('');
     renderLaunchReadiness(readiness);
+    renderVendorCompliancePosture(readiness);
   }
 
   function groupedSummary(groupField){
@@ -3204,14 +4944,24 @@
   }
 
   function printProgramResources(){
-    var hub=document.getElementById('program-resource-hub');
-    var lessons=document.getElementById('lesson-plan-section');
-    if(!hub||!lessons){return;}
-    var hubClone=hub.cloneNode(true);
-    var lessonsClone=lessons.cloneNode(true);
-    var printButton=hubClone.querySelector('#print-program-resources-btn');
-    if(printButton){printButton.remove();}
-    printWindow('Program Resources','<h1>Gwynne Park Run Club - Program Resources</h1>'+hubClone.innerHTML+lessonsClone.innerHTML);
+    var plans=resourceSessionPlans();
+    var body='<h1>Corso - Program Resources</h1><p>Editable session plans with WA Curriculum HPE links and Mini Coach notes.</p>';
+    plans.forEach(function(plan){
+      body+='<section style="page-break-inside:avoid;margin-bottom:1.5rem;"><h2>'+escapeHtml(plan.title)+'</h2>'+
+        '<p><strong>Focus:</strong> '+escapeHtml(plan.focus)+'</p>'+
+        '<p><strong>Mini Coach:</strong> '+escapeHtml(plan.miniCoach)+'</p>'+
+        '<p><strong>Curriculum:</strong> '+plan.curriculum.map(function(item){return escapeHtml(item.label);}).join(', ')+'</p>'+
+        plan.sections.map(function(section){
+          var rows=plan.activities.filter(function(activity){return (activity.section||'sessions')===section.id;});
+          return '<h3>'+escapeHtml(section.title)+' - '+resourceSectionMinutes(plan,section.id)+' / '+Number(section.target||0)+' min</h3>'+
+            (section.note?'<p><strong>Coach note:</strong> '+escapeHtml(section.note)+'</p>':'')+
+            '<table><thead><tr><th>Use</th><th>Activity</th><th>Minutes</th><th>Notes</th></tr></thead><tbody>'+
+            rows.map(function(activity){return '<tr><td>'+(activity.included?'Yes':'No')+'</td><td>'+escapeHtml(activity.title)+'</td><td>'+Number(activity.minutes||0)+'</td><td>'+escapeHtml(activity.detail)+'</td></tr>';}).join('')+
+            '</tbody></table>';
+        }).join('')+
+        '<p><strong>Selected time:</strong> '+resourceIncludedMinutes(plan)+' minutes of '+Number(plan.duration||0)+' planned.</p></section>';
+    });
+    printWindow('Program Resources',body);
   }
 
   function reportRowsTable(rows,cols){
@@ -3228,13 +4978,13 @@
 
   function printTermProgress(){
     var rows=termProgressRows(termReportTermEl.value);
-    printWindow('Term Progress Report','<h1>Gwynne Park Run Club - '+escapeHtml(termLabel(termReportTermEl.value))+'</h1>'+reportRowsTable(rows,[{key:'student',label:'Student'},{key:'year',label:'Year'},{key:'class',label:'Class'},{key:'period_laps',label:'Term laps'},{key:'period_km',label:'Term km'},{key:'lifetime_km',label:'Total km'}]));
+    printWindow('Term Progress Report','<h1>Corso - '+escapeHtml(termLabel(termReportTermEl.value))+'</h1>'+reportRowsTable(rows,[{key:'student',label:'Student'},{key:'year',label:'Year'},{key:'class',label:'Class'},{key:'period_laps',label:'Term laps'},{key:'period_km',label:'Term km'},{key:'lifetime_km',label:'Total km'}]));
   }
 
   function printClassReport(){
     var cls=classReportSelectEl.value;
     var rows=termProgressRows(termReportTermEl.value).filter(function(row){return row.class===cls;});
-    printWindow('Class Report '+cls,'<h1>Gwynne Park Run Club - '+escapeHtml(cls)+' '+escapeHtml(termLabel(termReportTermEl.value))+'</h1>'+reportRowsTable(rows,[{key:'student',label:'Student'},{key:'year',label:'Year'},{key:'period_laps',label:'Term laps'},{key:'period_km',label:'Term km'},{key:'lifetime_laps',label:'Total laps'},{key:'lifetime_km',label:'Total km'},{key:'certificates',label:'Certificates'}]));
+    printWindow('Class Report '+cls,'<h1>Corso - '+escapeHtml(cls)+' '+escapeHtml(termLabel(termReportTermEl.value))+'</h1>'+reportRowsTable(rows,[{key:'student',label:'Student'},{key:'year',label:'Year'},{key:'period_laps',label:'Term laps'},{key:'period_km',label:'Term km'},{key:'lifetime_laps',label:'Total laps'},{key:'lifetime_km',label:'Total km'},{key:'certificates',label:'Certificates'}]));
   }
 
   function certificateBatchRows(){
@@ -3243,7 +4993,7 @@
 
   function printAwardPack(){
     var rows=certificateBatchRows();
-    printWindow('Award Pack','<h1>Gwynne Park Run Club - Award Pack</h1>'+reportRowsTable(rows,[{key:'batch_rank',label:'#'},{key:'student',label:'Student'},{key:'year',label:'Year'},{key:'class',label:'Class'},{key:'milestone',label:'Award'},{key:'total_km',label:'Total km'}]));
+    printWindow('Award Pack','<h1>Corso - Award Pack</h1>'+reportRowsTable(rows,[{key:'batch_rank',label:'#'},{key:'student',label:'Student'},{key:'year',label:'Year'},{key:'class',label:'Class'},{key:'milestone',label:'Award'},{key:'total_km',label:'Total km'}]));
   }
 
   function sessionAttendanceRows(){
@@ -3391,32 +5141,37 @@
   var coachToolNoteFormEl=document.getElementById('coach-tool-note-form');
   var coachToolNoteScopeEl=document.getElementById('coach-tool-note-scope');
   var coachToolNoteTextEl=document.getElementById('coach-tool-note-text');
+  var coachToolNoteStatusEl=document.getElementById('coach-tool-note-status');
+  var coachToolNoteCategoryEl=document.getElementById('coach-tool-note-category');
+  var coachToolFollowUpDateEl=document.getElementById('coach-tool-follow-up-date');
   var coachToolResultEl=document.getElementById('coach-tool-result');
   var coachNoteListEl=document.getElementById('coach-note-list');
   var activeCoachTool='needs-attention';
 
   function coachNotes(){return load(COACH_NOTES_KEY,[]);}
   function saveCoachNotes(rows){save(COACH_NOTES_KEY,rows.slice(-400));}
+  function coachFollowUps(){return load(COACH_FOLLOWUPS_KEY,{});}
+  function saveCoachFollowUps(rows){save(COACH_FOLLOWUPS_KEY,rows||{});}
   function studentNotifications(){return load(STUDENT_NOTIFICATIONS_KEY,[]);}
   function saveStudentNotifications(rows){save(STUDENT_NOTIFICATIONS_KEY,rows.slice(-500));}
 
-  function saveCoachNote(scope,note){
+  function saveCoachNote(scope,note,status,category,followUpDate){
     var text=String(note||'').trim();
     if(!text){return null;}
-    var row={id:'coach-note-'+Date.now(),tool:activeCoachTool,scope:scope||activeCoachTool,note:text,created_at:new Date().toISOString(),staff:session.email||'coach'};
+    var row={id:'coach-note-'+Date.now(),tool:activeCoachTool,scope:scope||activeCoachTool,note:text,status:status||'open',category:category||'general',follow_up_date:followUpDate||'',created_at:new Date().toISOString(),staff:session.username||session.email||'coach'};
     var rows=coachNotes(); rows.push(row); saveCoachNotes(rows); return row;
   }
 
-  function saveCoachNoteWithBackend(scope,note){
+  function saveCoachNoteWithBackend(scope,note,status,category,followUpDate){
     var text=String(note||'').trim();
     if(!text){return Promise.resolve({ok:false,validation:true,error:'Type a note before saving.'});}
-    var row={id:'coach-note-'+Date.now(),tool:activeCoachTool,scope:scope||activeCoachTool,note:text,created_at:new Date().toISOString(),staff:session.email||'coach'};
+    var row={id:'coach-note-'+Date.now(),tool:activeCoachTool,scope:scope||activeCoachTool,note:text,status:status||'open',category:category||'general',follow_up_date:followUpDate||'',created_at:new Date().toISOString(),staff:session.username||session.email||'coach'};
     return runLiveFeatureWrite('saveCoachNote',{
       tool:row.tool,
       scope:row.scope,
       note:row.note,
       staff:row.staff,
-      metadata:{source_screen:'coach-tools',local_note_id:row.id}
+      metadata:{source_screen:'coach-tools',local_note_id:row.id,status:row.status,category:row.category,follow_up_date:row.follow_up_date}
     },function(){
       var rows=coachNotes();
       rows.push(row);
@@ -3449,55 +5204,233 @@
     });
   }
 
-  function closeAwardRows(limit){
-    return getStudents().map(function(s){
-      var next=nextCertificateFor(s);
+  function coachWorkflowKey(tool,row){
+    if(row.student){return tool+':student:'+row.student.id;}
+    if(row.student_id){return tool+':student:'+row.student_id;}
+    if(row.group){return tool+':class:'+row.group;}
+    if(row.result&&row.result.id){return tool+':result:'+row.result.id;}
+    return tool+':item:'+String(row.title||row.detail||'general').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+  }
+
+  function coachWorkflowStatus(key){
+    return coachFollowUps()[key]||{status:'open',follow_up_date:'',updated_at:''};
+  }
+
+  function saveCoachWorkflowStatus(key,status,followUpDate){
+    var rows=coachFollowUps();
+    rows[key]={status:status||'open',follow_up_date:followUpDate||'',updated_at:new Date().toISOString(),staff:session.username||session.email||'coach'};
+    saveCoachFollowUps(rows);
+    return rows[key];
+  }
+
+  function coachWorkflowStatusLabel(state){
+    if(!state||!state.status||state.status==='open'){return 'Open';}
+    if(state.status==='resolved'){return 'Resolved';}
+    if(state.status==='follow-up'){return state.follow_up_date?'Follow-up '+state.follow_up_date:'Follow-up';}
+    return state.status;
+  }
+
+  function renderCoachToolSummary(tool,rows){
+    var states=coachFollowUps();
+    var resolved=0;
+    var followUps=0;
+    rows.forEach(function(row){
+      var state=states[coachWorkflowKey(tool,row)];
+      if(state&&state.status==='resolved'){resolved+=1;}
+      if(state&&state.status==='follow-up'){followUps+=1;}
+    });
+    var openCount=Math.max(0,rows.length-resolved);
+    return 'Mini Coach summary: '+openCount+' open item'+(openCount===1?'':'s')+', '+followUps+' follow-up'+(followUps===1?'':'s')+' scheduled, '+resolved+' resolved. Use notes for staff context before acting.';
+  }
+
+  function coachToolSafeNextSteps(tool,rows){
+    var count=rows.length;
+    if(!count){return 'No action is needed from this list right now. Recheck after the next run session, training assignment, or athletics result entry.';}
+    var steps={
+      'needs-attention':'Start with the first three flagged students, check attendance/barcode/training access, then add a short staff-only note before speaking with the student.',
+      'close-award':'Use this as encouragement only: notify profiles or mention the next badge at the next session, without promising an award until the laps are logged.',
+      'training-not-opened':'Check whether the task title and link are clear, then follow up in class. Avoid treating unopened training as a behaviour issue.',
+      'personal-bests':'Celebrate PBs privately first, then decide whether the achievement is safe and appropriate to share more widely.',
+      'class-trends':'Look for one practical class nudge, such as a reminder, scanner setup fix, or class target. Avoid ranking students publicly from this view.',
+      'celebration-wall':'Review each candidate for consent, privacy-safe naming, and school tone before publishing, printing, or sharing.'
+    };
+    return 'Safe next step: '+(steps[tool]||'Review the list, add a staff note, and choose one small action for the next session.');
+  }
+
+  var smartCoachInsightsCache=null;
+
+  function insightConfidenceLabel(score){
+    if(score>=0.85){return 'High confidence rule';}
+    if(score>=0.65){return 'Medium confidence rule';}
+    return 'Staff review needed';
+  }
+
+  function buildSmartCoachInsights(){
+    var students=getStudents();
+    var settings=programSettings();
+    var lapDistance=settings.lapDistanceKm||0.25;
+    var trainingTasks=load(K.training,[]);
+    var trainingClicks=load(K.trainingClicks,[]);
+    var athleticsPbs=athleticsResults().filter(function(row){return row.personal_best;}).slice().reverse();
+    var unopenedByStudent={};
+    var unopenedRows=[];
+
+    trainingTasks.forEach(function(task){
+      (task.student_ids||[]).forEach(function(studentId){
+        var opened=trainingClicks.some(function(click){return click.training_id===task.id&&click.student_id===studentId;});
+        if(opened){return;}
+        var student=students.find(function(s){return s.id===studentId;});
+        if(!student){return;}
+        unopenedByStudent[student.id]=(unopenedByStudent[student.id]||0)+1;
+        unopenedRows.push({
+          student:student,
+          task:task,
+          reason:'Assigned training has not been opened',
+          action:'Check whether the task was clear and remind the student in class.',
+          confidence:0.86
+        });
+      });
+    });
+
+    var closeAward=students.map(function(student){
+      var next=nextCertificateFor(student);
       if(!next){return null;}
-      var kmLeft=Math.max(0,next.km-totalKm(s));
-      var lapsLeft=Math.ceil(kmLeft/(programSettings().lapDistanceKm||0.25));
-      return {student:s,next:next,lapsLeft:lapsLeft,kmLeft:kmLeft};
-    }).filter(function(row){return row&&row.lapsLeft<=8;}).sort(function(a,b){return a.lapsLeft-b.lapsLeft;}).slice(0,limit||999);
+      var kmLeft=Math.max(0,next.km-totalKm(student));
+      var lapsLeft=Math.ceil(kmLeft/lapDistance);
+      return {
+        student:student,
+        next:next,
+        lapsLeft:lapsLeft,
+        kmLeft:kmLeft,
+        action:'Give a small next-session target and celebrate the upcoming milestone.',
+        confidence:lapsLeft<=3?0.95:0.82
+      };
+    }).filter(function(row){return row&&row.lapsLeft<=8;}).sort(function(a,b){return a.lapsLeft-b.lapsLeft;});
+
+    var needsAttention=students.map(function(student){
+      var reasons=[];
+      var actions=[];
+      var confidence=0.7;
+      if(!(student.laps||0)){
+        reasons.push('No laps recorded yet');
+        actions.push('Check attendance or barcode setup before the next run.');
+        confidence=0.9;
+      }
+      if((student.laps||0)>0&&(student.laps||0)<5){
+        reasons.push('Still below first 5-lap badge');
+        actions.push('Set a tiny target such as one steady lap next session.');
+        confidence=Math.max(confidence,0.78);
+      }
+      if(unopenedByStudent[student.id]){
+        reasons.push(unopenedByStudent[student.id]+' training task'+(unopenedByStudent[student.id]===1?'':'s')+' not opened');
+        actions.push('Confirm the student can find the Training tab and understands the task.');
+        confidence=Math.max(confidence,0.86);
+      }
+      return reasons.length?{
+        student:student,
+        reasons:reasons,
+        actions:actions,
+        confidence:confidence,
+        confidence_label:insightConfidenceLabel(confidence)
+      }:null;
+    }).filter(Boolean);
+
+    var classTrends=groupedSummary('cls').sort(function(a,b){return b.km-a.km;}).map(function(row,index){
+      return Object.assign({},row,{
+        rank:index+1,
+        action:index===0?'Share what is working for this class.':'Look for one simple participation nudge this week.',
+        confidence:0.74,
+        confidence_label:insightConfidenceLabel(0.74)
+      });
+    });
+
+    var celebrationRows=[];
+    certificateRows().slice(0,12).forEach(function(row){
+      celebrationRows.push({
+        title:row.milestone,
+        detail:row.student+' - '+row.class+' - '+row.total_km+' km',
+        type:'award',
+        action:'Approve for Celebration Wall or print certificate.',
+        confidence:0.9,
+        confidence_label:insightConfidenceLabel(0.9)
+      });
+    });
+    athleticsPbs.slice(0,12).forEach(function(row){
+      celebrationRows.push({
+        title:'PB: '+row.event_name,
+        detail:row.student_name+' - '+resultDisplay(row),
+        type:'personal_best',
+        result:row,
+        action:'Approve as a staff-moderated PB celebration.',
+        confidence:0.88,
+        confidence_label:insightConfidenceLabel(0.88)
+      });
+    });
+
+    var nextBestActions=[];
+    if(needsAttention.length){
+      nextBestActions.push({title:'Follow up flagged students',count:needsAttention.length,tool:'needs-attention',action:'Open Needs Attention and add notes for the highest-priority students.',confidence:0.88});
+    }
+    if(closeAward.length){
+      nextBestActions.push({title:'Nudge close-to-award runners',count:closeAward.length,tool:'close-award',action:'Send profile reminders or mention the milestone next session.',confidence:0.86});
+    }
+    if(unopenedRows.length){
+      nextBestActions.push({title:'Check unopened training',count:unopenedRows.length,tool:'training-not-opened',action:'Review tasks that have not been opened and simplify instructions if needed.',confidence:0.84});
+    }
+    if(celebrationRows.length){
+      nextBestActions.push({title:'Review celebration candidates',count:celebrationRows.length,tool:'celebration-wall',action:'Approve only privacy-safe achievements for sharing.',confidence:0.82});
+    }
+
+    return {
+      generated_at:new Date().toISOString(),
+      summary:{
+        students:students.length,
+        needs_attention:needsAttention.length,
+        close_to_award:closeAward.length,
+        training_not_opened:unopenedRows.length,
+        personal_bests:athleticsPbs.length,
+        celebration_candidates:celebrationRows.length,
+        next_best_actions:nextBestActions.length
+      },
+      needs_attention:needsAttention,
+      close_to_award:closeAward,
+      training_not_opened:unopenedRows,
+      personal_bests:athleticsPbs,
+      class_trends:classTrends,
+      celebration_wall:celebrationRows,
+      next_best_actions:nextBestActions
+    };
+  }
+
+  function getSmartCoachInsights(refresh){
+    if(refresh||!smartCoachInsightsCache){
+      smartCoachInsightsCache=buildSmartCoachInsights();
+    }
+    return smartCoachInsightsCache;
+  }
+
+  function closeAwardRows(limit){
+    return getSmartCoachInsights().close_to_award.slice(0,limit||999);
   }
 
   function trainingNotOpenedRows(limit){
-    var students=getStudents();
-    var clicks=load(K.trainingClicks,[]);
-    var rows=[];
-    load(K.training,[]).forEach(function(task){
-      (task.student_ids||[]).forEach(function(studentId){
-        if(clicks.some(function(click){return click.training_id===task.id&&click.student_id===studentId;})){return;}
-        var student=students.find(function(s){return s.id===studentId;});
-        if(student){rows.push({student:student,task:task});}
-      });
-    });
-    return rows.slice(0,limit||999);
+    return getSmartCoachInsights().training_not_opened.slice(0,limit||999);
   }
 
   function needsAttentionRows(limit){
-    var unopenedMap={};
-    trainingNotOpenedRows().forEach(function(row){unopenedMap[row.student.id]=(unopenedMap[row.student.id]||0)+1;});
-    return getStudents().map(function(s){
-      var reasons=[];
-      if(!(s.laps||0)){reasons.push('No laps recorded yet');}
-      if((s.laps||0)>0&&(s.laps||0)<5){reasons.push('Still below first 5-lap badge');}
-      if(unopenedMap[s.id]){reasons.push(unopenedMap[s.id]+' training task'+(unopenedMap[s.id]===1?'':'s')+' not opened');}
-      return reasons.length?{student:s,reasons:reasons}:null;
-    }).filter(Boolean).slice(0,limit||999);
+    return getSmartCoachInsights().needs_attention.slice(0,limit||999);
   }
 
   function personalBestRows(limit){
-    return athleticsResults().filter(function(row){return row.personal_best;}).slice().reverse().slice(0,limit||999);
+    return getSmartCoachInsights().personal_bests.slice(0,limit||999);
   }
 
   function classTrendRows(limit){
-    return groupedSummary('cls').sort(function(a,b){return b.km-a.km;}).slice(0,limit||999);
+    return getSmartCoachInsights().class_trends.slice(0,limit||999);
   }
 
   function celebrationRows(limit){
-    var rows=[];
-    certificateRows().slice(0,8).forEach(function(row){rows.push({title:row.milestone,detail:row.student+' - '+row.class+' - '+row.total_km+' km'});});
-    personalBestRows(8).forEach(function(row){rows.push({title:'PB: '+row.event_name,detail:row.student_name+' - '+resultDisplay(row)});});
-    return rows.slice(0,limit||999);
+    return getSmartCoachInsights().celebration_wall.slice(0,limit||999);
   }
 
   function coachToolConfig(tool){
@@ -3522,30 +5455,41 @@
     return [];
   }
 
+  function coachWorkflowActionsHtml(workflowKey,extra){
+    return '<div class="coach-workflow-actions">'+(extra||'')+
+      '<button type="button" class="secondary coach-note-target" data-scope="'+escapeAttr(workflowKey)+'">Note</button>'+
+      '<button type="button" class="secondary coach-follow-up-target" data-workflow-key="'+escapeAttr(workflowKey)+'">Follow up</button>'+
+      '<button type="button" class="secondary coach-resolve-target" data-workflow-key="'+escapeAttr(workflowKey)+'">Resolve</button>'+
+      '</div>';
+  }
+
   function coachToolRowHtml(tool,row){
+    var workflowKey=coachWorkflowKey(tool,row);
+    var workflowState=coachWorkflowStatus(workflowKey);
+    var statusBadge='<span class="coach-workflow-status coach-workflow-status--'+escapeAttr(workflowState.status||'open')+'">'+escapeHtml(coachWorkflowStatusLabel(workflowState))+'</span>';
     if(tool==='needs-attention'){
-      return '<article class="coach-tool-row"><div><strong>'+escapeHtml(row.student.name)+'</strong><span>'+escapeHtml(row.student.year+' / '+row.student.cls)+'</span><p>'+row.reasons.map(escapeHtml).join(' | ')+'</p></div><button type="button" class="secondary coach-note-target" data-scope="'+escapeAttr(row.student.id)+'">Note</button></article>';
+      return '<article class="coach-tool-row" data-workflow-key="'+escapeAttr(workflowKey)+'"><div><strong>'+escapeHtml(row.student.name)+'</strong>'+statusBadge+'<span>'+escapeHtml(row.student.year+' / '+row.student.cls)+' - '+escapeHtml(row.confidence_label||insightConfidenceLabel(row.confidence||0.7))+'</span><p>'+row.reasons.map(escapeHtml).join(' | ')+'</p><p>'+escapeHtml((row.actions&&row.actions[0])||'Add a staff note for next follow-up.')+'</p></div>'+coachWorkflowActionsHtml(workflowKey)+'</article>';
     }
     if(tool==='close-award'){
-      return '<article class="coach-tool-row"><div><strong>'+escapeHtml(row.student.name)+'</strong><span>'+row.lapsLeft+' lap'+(row.lapsLeft===1?'':'s')+' to '+escapeHtml(row.next.name)+'</span><p>'+row.student.laps+' laps currently recorded.</p></div><button type="button" class="secondary coach-notify-award" data-student="'+escapeAttr(row.student.id)+'">Notify</button></article>';
+      return '<article class="coach-tool-row" data-workflow-key="'+escapeAttr(workflowKey)+'"><div><strong>'+escapeHtml(row.student.name)+'</strong>'+statusBadge+'<span>'+row.lapsLeft+' lap'+(row.lapsLeft===1?'':'s')+' to '+escapeHtml(row.next.name)+' - '+escapeHtml(insightConfidenceLabel(row.confidence||0.82))+'</span><p>'+row.student.laps+' laps currently recorded. '+escapeHtml(row.action||'Celebrate the upcoming milestone.')+'</p></div>'+coachWorkflowActionsHtml(workflowKey,'<button type="button" class="secondary coach-notify-award" data-student="'+escapeAttr(row.student.id)+'">Notify</button>')+'</article>';
     }
     if(tool==='training-not-opened'){
-      return '<article class="coach-tool-row"><div><strong>'+escapeHtml(row.student.name)+'</strong><span>'+escapeHtml(row.task.title)+'</span><p>Due '+escapeHtml(row.task.due_date||'not set')+' - '+escapeHtml(row.student.cls)+'</p></div><button type="button" class="secondary coach-note-target" data-scope="'+escapeAttr(row.student.id)+'">Note</button></article>';
+      return '<article class="coach-tool-row" data-workflow-key="'+escapeAttr(workflowKey)+'"><div><strong>'+escapeHtml(row.student.name)+'</strong>'+statusBadge+'<span>'+escapeHtml(row.task.title)+' - '+escapeHtml(insightConfidenceLabel(row.confidence||0.86))+'</span><p>Due '+escapeHtml(row.task.due_date||'not set')+' - '+escapeHtml(row.student.cls)+'. '+escapeHtml(row.action||'Check access to the task.')+'</p></div>'+coachWorkflowActionsHtml(workflowKey)+'</article>';
     }
     if(tool==='personal-bests'){
-      return '<article class="coach-tool-row"><div><strong>'+escapeHtml(row.student_name)+'</strong><span>'+escapeHtml(row.event_name)+' - '+escapeHtml(resultDisplay(row))+'</span><p>'+new Date(row.date).toLocaleDateString()+'</p></div><button type="button" class="secondary coach-note-target" data-scope="'+escapeAttr(row.student_id)+'">Note</button></article>';
+      return '<article class="coach-tool-row" data-workflow-key="'+escapeAttr(workflowKey)+'"><div><strong>'+escapeHtml(row.student_name)+'</strong>'+statusBadge+'<span>'+escapeHtml(row.event_name)+' - '+escapeHtml(resultDisplay(row))+'</span><p>'+new Date(row.date).toLocaleDateString()+'</p></div>'+coachWorkflowActionsHtml(workflowKey)+'</article>';
     }
     if(tool==='class-trends'){
-      return '<article class="coach-tool-row"><div><strong>'+escapeHtml(row.group)+'</strong><span>'+row.students+' students - '+row.laps+' laps - '+row.km+' km</span><p>'+row.certificates+' certificates ready.</p></div><button type="button" class="secondary coach-note-target" data-scope="class:'+escapeAttr(row.group)+'">Note</button></article>';
+      return '<article class="coach-tool-row" data-workflow-key="'+escapeAttr(workflowKey)+'"><div><strong>'+escapeHtml(row.group)+'</strong>'+statusBadge+'<span>'+row.students+' students - '+row.laps+' laps - '+row.km+' km</span><p>'+row.certificates+' certificates ready. '+escapeHtml(row.action||'Review class participation trend.')+'</p></div>'+coachWorkflowActionsHtml(workflowKey)+'</article>';
     }
-    return '<article class="coach-tool-row"><div><strong>'+escapeHtml(row.title)+'</strong><span>'+escapeHtml(row.detail)+'</span><p>Staff review before sharing.</p></div><button type="button" class="secondary coach-note-target" data-scope="'+escapeAttr(row.title)+'">Note</button></article>';
+    return '<article class="coach-tool-row" data-workflow-key="'+escapeAttr(workflowKey)+'"><div><strong>'+escapeHtml(row.title)+'</strong>'+statusBadge+'<span>'+escapeHtml(row.detail)+'</span><p>'+escapeHtml(row.action||'Staff review before sharing.')+'</p></div>'+coachWorkflowActionsHtml(workflowKey)+'</article>';
   }
 
   function renderCoachNotes(){
     if(!coachNoteListEl){return;}
     var rows=coachNotes().slice().reverse().slice(0,8);
     coachNoteListEl.innerHTML=rows.length?rows.map(function(row){
-      return '<div class="coach-note-item"><strong>'+escapeHtml(row.scope)+'</strong><span>'+escapeHtml(row.tool)+' - '+new Date(row.created_at).toLocaleString()+'</span><p>'+escapeHtml(row.note)+'</p></div>';
+      return '<div class="coach-note-item"><strong>'+escapeHtml(row.scope)+'</strong><span>'+escapeHtml(row.tool)+' - '+escapeHtml(row.status||'open')+' - '+escapeHtml(row.category||'general')+' - '+new Date(row.created_at).toLocaleString()+'</span>'+(row.follow_up_date?'<small>Follow-up: '+escapeHtml(row.follow_up_date)+'</small>':'')+'<p>'+escapeHtml(row.note)+'</p></div>';
     }).join(''):'<p class="muted-copy">No coach notes saved yet.</p>';
   }
 
@@ -3555,14 +5499,32 @@
     var rows=coachToolRows(tool);
     coachToolTitleEl.textContent=config.title;
     coachToolSubtitleEl.textContent=config.subtitle;
-    coachToolAiCopyEl.textContent=config.ai;
+    coachToolAiCopyEl.textContent=renderCoachToolSummary(tool,rows)+' '+coachToolSafeNextSteps(tool,rows)+' Staff-reviewed only: '+config.ai;
     coachToolNoteScopeEl.value=tool;
     coachToolNoteTextEl.value='';
+    if(coachToolNoteStatusEl){coachToolNoteStatusEl.value='open';}
+    if(coachToolNoteCategoryEl){coachToolNoteCategoryEl.value=tool==='close-award'?'award':tool==='training-not-opened'?'training':tool==='personal-bests'?'pb':tool==='celebration-wall'?'celebration':'general';}
+    if(coachToolFollowUpDateEl){coachToolFollowUpDateEl.value='';}
     coachToolResultEl.hidden=true;
     coachToolActionsEl.innerHTML=tool==='close-award'&&rows.length?'<button type="button" class="secondary" id="notify-all-close-awards-btn">Notify all close-to-award students</button>':'';
     coachToolListEl.innerHTML=rows.length?rows.map(function(row){return coachToolRowHtml(tool,row);}).join(''):'<p class="empty-note">Nothing to review here yet.</p>';
     Array.prototype.forEach.call(coachToolListEl.querySelectorAll('.coach-note-target'),function(btn){
-      btn.addEventListener('click',function(){coachToolNoteScopeEl.value=btn.dataset.scope;coachToolNoteTextEl.focus();});
+      btn.addEventListener('click',function(){coachToolNoteScopeEl.value=btn.dataset.scope;if(coachToolNoteStatusEl){coachToolNoteStatusEl.value='open';}coachToolNoteTextEl.focus();});
+    });
+    Array.prototype.forEach.call(coachToolListEl.querySelectorAll('.coach-follow-up-target'),function(btn){
+      btn.addEventListener('click',function(){
+        coachToolNoteScopeEl.value=btn.dataset.workflowKey;
+        if(coachToolNoteStatusEl){coachToolNoteStatusEl.value='follow-up';}
+        if(coachToolFollowUpDateEl){coachToolFollowUpDateEl.focus();}
+      });
+    });
+    Array.prototype.forEach.call(coachToolListEl.querySelectorAll('.coach-resolve-target'),function(btn){
+      btn.addEventListener('click',function(){
+        saveCoachWorkflowStatus(btn.dataset.workflowKey,'resolved','');
+        renderCoachToolModal.trigger=null;
+        renderCoachToolModal(activeCoachTool);
+        showResult(coachToolResultEl,{success:true,message:'Insight marked resolved.',item:btn.dataset.workflowKey});
+      });
     });
     Array.prototype.forEach.call(coachToolListEl.querySelectorAll('.coach-notify-award'),function(btn){
       btn.addEventListener('click',function(){notifyCloseAwardStudent(btn.dataset.student);});
@@ -3586,14 +5548,15 @@
   function renderFutureIntelligenceSkeleton(){
     var target=document.getElementById('future-intelligence-skeleton');
     if(!target){return;}
+    var insights=getSmartCoachInsights(true);
     var cards=[
-      {tool:'mini-coach',label:'Mini Coach AI',title:'Smart Suggestions',body:'Skeleton only: future assistant can review timelines, goals, PBs, and training history.',foot:'Bookmark: staff-reviewed advice only.'},
-      {tool:'needs-attention',label:'Needs Attention',title:needsAttentionRows().length+' flagged',body:'Open flagged students with practical follow-up reasons.',foot:'Click to review and add notes.'},
-      {tool:'close-award',label:'Close To Award',title:closeAwardRows().length+' runners nearby',body:'Review students within 8 laps of the next milestone.',foot:'Click to notify student profiles.'},
-      {tool:'training-not-opened',label:'Training Not Opened',title:trainingNotOpenedRows().length+' pending views',body:'See assigned tasks that have not been opened.',foot:'Click for reminder notes.'},
-      {tool:'personal-bests',label:'Personal Bests',title:personalBestRows().length+' PB markers',body:'Review recent PBs across athletics and carnival results.',foot:'Click for celebration or next-step notes.'},
-      {tool:'class-trends',label:'Class Trends',title:(classTrendRows(1)[0]&&classTrendRows(1)[0].group)||'No class yet',body:'Compare participation, progress, and award readiness by class.',foot:'Click for class-level notes.'},
-      {tool:'celebration-wall',label:'Celebration Wall',title:'Review candidates',body:'Moderated list of awards and PBs worth celebrating.',foot:'Click to prepare staff-reviewed shout-outs.',wide:true}
+      {tool:'mini-coach',label:'Mini Coach AI',title:insights.summary.next_best_actions+' smart actions',body:'Rule-based local insights now review timelines, goals, PBs, awards, and training history.',foot:'Staff-reviewed advice only.'},
+      {tool:'needs-attention',label:'Needs Attention',title:insights.summary.needs_attention+' flagged',body:'Open flagged students with practical follow-up reasons.',foot:'Click to review and add notes.'},
+      {tool:'close-award',label:'Close To Award',title:insights.summary.close_to_award+' runners nearby',body:'Review students within 8 laps of the next milestone.',foot:'Click to notify student profiles.'},
+      {tool:'training-not-opened',label:'Training Not Opened',title:insights.summary.training_not_opened+' pending views',body:'See assigned tasks that have not been opened.',foot:'Click for reminder notes.'},
+      {tool:'personal-bests',label:'Personal Bests',title:insights.summary.personal_bests+' PB markers',body:'Review recent PBs across athletics and carnival results.',foot:'Click for celebration or next-step notes.'},
+      {tool:'class-trends',label:'Class Trends',title:(insights.class_trends[0]&&insights.class_trends[0].group)||'No class yet',body:'Compare participation, progress, and award readiness by class.',foot:'Click for class-level notes.'},
+      {tool:'celebration-wall',label:'Celebration Wall',title:insights.summary.celebration_candidates+' candidates',body:'Moderated list of awards and PBs worth celebrating.',foot:'Click to prepare staff-reviewed shout-outs.',wide:true}
     ];
     target.innerHTML=cards.map(function(card){
       var content='<span>'+escapeHtml(card.label)+'</span><h3>'+escapeHtml(card.title)+'</h3><p>'+escapeHtml(card.body)+'</p><small>'+escapeHtml(card.foot)+'</small>';
@@ -3613,11 +5576,17 @@
   if(coachToolNoteFormEl){
     coachToolNoteFormEl.addEventListener('submit',function(e){
       e.preventDefault();
-      saveCoachNoteWithBackend(coachToolNoteScopeEl.value,coachToolNoteTextEl.value).then(function(result){
+      var status=coachToolNoteStatusEl?coachToolNoteStatusEl.value:'open';
+      var category=coachToolNoteCategoryEl?coachToolNoteCategoryEl.value:'general';
+      var followUpDate=coachToolFollowUpDateEl?coachToolFollowUpDateEl.value:'';
+      if(coachToolNoteScopeEl.value){saveCoachWorkflowStatus(coachToolNoteScopeEl.value,status,followUpDate);}
+      saveCoachNoteWithBackend(coachToolNoteScopeEl.value,coachToolNoteTextEl.value,status,category,followUpDate).then(function(result){
         if(!result.ok){showResult(coachToolResultEl,{success:false,error:result.error||result.reason||'Coach note failed.'});return;}
         var row=result.coach_note;
         coachToolNoteTextEl.value='';
+        if(coachToolFollowUpDateEl){coachToolFollowUpDateEl.value='';}
         renderCoachNotes();
+        renderFutureIntelligenceSkeleton();
         showResult(coachToolResultEl,{success:true,message:'Coach note saved.',scope:row.scope,backend:result.local?'local':'synced'});
       });
     });
@@ -3656,6 +5625,11 @@
   renderMultiSchoolReports();
   renderBrandingSettings();
   renderBackendReadiness();
+  renderSchoolSignup();
+  renderComplianceChecklist();
+  renderComplianceDataMap();
+  renderParentCollectionNotice();
+  renderBreachLog();
   populateFullHistoryStudents();
   populateClassReportSelect();
   populateAdjustmentStudents();
@@ -3729,6 +5703,14 @@
   document.getElementById('print-term-progress-btn').addEventListener('click',printTermProgress);
   document.getElementById('print-class-report-btn').addEventListener('click',printClassReport);
   if(printLaunchReadinessBtn){printLaunchReadinessBtn.addEventListener('click',printLaunchReadiness);}
+  if(schoolSignupFormEl){schoolSignupFormEl.addEventListener('submit',saveSchoolSignup);}
+  document.getElementById('export-school-signup-btn').addEventListener('click',exportSchoolSignup);
+  document.getElementById('print-compliance-checklist-btn').addEventListener('click',printComplianceChecklist);
+  document.getElementById('export-compliance-pack-btn').addEventListener('click',exportCompliancePack);
+  document.getElementById('print-parent-notice-btn').addEventListener('click',printParentCollectionNotice);
+  document.getElementById('export-parent-notice-btn').addEventListener('click',exportParentCollectionNotice);
+  breachLogFormEl.addEventListener('submit',saveBreachLogEntry);
+  document.getElementById('breach-log-date').value=new Date().toISOString().slice(0,10);
   document.getElementById('print-award-pack-btn').addEventListener('click',printAwardPack);
   document.getElementById('export-certificate-batch-csv-btn').addEventListener('click',function(){
     dlCsv('certificate-batch-'+new Date().toISOString().slice(0,10)+'.csv',certificateBatchRows(),['batch_rank','student','year','class','milestone','km','total_km','printed']);
@@ -3741,6 +5723,11 @@
   multiSchoolFilterEl.addEventListener('change',renderMultiSchoolReports);
   document.getElementById('export-multi-school-csv-btn').addEventListener('click',exportMultiSchoolCsv);
   brandingFormEl.addEventListener('submit',saveBrandingSettings);
+  applyBrandingTitleBtn.addEventListener('click',saveBrandingTitleOnly);
+  applyBrandingColorsBtn.addEventListener('click',saveBrandingColorsOnly);
+  brandingSchoolBlueEl.addEventListener('input',previewBrandingColors);
+  brandingUniformGoldEl.addEventListener('input',previewBrandingColors);
+  document.getElementById('clear-branding-logo-btn').addEventListener('click',clearBrandingLogo);
   document.getElementById('reset-branding-btn').addEventListener('click',resetBrandingSettings);
   adjustmentFormEl.addEventListener('submit',createManualAdjustment);
   document.getElementById('download-admin-templates-btn').addEventListener('click',downloadAdminTemplates);
@@ -3949,7 +5936,7 @@
     html+='<div class="cards">';
     students.forEach(function(s){
       var code=s.barcode||s.id;
-      html+='<div class="barcode-card-print"><div class="barcode-card-school">Gwynne Park Run Club</div><strong class="barcode-card-name">'+escapeHtml(s.name)+'</strong><div class="barcode-card-meta">'+escapeHtml(s.year)+' / '+escapeHtml(s.cls)+'</div><div class="barcode-qr-row">'+barcodeBarsHtml(code)+qrCodeHtml(code)+'</div><div class="barcode-code">'+escapeHtml(code)+'</div></div>';
+      html+='<div class="barcode-card-print"><div class="barcode-card-school">Corso</div><strong class="barcode-card-name">'+escapeHtml(s.name)+'</strong><div class="barcode-card-meta">'+escapeHtml(s.year)+' / '+escapeHtml(s.cls)+'</div><div class="barcode-qr-row">'+barcodeBarsHtml(code)+qrCodeHtml(code)+'</div><div class="barcode-code">'+escapeHtml(code)+'</div></div>';
     });
     html+='</div></body></html>';
     win.document.write(html); win.document.close(); win.focus(); win.print();

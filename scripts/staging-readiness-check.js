@@ -65,7 +65,7 @@ const checks = [
   hasEnv('RUN_CLUB_SCHOOL_ID', ['SUPABASE_SCHOOL_ID'])
 ];
 
-console.log('Gwynne Park Run Club staging readiness');
+console.log('Corso staging readiness');
 console.log('No secret values are printed by this check.\n');
 checks.forEach(printRow);
 

@@ -1,4 +1,4 @@
-var CACHE_NAME = 'gwynne-park-run-club-v107';
+var CACHE_NAME = 'gwynne-park-run-club-v165';
 var CORE_ASSETS = [
   './',
   './index.html',
@@ -28,7 +28,7 @@ var CORE_ASSETS = [
   './student.js',
   './tracking.js',
   './manifest.webmanifest',
-  './assets/gwynne-park-logo.png',
+  './assets/corso-logo.png',
   './assets/app-icon-192.png',
   './assets/app-icon-512.png',
   './assets/qrcode-generator.js'

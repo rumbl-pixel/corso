@@ -25,8 +25,10 @@ assertFile('supabase/functions/guardian_access/index.ts');
 assertFile('supabase/seed.staging.sql');
 assertFile('docs/supabase-staging-checklist.md');
 assertFile('docs/staging-coach-staff.sql');
+assertFile('docs/platform-admin-grant.sql');
 assertFile('scripts/staging-readiness-check.js');
 assertFile('supabase/migrations/202606160001_live_beta_feature_tables.sql');
+assertFile('supabase/migrations/202606180001_platform_admin_school_coach_access.sql');
 
 const studentAuth = read('supabase/functions/student_auth/index.ts');
 assert(/Deno\.serve/.test(studentAuth), 'student_auth should expose a Supabase Edge Function handler');
@@ -63,12 +65,25 @@ assert(!/James Smith|Emily Chen|Sarah Johnson/.test(seed), 'staging seed should 
 const stagingChecklist = read('docs/supabase-staging-checklist.md');
 assert(/role `coach`/.test(stagingChecklist), 'staging checklist should use a coach role for the test staff account');
 assert(/docs\/staging-coach-staff\.sql/.test(stagingChecklist), 'staging checklist should point to the coach staff SQL template');
+assert(/docs\/platform-admin-grant\.sql/.test(stagingChecklist), 'staging checklist should point to the platform admin SQL template');
 assert(!/as `owner`/.test(stagingChecklist), 'staging checklist should not tell the user to use owner for the test account');
 
 const coachStaffSql = read('docs/staging-coach-staff.sql');
 assert(/'coach'/.test(coachStaffSql), 'coach staff SQL should insert the staging staff role as coach');
 assert(/school_users/.test(coachStaffSql), 'coach staff SQL should create a school_users row');
 assert(/app_users/.test(coachStaffSql), 'coach staff SQL should create an app_users row');
+
+const platformAdminGrantSql = read('docs/platform-admin-grant.sql');
+assert(/platform_admins/.test(platformAdminGrantSql), 'platform admin SQL should create a platform_admins grant');
+assert(/'platform_admin'/.test(platformAdminGrantSql), 'platform admin SQL should use the platform_admin role');
+
+const platformAdminMigration = read('supabase/migrations/202606180001_platform_admin_school_coach_access.sql');
+assert(/create table if not exists public\.platform_admins/.test(platformAdminMigration), 'platform admin migration should create platform_admins');
+assert(/create or replace function public\.is_platform_admin/.test(platformAdminMigration), 'platform admin migration should create the platform admin helper');
+assert(/public\.is_platform_admin\(\)/.test(platformAdminMigration), 'school role helper should include platform admin override');
+assert(/update public\.school_users[\s\S]+set role = 'coach'[\s\S]+where role in \('owner','admin'\)/.test(platformAdminMigration), 'migration should convert old school owner/admin rows to coach');
+assert(/check \(role in \('coach','parent','student'\)\)/.test(platformAdminMigration), 'school users should be constrained to coach, parent, or student roles');
+assert(/check \(role = 'coach'\)/.test(platformAdminMigration), 'staff invites should be constrained to coach invites');
 
 const liveBetaMigration = read('supabase/migrations/202606160001_live_beta_feature_tables.sql');
 [
