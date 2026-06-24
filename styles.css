@@ -435,6 +435,39 @@ body.mobile-header-compact .main-nav button {
 =========================== */
 .content { max-width: 1040px; margin: 0 auto; padding: 2rem 1.5rem; }
 
+.beta-share-banner {
+  max-width: 1040px;
+  margin: 0.85rem auto 0;
+  padding: 0.65rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--uniform-gold) 42%, rgba(255,255,255,0.70) 58%);
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.88), var(--uniform-gold-wash));
+  color: var(--ink);
+  font-size: 0.88rem;
+  line-height: 1.35;
+  box-shadow: 0 14px 34px rgba(7,20,38,0.08);
+}
+
+.beta-share-banner__status {
+  flex: 0 0 auto;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  background: var(--obsidian-navy);
+  color: #f5f9ff;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+html[data-theme="dark"] .beta-share-banner {
+  background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(201,151,34,0.12));
+  color: #f5f9ff;
+  border-color: color-mix(in srgb, var(--uniform-gold) 54%, rgba(255,255,255,0.24) 46%);
+}
+
 @keyframes revealIn {
   from {
     opacity: 0;
@@ -5716,6 +5749,21 @@ html[data-theme="dark"] .branding-color-input {
 }
 
 @media (max-width: 640px) {
+  .beta-share-banner {
+    width: calc(100% - 1.5rem);
+    margin-top: 0.55rem;
+    padding: 0.6rem 0.75rem;
+    align-items: flex-start;
+    justify-content: flex-start;
+    border-radius: 8px;
+    font-size: 0.78rem;
+  }
+
+  .beta-share-banner__status {
+    padding: 0.24rem 0.5rem;
+    font-size: 0.72rem;
+  }
+
   .site-footer .feature-suggestion-btn {
     width: min(100%, 220px);
   }

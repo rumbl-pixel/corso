@@ -597,11 +597,11 @@ Most recent work focused on the Programming tab and Mini Coach:
 
 Current relevant asset versions:
 
-- HTML pages load `styles.css?v=118`
-- HTML pages load `theme.js?v=12`
+- HTML pages load `styles.css?v=119`
+- HTML pages load `theme.js?v=14`
 - `admin.html` loads `admin.js?v=5`
 - `admin-dashboard.html` loads `admin-dashboard.js?v=85`
-- `service-worker.js` cache is `gwynne-park-run-club-v165`
+- `service-worker.js` cache is `gwynne-park-run-club-v166`
 
 Priority 9 update:
 
@@ -655,5 +655,3 @@ git diff --check
 ```
 
 These passed after the Priority 9 Coach Tools workflow-state pass.
-
-
