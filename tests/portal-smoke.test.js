@@ -32,9 +32,11 @@ assertFile('pwa.js');
 assertFile('assets/app-icon-192.png');
 assertFile('assets/app-icon-512.png');
 assertFile('assets/corso-logo.png');
+assertFile('about.html');
 
 const brandFiles = [
   'index.html',
+  'about.html',
   'admin.html',
   'admin-dashboard.html',
   'student.html',
@@ -58,6 +60,7 @@ for (const file of brandFiles) {
 
 const pwaPages = [
   'index.html',
+  'about.html',
   'admin.html',
   'admin-dashboard.html',
   'student.html',
@@ -94,6 +97,8 @@ assert(/assets\/corso-logo\.png/.test(read('index.html')), 'home page should use
 const serviceWorker = read('service-worker.js');
 assert(/CACHE_NAME/.test(serviceWorker), 'service worker should define a cache name');
 assert(/CORE_ASSETS/.test(serviceWorker), 'service worker should cache the core app shell');
+assert(/gwynne-park-run-club-v167/.test(serviceWorker), 'service worker cache should be bumped after adding the About page');
+assert(/\.\/about\.html/.test(serviceWorker), 'service worker should cache the About page');
 assert(/manifest\.webmanifest/.test(serviceWorker), 'service worker should cache the manifest');
 assert(/app-icon-192\.png/.test(serviceWorker) && /app-icon-512\.png/.test(serviceWorker), 'service worker should cache app icons');
 assert(/assets\/corso-logo\.png/.test(serviceWorker), 'service worker should cache the supplied Corso logo');
@@ -1169,7 +1174,7 @@ assert(/student\.js\?v=21/.test(studentProfileHtml), 'student profile should req
 assert(/goals\.js\?v=5/.test(studentProfileHtml), 'student profile should request a fresh goals script');
 assert(/student\.js\?v=21/.test(studentHtml), 'student login should request the current student portal script');
 assert(/goals\.js\?v=5/.test(studentHtml), 'student login should request a fresh goals script');
-assert(/gwynne-park-run-club-v166/.test(serviceWorker), 'service worker cache should be bumped for the compliance workspace refresh');
+assert(/gwynne-park-run-club-v167/.test(serviceWorker), 'service worker cache should be bumped for the About page refresh');
 assert(/backend\.js/.test(serviceWorker), 'service worker should cache the backend adapter');
 assert(/interschool-team\.html/.test(serviceWorker) && /interschool-team\.js/.test(serviceWorker), 'service worker should cache the dedicated interschool team page');
 assertFile('tests/backend-live-style.test.js');

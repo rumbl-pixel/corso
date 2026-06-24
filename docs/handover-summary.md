@@ -1,6 +1,6 @@
 # Corso Handover Summary
 
-Last updated: 2026-06-18
+Last updated: 2026-06-24
 
 ## Product Snapshot
 
@@ -34,6 +34,7 @@ python -m http.server 8080
 Key files:
 
 - `index.html` - public/home dashboard
+- `about.html` - About Corso page with Jeremy's founder/running/privacy introduction
 - `admin.html` - admin login
 - `admin-dashboard.html` - main admin console
 - `admin-dashboard.js` - main admin feature logic
@@ -53,6 +54,8 @@ Key files:
 - `docs/access-model-decision.md` - locked access model
 - `docs/backend-stack-decision.md` - backend decision notes
 - `docs/backend-sync-runbook.md` - backend/sync notes
+- `CLAUDE_HANDOVER.md` - concise second-agent start-here brief
+- `docs/beta-tester-checklist.md` - simple demo-review checklist for testers
 
 ## Current Technical Shape
 
@@ -116,6 +119,9 @@ Recent design work:
 
 Recent QA and roadmap work:
 
+- About page added on 2026-06-24 with Jeremy's first-person introduction, privacy stance, and beta-safe positioning.
+- Beta Share Mode added on 2026-06-24 as a compact site-wide demo warning. It appears on shared demo pages and stays hidden from the locked kiosk surface.
+- Current transfer point commit history includes the beta-readiness sweep and About page work. The next handover target is a second-agent review, not a broad rewrite.
 - Stage 1 general browser QA is complete except for browser-native print/download/confirmation actions that Jeremy will click manually at the very end.
 - Stage 2 portal/workflow QA is complete for admin login, student login, parent read-only view, kiosk exit, student training checklist, Programming catalogue, and Mini Coach program generation.
 - Stage 3 Sports/Interschool QA is complete: Sports opens as one command centre, Interschool Athletics Mode works, Cross Country show/hide works, consent checklist is compact and centred, event popups stay in viewport on phone/iPad widths, and team summaries show student, year, class, division, events, PBs, and consent.
@@ -601,7 +607,58 @@ Current relevant asset versions:
 - HTML pages load `theme.js?v=14`
 - `admin.html` loads `admin.js?v=5`
 - `admin-dashboard.html` loads `admin-dashboard.js?v=85`
-- `service-worker.js` cache is `gwynne-park-run-club-v166`
+- `service-worker.js` cache is `gwynne-park-run-club-v167`
+
+## Current Transfer Point - 2026-06-24
+
+Corso is ready for a structured Claude/second-agent handover after one more beta-safety feature pass. The important point is that the platform is feature-rich but still beta/demo only.
+
+Recently completed:
+
+- Added `about.html`.
+- Linked About Us from the home portal grid and shared footers.
+- Added About page to PWA cache and smoke checks.
+- Added `CLAUDE_HANDOVER.md`.
+- Added `docs/beta-tester-checklist.md`.
+- Added Beta Share Mode banner and documented fine-tune/add/dilute candidates in `docs/beta-readiness-sweep.md`.
+
+Still demo/local-only:
+
+- Browser/localStorage student, scan, training, guardian, compliance, and school settings data.
+- Demo admin/site-code login.
+- Parent guardian access links.
+- Mini Coach recommendations.
+- Compliance sign-off workflow.
+- Compass import.
+
+Live blockers:
+
+- Supabase Auth is not fully live.
+- Row-level security needs final implementation and proof.
+- School/site scoping needs production proof.
+- No real student data should be entered.
+- Demo/localStorage areas still exist.
+- School approval, parent communication, retention/deletion decisions, and breach-response pathways must be confirmed.
+
+Feature status summary:
+
+| Feature area | Status | Notes |
+| --- | --- | --- |
+| Home/About/Privacy | Done | About page, Privacy Policy, beta banner, and support widget exist. |
+| Admin dashboard | Done | Works as a static demo; `admin-dashboard.js` needs future modularisation. |
+| School/site login | Skeleton | Username/site-code model exists; production Auth still required. |
+| Students roster | Done | Demo/local with backend adapter paths started. |
+| Scanner/kiosk | Needs manual test | Code checks pass; test real phone/iPad/scanner before beta. |
+| Student profile | Done | Includes timeline, awards, training checklist, barcode, medical. |
+| Parent portal | Needs backend | Read-only demo exists; production guardian linking still required. |
+| Coach Hub | Done | Sports, Training, Programming, and Insights grouped. |
+| Sports/Interschool | Needs manual test | Feature-rich and high-value; always re-test division filters after edits. |
+| Training assignment | Done | Student to-do checklist exists. |
+| Programming/Mini Coach | Skeleton | Useful rule-based planning assistant; not production AI. |
+| Awards/certificates | Needs manual test | Print/PDF flows need browser click-through. |
+| Compliance workspace | Skeleton | Evidence/posture tools exist; cannot automatically certify a school. |
+| Supabase backend | Needs backend | Adapter and tests exist; production project/auth/RLS not complete. |
+| Native app/App Store | Later | PWA/beta first. |
 
 Priority 9 update:
 
