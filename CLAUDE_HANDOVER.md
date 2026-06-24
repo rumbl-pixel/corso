@@ -22,7 +22,7 @@ python -m http.server 8080
 
 ## What Has Been Built
 
-- Public home page, About page, Privacy Policy, beta demo banner, Ko-fi support widget.
+- Public home page, About page, Privacy Policy, beta demo banner, homepage beta explainer, Ko-fi support widget.
 - Admin login and Admin Dashboard.
 - School-scoped staff/site-code login model skeleton.
 - Student login and student profile.
@@ -38,6 +38,7 @@ python -m http.server 8080
 - Programming/session builder with athletics PE catalogue, drag/drop lesson legs, editable timings, and Mini Coach planning widget.
 - Compliance workspace with vendor posture, signup/use attestation, evidence exports, parent notice, breach log, and launch readiness checks.
 - School Settings for school name, logo, colour override, reset to Corso defaults.
+- Beta Testing Toolkit in Admin Help with demo snapshot export, confirmed demo reset, first-time admin guide, feature status badges, page health labels, and tester checklist link.
 - Backend adapter and live-style tests for future Supabase work.
 - Claude transition plan, first-review brief, and beta-readiness sweep docs.
 
@@ -97,6 +98,7 @@ Real student data is blocked until all of these are finished:
 | Area | Status | Notes |
 | --- | --- | --- |
 | Home/About/Privacy | Done | About page and beta safety messaging exist. |
+| Beta testing toolkit | Done | Export demo snapshot, reset demo data, checklist, feedback, and status labels exist. |
 | Admin dashboard shell | Done | Large file; future modularisation recommended. |
 | Coach Hub | Done | Groups Sports, Training, Programming, and Insights. |
 | Students roster | Done | Demo/local with backend paths started. |

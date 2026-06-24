@@ -102,10 +102,24 @@
     header.insertAdjacentElement('afterend', banner);
   }
 
+  function updateFeedbackLinks() {
+    var page = (document.title || 'Corso page').replace(/\s+/g, ' ').trim();
+    var path = window.location.pathname.split('/').pop() || 'index.html';
+    document.querySelectorAll('.feature-suggestion-btn').forEach(function (link) {
+      var subject = encodeURIComponent('Corso feedback - ' + page);
+      var body = encodeURIComponent('Page: ' + path + '\nDevice/browser:\nWhat felt confusing or broken:\nSuggested improvement:\n');
+      link.setAttribute('href', 'mailto:support@gwynneparkrunclub.com.au?subject=' + subject + '&body=' + body);
+      if (/Feature Suggestion/i.test(link.textContent || '')) {
+        link.textContent = 'Send Feedback';
+      }
+    });
+  }
+
   root.setAttribute('data-theme', activeTheme);
 
   document.addEventListener('DOMContentLoaded', function () {
     applyBrandingSettings();
+    updateFeedbackLinks();
     if (document.body.classList.contains('page-kiosk')) { return; }
     renderBetaShareBanner();
 

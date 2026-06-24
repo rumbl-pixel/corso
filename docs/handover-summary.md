@@ -603,11 +603,11 @@ Most recent work focused on the Programming tab and Mini Coach:
 
 Current relevant asset versions:
 
-- HTML pages load `styles.css?v=119`
-- HTML pages load `theme.js?v=14`
+- HTML pages load `styles.css?v=120`
+- HTML pages load `theme.js?v=15`
 - `admin.html` loads `admin.js?v=5`
-- `admin-dashboard.html` loads `admin-dashboard.js?v=85`
-- `service-worker.js` cache is `gwynne-park-run-club-v167`
+- `admin-dashboard.html` loads `admin-dashboard.js?v=86`
+- `service-worker.js` cache is `gwynne-park-run-club-v168`
 
 ## Current Transfer Point - 2026-06-24
 
@@ -621,6 +621,17 @@ Recently completed:
 - Added `CLAUDE_HANDOVER.md`.
 - Added `docs/beta-tester-checklist.md`.
 - Added Beta Share Mode banner and documented fine-tune/add/dilute candidates in `docs/beta-readiness-sweep.md`.
+- Added lightweight beta-prep helpers:
+  - Admin demo data safety banner.
+  - Help tab Beta Testing Toolkit.
+  - Export demo snapshot button.
+  - Reset demo data button with confirmation.
+  - First-Time Admin Guide.
+  - Feature Status badges.
+  - Page Health labels.
+  - Page-aware Send Feedback footer links.
+  - Homepage "What This Is / What This Is Not Yet" beta explanation.
+  - Print-friendly About/Privacy styling.
 
 Still demo/local-only:
 

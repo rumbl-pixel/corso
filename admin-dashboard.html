@@ -4,12 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Corso - Admin Dashboard</title>
-    <link rel="stylesheet" href="styles.css?v=119" />
+    <link rel="stylesheet" href="styles.css?v=120" />
     <link rel="manifest" href="manifest.webmanifest" />
     <meta name="theme-color" content="#0c5aa8" />
     <link rel="apple-touch-icon" href="assets/app-icon-192.png" />
     <script src="config.js"></script>
-    <script src="theme.js?v=14"></script>
+    <script src="theme.js?v=15"></script>
   </head>
   <body class="page page-admin-dashboard">
     <a class="skip-link" href="#main-content">Skip to main content</a>
@@ -42,6 +42,11 @@
         <button class="tab-btn" data-tab="events" role="tab" aria-selected="false" aria-controls="tab-events">&#128197; Events</button>
         <button class="tab-btn" data-tab="awards" role="tab" aria-selected="false" aria-controls="tab-awards">&#127885; Awards</button>
         <button class="tab-btn" data-tab="school-admin" role="tab" aria-selected="false" aria-controls="tab-school-admin">&#9881; School Admin</button>
+      </div>
+
+      <div class="admin-beta-safety-banner" role="note">
+        <strong>Demo mode:</strong>
+        <span>Do not enter real student data yet. Use sample names only until Supabase Auth, RLS, school approval, and live privacy checks are complete.</span>
       </div>
 
       <!-- SCANNER TAB -->
@@ -1453,6 +1458,23 @@
 
       <!-- HELP TAB -->
       <div class="tab-panel admin-hub-section" id="tab-help">
+        <div class="card admin-help-card" id="help-beta-controls">
+          <div class="section-heading-row">
+            <div>
+              <h2>Beta Testing Toolkit</h2>
+              <p class="muted-copy">Use these before sharing a demo link or handing the project to another reviewer.</p>
+            </div>
+            <span class="feature-status-badge feature-status-badge--demo">Demo only</span>
+          </div>
+          <div class="help-action-row">
+            <button id="export-demo-snapshot-btn" type="button">Export demo snapshot</button>
+            <button id="reset-demo-data-btn" type="button" class="danger">Reset demo data</button>
+            <a class="secondary button-link" href="docs/beta-tester-checklist.md" target="_blank" rel="noopener">Open tester checklist</a>
+          </div>
+          <p class="muted-copy">Export first if you want to keep the current local test state. Reset clears Corso demo data from this browser and reloads the seeded sample state.</p>
+          <div id="demo-data-result" class="inline-save-status" hidden></div>
+        </div>
+
         <div class="card admin-help-card" id="help-privacy-gate">
           <h2>Go-Live Privacy Gate</h2>
           <p>Do not enter real student data until Priority 0 is complete. Use demo names only while testing layouts, scanning, training, reports, and interschool workflows.</p>
@@ -1507,14 +1529,42 @@
         </div>
 
         <div class="card admin-help-card" id="help-quick-start">
-          <h2>Quick Start</h2>
+          <h2>First-Time Admin Guide</h2>
           <ol class="help-checklist">
-            <li>Set school name, lap distance, years, classes, and award thresholds in Reports &gt; Onboarding Wizard.</li>
-            <li>Add students manually or import the roster CSV from the Import tab.</li>
-            <li>Print barcode / QR cards and test each scanner before the first run session.</li>
-            <li>Run sessions on one logged-in admin device, or use Kiosk only from an admin login.</li>
-            <li>Review reports and exports before sharing results with families.</li>
+            <li>Set the school name, colours, and emblem in School Admin &gt; Settings.</li>
+            <li>Add students manually or import a demo roster CSV from School Admin &gt; Import.</li>
+            <li>Generate barcode / QR cards and test one code from each class.</li>
+            <li>Run sessions on one logged-in admin device, then check the scanner session log before sharing results.</li>
+            <li>Review leaderboards, awards, and reports before sharing results with families.</li>
           </ol>
+        </div>
+
+        <div class="card admin-help-card" id="help-feature-status">
+          <h2>Feature Status</h2>
+          <div class="feature-status-grid">
+            <div><span class="feature-status-badge feature-status-badge--ready">Ready</span><strong>Home, About, Privacy</strong><p>Public-facing beta information is in place.</p></div>
+            <div><span class="feature-status-badge feature-status-badge--ready">Ready</span><strong>Student profiles</strong><p>Demo profile, awards, timeline, barcode, medical, and training checklist exist.</p></div>
+            <div><span class="feature-status-badge feature-status-badge--manual">Manual test</span><strong>Kiosk/scanner</strong><p>Test real phone/iPad camera and Bluetooth scanners before beta.</p></div>
+            <div><span class="feature-status-badge feature-status-badge--manual">Manual test</span><strong>Sports/Interschool</strong><p>Recheck event filters, consent checklist, team lists, and results after edits.</p></div>
+            <div><span class="feature-status-badge feature-status-badge--demo">Demo only</span><strong>Mini Coach</strong><p>Rule-based planning helper only. Staff must review all suggestions.</p></div>
+            <div><span class="feature-status-badge feature-status-badge--backend">Needs backend</span><strong>Supabase/Auth/RLS</strong><p>Required before real student data or school deployment.</p></div>
+            <div><span class="feature-status-badge feature-status-badge--demo">Demo only</span><strong>Compliance workspace</strong><p>Evidence support only. School sign-off still happens externally.</p></div>
+            <div><span class="feature-status-badge feature-status-badge--later">Later</span><strong>Native app</strong><p>PWA and hosted beta come first.</p></div>
+          </div>
+        </div>
+
+        <div class="card admin-help-card" id="help-page-health">
+          <h2>Page Health Labels</h2>
+          <div class="page-health-grid">
+            <span>Home <strong>checked</strong></span>
+            <span>About <strong>checked</strong></span>
+            <span>Admin <strong>checked</strong></span>
+            <span>Student profile <strong>checked</strong></span>
+            <span>Parent portal <strong>manual test</strong></span>
+            <span>Kiosk <strong>manual device test</strong></span>
+            <span>Sports <strong>manual review</strong></span>
+            <span>Supabase <strong>backend skeleton</strong></span>
+          </div>
         </div>
 
         <div class="card admin-help-card" id="help-device-setup">
@@ -1573,7 +1623,7 @@
     <script src="goals.js?v=5"></script>
     <script src="admin-goals.js?v=5"></script>
     <script src="assets/qrcode-generator.js"></script>
-    <script src="admin-dashboard.js?v=85"></script>
+    <script src="admin-dashboard.js?v=86"></script>
     <script src="pwa.js"></script>
         <script src='https://storage.ko-fi.com/cdn/scripts/overlay-widget.js'></script>
     <script>
