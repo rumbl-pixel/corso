@@ -89,11 +89,25 @@
     toggle.querySelector('[data-theme-toggle-thumb]').textContent = isDark ? '☾' : '☀';
   }
 
+  function renderBetaShareBanner() {
+    var cfg = window.RUN_CLUB_CONFIG || {};
+    var betaEnabled = cfg.betaShareMode !== false && (cfg.betaShareMode || cfg.demoMode !== false);
+    if (!betaEnabled || document.querySelector('[data-beta-share-banner]')) { return; }
+    var header = document.querySelector('.site-header');
+    if (!header) { return; }
+    var banner = document.createElement('div');
+    banner.className = 'beta-share-banner';
+    banner.setAttribute('data-beta-share-banner', '');
+    banner.innerHTML = '<span class="beta-share-banner__status">Beta demo</span><span>' + (cfg.betaShareMessage || 'No real student data. Production use needs school approval and backend readiness.') + '</span>';
+    header.insertAdjacentElement('afterend', banner);
+  }
+
   root.setAttribute('data-theme', activeTheme);
 
   document.addEventListener('DOMContentLoaded', function () {
     applyBrandingSettings();
     if (document.body.classList.contains('page-kiosk')) { return; }
+    renderBetaShareBanner();
 
     var header = document.querySelector('.site-header');
     var headerInner = document.querySelector('.site-header .header-inner');

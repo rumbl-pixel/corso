@@ -109,6 +109,8 @@ assert(/schoolSites/.test(config), 'config.js should expose a site-code to schoo
 assert(/authUsernameDomain/.test(config), 'config.js should expose the internal staff username auth domain');
 assert(/syncEnabled/.test(config), 'config.js should expose a backend sync feature flag');
 assert(/liveDataMode:\s*false/.test(config), 'config.js should keep live student data mode disabled until Priority 0 is complete');
+assert(/betaShareMode:\s*true/.test(config), 'config.js should expose beta share mode for safe demo links');
+assert(/betaShareMessage/.test(config), 'config.js should expose beta share wording');
 
 const backendJs = read('backend.js');
 assert(/RunClubBackend/.test(backendJs), 'backend adapter should expose RunClubBackend');
@@ -1065,9 +1067,9 @@ assert(/\.student-editor-modal\.athletics-team-modal[\s\S]*width:\s*min\(100%,\s
 assert(/athletics-consent-status-select/.test(styles), 'styles should support inline consent status dropdowns in the modal checklist');
 assert(/athletics-consent-status-select--pending/.test(styles) && /athletics-consent-status-select--granted/.test(styles) && /athletics-consent-status-select--declined/.test(styles), 'styles should colour pending, approved, and declined consent pills');
 assert(/athletics-consent-saved-list/.test(styles), 'styles should support the saved consent list inside team overview');
-assert(/styles\.css\?v=118/.test(leaderboardHtml), 'leaderboard page should request the current stylesheet version');
-assert(/styles\.css\?v=118/.test(interschoolTeamHtml), 'interschool team page should request the current stylesheet');
-assert(/theme\.js\?v=12/.test(studentProfileHtml), 'student profile should load the shared light/dark theme switch');
+assert(/styles\.css\?v=119/.test(leaderboardHtml), 'leaderboard page should request the current stylesheet version');
+assert(/styles\.css\?v=119/.test(interschoolTeamHtml), 'interschool team page should request the current stylesheet');
+assert(/theme\.js\?v=14/.test(studentProfileHtml), 'student profile should load the shared light/dark theme switch');
 assert(/data-theme="dark"/.test(styles), 'site styles should define dark theme overrides');
 assert(/html\[data-theme="dark"\] \.privacy-badge--public[\s\S]*color:\s*#fff3c4/.test(styles), 'dark mode should keep public-name privacy badges readable');
 assert(/html\[data-theme="dark"\] #student-list \.student-name-link,[\s\S]*html\[data-theme="dark"\] #student-list \.link-btn[\s\S]*color:\s*#9fc7f7/.test(styles), 'dark mode should soften admin student roster links');
@@ -1125,6 +1127,9 @@ assert(/classList\.add\('mobile-header-compact'\)/.test(themeJs), 'theme script 
 assert(!/addEventListener\('scroll'/.test(themeJs), 'theme script should not resize the header on scroll');
 assert(/mobile-nav-open/.test(themeJs), 'theme script should toggle the pop-out mobile nav');
 assert(/page-kiosk/.test(themeJs), 'theme switch should stay out of the locked kiosk surface');
+assert(/renderBetaShareBanner/.test(themeJs), 'theme script should render the beta share banner');
+assert(/beta-share-banner/.test(themeJs), 'theme script should create a beta share banner class');
+assert(/No real student data/.test(themeJs), 'beta share banner should warn against real student data');
 assert(/feature-suggestion-btn/.test(adminDashboardHtml), 'admin dashboard footer should include a feature suggestion button');
 assert(/Feature Suggestion/.test(adminDashboardHtml), 'admin dashboard footer should label the feature suggestion button clearly');
 assert(/privacy-pledge/.test(adminDashboardHtml), 'admin dashboard footer should include the no-ads privacy pledge');
@@ -1134,6 +1139,8 @@ assert(/kofiWidgetOverlay\.draw\('jmancini'/.test(adminDashboardHtml), 'support 
 assert(/'floating-chat\.donateButton\.text': 'Support Us'/.test(adminDashboardHtml), 'support widget should label the floating button Support Us');
 assert(/'floating-chat\.donateButton\.background-color': '#ffffff'/.test(adminDashboardHtml), 'support widget should use the requested white button background');
 assert(!/BMC-Widget|buymeacoffee/.test(adminDashboardHtml), 'admin dashboard should not include the old Buy Me a Coffee widget');
+assert(/\.beta-share-banner/.test(styles), 'styles should include the beta share banner');
+assert(/\.beta-share-banner__status/.test(styles), 'styles should include a compact beta status pill');
 assert(/feature-suggestion-btn/.test(styles), 'site footer should style the feature suggestion button');
 assert(/\.floatingchat-container-wrap,[\s\S]*\.floatingchat-container-wrap-mobi[\s\S]*left:\s*auto !important[\s\S]*right:\s*4px !important[\s\S]*bottom:\s*4px !important[\s\S]*transform:\s*scale\(0\.76\)/.test(styles), 'Ko-fi floating widget should clear default left positioning and sit in the bottom-right corner');
 assert(/\.floating-chat-kofi-popup-iframe,[\s\S]*\.floating-chat-kofi-popup-iframe-mobi[\s\S]*left:\s*auto !important[\s\S]*right:\s*4px !important/.test(styles), 'Ko-fi popup should clear default left positioning and open from the right');
@@ -1162,7 +1169,7 @@ assert(/student\.js\?v=21/.test(studentProfileHtml), 'student profile should req
 assert(/goals\.js\?v=5/.test(studentProfileHtml), 'student profile should request a fresh goals script');
 assert(/student\.js\?v=21/.test(studentHtml), 'student login should request the current student portal script');
 assert(/goals\.js\?v=5/.test(studentHtml), 'student login should request a fresh goals script');
-assert(/gwynne-park-run-club-v165/.test(serviceWorker), 'service worker cache should be bumped for the compliance workspace refresh');
+assert(/gwynne-park-run-club-v166/.test(serviceWorker), 'service worker cache should be bumped for the compliance workspace refresh');
 assert(/backend\.js/.test(serviceWorker), 'service worker should cache the backend adapter');
 assert(/interschool-team\.html/.test(serviceWorker) && /interschool-team\.js/.test(serviceWorker), 'service worker should cache the dedicated interschool team page');
 assertFile('tests/backend-live-style.test.js');

@@ -8,6 +8,8 @@ Corso passed the current local beta-readiness sweep at demo/local level. No bloc
 
 This sweep does not approve live real-student use. Keep demo/local mode until school approval, production Supabase/Auth, RLS, and live readiness checks are complete.
 
+Beta Share Mode has now been added as a compact site-wide banner for demo pages. It warns viewers that the beta should not be used with real student data yet. The locked kiosk surface stays clean and does not show the banner.
+
 ## Automated Checks
 
 Passed:
@@ -101,6 +103,28 @@ Result:
 - Bluetooth/HID scanner hardware must still be tested manually.
 - Print/download flows must still be checked manually in Firefox/Chrome.
 - Live Supabase/Auth/RLS configuration is intentionally not treated as ready for real student data yet.
+
+## Fine Tune / Add / Dilute Candidates
+
+Fine tune before sharing:
+
+- Keep the Beta Share Mode banner visible on shared demo links so viewers know the platform is not live-approved for real student data.
+- Recheck Ko-fi widget placement on the hosted beta URL, especially on phones.
+- Consider stacked cards for Sports team summary and Compliance data map on phone widths.
+- Keep checking dark/light contrast in Admin tables and modal controls as more data is added.
+
+Add only if it helps the beta:
+
+- A short `Try the demo` checklist on the home page or Help tab for people testing the beta.
+- A beta feedback link that routes to the existing Feature Suggestion button.
+- A tiny reset-demo-data note for testers if browser local data gets messy.
+
+Dilute or postpone:
+
+- Avoid adding more dashboard tiles until the beta testers use the current eight admin areas.
+- Keep autonomous AI advice parked; Mini Coach should remain rule-based and staff-reviewed.
+- Do not add production onboarding complexity until the live Supabase/Auth setup is ready.
+- Do not add more student self-entry features; staff-controlled records remain the trust model.
 
 ## Human Final Checks Before Sharing Beta
 
