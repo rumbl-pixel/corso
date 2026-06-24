@@ -445,6 +445,46 @@
     a.href=u; a.download=filename; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(u);
   }
 
+  function corsoLocalStorageKeys(){
+    var keys=[];
+    for(var i=0;i<localStorage.length;i+=1){
+      var key=localStorage.key(i);
+      if(!key){continue;}
+      if(key==='runClubAdminSession' || key==='gp_run_club_theme'){continue;}
+      if(key.indexOf('rc_')===0 || key.indexOf('runClub')===0 || key.indexOf('gp_run_club')===0){
+        keys.push(key);
+      }
+    }
+    return keys.sort();
+  }
+
+  function exportDemoSnapshot(){
+    var keys=corsoLocalStorageKeys();
+    var data={
+      exported_at:new Date().toISOString(),
+      app:'Corso',
+      mode:'demo-local-storage',
+      warning:'Demo/local browser snapshot only. Do not include real student data.',
+      keys:{}
+    };
+    keys.forEach(function(key){
+      var raw=localStorage.getItem(key);
+      try{data.keys[key]=JSON.parse(raw);}catch(e){data.keys[key]=raw;}
+    });
+    dlJson('corso-demo-snapshot-'+new Date().toISOString().slice(0,10)+'.json',data);
+    showResult(document.getElementById('demo-data-result'),{success:true,message:'Demo snapshot exported.',keys:keys.length});
+  }
+
+  function resetDemoData(){
+    var message='Reset Corso demo data in this browser? This clears local students, scans, training, sports, guardian links, reports, compliance notes, and school branding overrides. Export a snapshot first if you need to keep this test state.';
+    if(!confirm(message)){return;}
+    corsoLocalStorageKeys().forEach(function(key){localStorage.removeItem(key);});
+    localStorage.removeItem('studentSession');
+    localStorage.removeItem('parentSession');
+    showResult(document.getElementById('demo-data-result'),{success:true,message:'Demo data reset. Reloading sample state...'});
+    window.setTimeout(function(){window.location.href='admin-dashboard.html?tab=school-admin&section=help&qa=demo-reset';},700);
+  }
+
   // --- TABS ---
   var tabBtns = document.querySelectorAll('.tab-btn');
   var coachHubTabs = document.querySelectorAll('.coach-hub-tab');
@@ -5709,6 +5749,10 @@
   document.getElementById('export-compliance-pack-btn').addEventListener('click',exportCompliancePack);
   document.getElementById('print-parent-notice-btn').addEventListener('click',printParentCollectionNotice);
   document.getElementById('export-parent-notice-btn').addEventListener('click',exportParentCollectionNotice);
+  var exportDemoSnapshotBtn=document.getElementById('export-demo-snapshot-btn');
+  if(exportDemoSnapshotBtn){exportDemoSnapshotBtn.addEventListener('click',exportDemoSnapshot);}
+  var resetDemoDataBtn=document.getElementById('reset-demo-data-btn');
+  if(resetDemoDataBtn){resetDemoDataBtn.addEventListener('click',resetDemoData);}
   breachLogFormEl.addEventListener('submit',saveBreachLogEntry);
   document.getElementById('breach-log-date').value=new Date().toISOString().slice(0,10);
   document.getElementById('print-award-pack-btn').addEventListener('click',printAwardPack);

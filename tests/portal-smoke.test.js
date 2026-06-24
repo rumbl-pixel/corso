@@ -97,7 +97,7 @@ assert(/assets\/corso-logo\.png/.test(read('index.html')), 'home page should use
 const serviceWorker = read('service-worker.js');
 assert(/CACHE_NAME/.test(serviceWorker), 'service worker should define a cache name');
 assert(/CORE_ASSETS/.test(serviceWorker), 'service worker should cache the core app shell');
-assert(/gwynne-park-run-club-v167/.test(serviceWorker), 'service worker cache should be bumped after adding the About page');
+assert(/gwynne-park-run-club-v168/.test(serviceWorker), 'service worker cache should be bumped after adding the About page');
 assert(/\.\/about\.html/.test(serviceWorker), 'service worker should cache the About page');
 assert(/manifest\.webmanifest/.test(serviceWorker), 'service worker should cache the manifest');
 assert(/app-icon-192\.png/.test(serviceWorker) && /app-icon-512\.png/.test(serviceWorker), 'service worker should cache app icons');
@@ -453,9 +453,18 @@ assert(/reset-branding-btn/.test(adminDashboardHtml), 'branding settings should 
 assert(/data-admin-section="help"/.test(adminDashboardHtml), 'School Admin should include a Help section');
 assert(/data-admin-section="compliance"/.test(adminDashboardHtml), 'School Admin should include a Compliance section');
 assert(/admin-help-card/.test(adminDashboardHtml), 'admin dashboard should include setup help cards');
+assert(/admin-beta-safety-banner/.test(adminDashboardHtml), 'admin dashboard should show a stronger demo data safety banner');
+assert(/help-beta-controls/.test(adminDashboardHtml), 'admin help should include beta testing controls');
+assert(/export-demo-snapshot-btn/.test(adminDashboardHtml), 'admin help should let staff export a demo snapshot');
+assert(/reset-demo-data-btn/.test(adminDashboardHtml), 'admin help should let staff reset demo data with confirmation');
+assert(/docs\/beta-tester-checklist\.md/.test(adminDashboardHtml), 'admin help should link to the beta tester checklist');
 assert(/help-quick-start/.test(adminDashboardHtml), 'admin help should include quick start notes');
+assert(/First-Time Admin Guide/.test(adminDashboardHtml), 'admin help should include a first-time admin guide');
 assert(/help-device-setup/.test(adminDashboardHtml), 'admin help should include device setup notes');
 assert(/help-privacy-gate/.test(adminDashboardHtml), 'admin help should include privacy gate notes');
+assert(/help-feature-status/.test(adminDashboardHtml), 'admin help should include feature status badges');
+assert(/feature-status-badge--backend/.test(adminDashboardHtml), 'feature status should mark backend-only work clearly');
+assert(/help-page-health/.test(adminDashboardHtml), 'admin help should include page health labels');
 assert(/help-education-compliance/.test(adminDashboardHtml), 'admin help should include education compliance readiness notes');
 assert(/Education Compliance Readiness/.test(adminDashboardHtml), 'admin help should label the education compliance readiness card');
 assert(/docs\/education-compliance-readiness\.md/.test(adminDashboardHtml), 'admin help should link to the education compliance readiness evidence notes');
@@ -534,7 +543,7 @@ assert(/training-status-list/.test(adminDashboardHtml), 'admin training tab shou
 assert(/role="tablist"/.test(adminDashboardHtml), 'admin tabs should expose a tablist role');
 assert(/aria-selected="true"/.test(adminDashboardHtml), 'admin active tab should expose selected state');
 assert(/aria-controls="tab-scanner"/.test(adminDashboardHtml), 'admin tabs should reference tab panels');
-assert(/admin-dashboard\.js\?v=85/.test(adminDashboardHtml), 'admin dashboard should request the current live beta dashboard script');
+assert(/admin-dashboard\.js\?v=86/.test(adminDashboardHtml), 'admin dashboard should request the current live beta dashboard script');
 assert(/backend\.js\?v=23/.test(adminDashboardHtml), 'admin dashboard should load the current backend adapter before app scripts');
 
 const adminDashboardJs = read('admin-dashboard.js');
@@ -1072,9 +1081,9 @@ assert(/\.student-editor-modal\.athletics-team-modal[\s\S]*width:\s*min\(100%,\s
 assert(/athletics-consent-status-select/.test(styles), 'styles should support inline consent status dropdowns in the modal checklist');
 assert(/athletics-consent-status-select--pending/.test(styles) && /athletics-consent-status-select--granted/.test(styles) && /athletics-consent-status-select--declined/.test(styles), 'styles should colour pending, approved, and declined consent pills');
 assert(/athletics-consent-saved-list/.test(styles), 'styles should support the saved consent list inside team overview');
-assert(/styles\.css\?v=119/.test(leaderboardHtml), 'leaderboard page should request the current stylesheet version');
-assert(/styles\.css\?v=119/.test(interschoolTeamHtml), 'interschool team page should request the current stylesheet');
-assert(/theme\.js\?v=14/.test(studentProfileHtml), 'student profile should load the shared light/dark theme switch');
+assert(/styles\.css\?v=120/.test(leaderboardHtml), 'leaderboard page should request the current stylesheet version');
+assert(/styles\.css\?v=120/.test(interschoolTeamHtml), 'interschool team page should request the current stylesheet');
+assert(/theme\.js\?v=15/.test(studentProfileHtml), 'student profile should load the shared light/dark theme switch');
 assert(/data-theme="dark"/.test(styles), 'site styles should define dark theme overrides');
 assert(/html\[data-theme="dark"\] \.privacy-badge--public[\s\S]*color:\s*#fff3c4/.test(styles), 'dark mode should keep public-name privacy badges readable');
 assert(/html\[data-theme="dark"\] #student-list \.student-name-link,[\s\S]*html\[data-theme="dark"\] #student-list \.link-btn[\s\S]*color:\s*#9fc7f7/.test(styles), 'dark mode should soften admin student roster links');
@@ -1135,6 +1144,7 @@ assert(/page-kiosk/.test(themeJs), 'theme switch should stay out of the locked k
 assert(/renderBetaShareBanner/.test(themeJs), 'theme script should render the beta share banner');
 assert(/beta-share-banner/.test(themeJs), 'theme script should create a beta share banner class');
 assert(/No real student data/.test(themeJs), 'beta share banner should warn against real student data');
+assert(/updateFeedbackLinks/.test(themeJs), 'theme script should enrich footer feedback links with page context');
 assert(/feature-suggestion-btn/.test(adminDashboardHtml), 'admin dashboard footer should include a feature suggestion button');
 assert(/Feature Suggestion/.test(adminDashboardHtml), 'admin dashboard footer should label the feature suggestion button clearly');
 assert(/privacy-pledge/.test(adminDashboardHtml), 'admin dashboard footer should include the no-ads privacy pledge');
@@ -1160,6 +1170,9 @@ assert(!/#bmc-wbtn|#bmc-iframe/.test(styles), 'site styles should not keep old B
 assert(/\.privacy-pledge[\s\S]*max-width:\s*760px/.test(styles), 'privacy pledge should be styled as readable footer text');
 assert(/\.footer-actions[\s\S]*display:\s*flex[\s\S]*flex-wrap:\s*wrap/.test(styles), 'footer actions should wrap cleanly on small screens');
 assert(/\.feature-suggestion-btn[\s\S]*rgba\(255,248,221,0\.98\)[\s\S]*rgba\(242,216,145,0\.86\)/.test(styles), 'feature suggestion button should use a pale gold base colour');
+assert(/admin-beta-safety-banner/.test(styles), 'styles should include the admin beta safety banner');
+assert(/feature-status-badge/.test(styles), 'styles should include feature status badges');
+assert(/@media print/.test(styles) && /\.site-header[\s\S]*display: none !important/.test(styles), 'styles should include print-friendly About and Privacy output');
 const privacyPolicyHtml = read('privacy-policy.html');
 assert(/Access boundaries/.test(privacyPolicyHtml), 'privacy policy should explain access boundaries');
 assert(/Parents can see only their own linked child or children/.test(privacyPolicyHtml), 'privacy policy should describe parent-only child access');
@@ -1167,14 +1180,14 @@ assert(/advertising trackers/.test(privacyPolicyHtml), 'privacy policy should ru
 assert(/School and Department approval/.test(privacyPolicyHtml), 'privacy policy should explain school and Department approval expectations');
 assert(/Medical and safety notes/.test(privacyPolicyHtml), 'privacy policy should explain medical and safety note boundaries');
 assert(/Security and breach response/.test(privacyPolicyHtml), 'privacy policy should explain breach response expectations');
-assert(/admin-dashboard\.js\?v=85/.test(adminDashboardHtml), 'admin dashboard should request the current live beta dashboard script');
+assert(/admin-dashboard\.js\?v=86/.test(adminDashboardHtml), 'admin dashboard should request the current live beta dashboard script');
 assert(/goals\.js\?v=5/.test(adminDashboardHtml), 'admin dashboard should request a fresh goals script after interschool goals changes');
 assert(/admin-goals\.js\?v=5/.test(adminDashboardHtml), 'admin dashboard should request a fresh admin goals script after interschool goals changes');
 assert(/student\.js\?v=21/.test(studentProfileHtml), 'student profile should request the current student portal script');
 assert(/goals\.js\?v=5/.test(studentProfileHtml), 'student profile should request a fresh goals script');
 assert(/student\.js\?v=21/.test(studentHtml), 'student login should request the current student portal script');
 assert(/goals\.js\?v=5/.test(studentHtml), 'student login should request a fresh goals script');
-assert(/gwynne-park-run-club-v167/.test(serviceWorker), 'service worker cache should be bumped for the About page refresh');
+assert(/gwynne-park-run-club-v168/.test(serviceWorker), 'service worker cache should be bumped for the About page refresh');
 assert(/backend\.js/.test(serviceWorker), 'service worker should cache the backend adapter');
 assert(/interschool-team\.html/.test(serviceWorker) && /interschool-team\.js/.test(serviceWorker), 'service worker should cache the dedicated interschool team page');
 assertFile('tests/backend-live-style.test.js');
