@@ -33,6 +33,10 @@ assertFile('assets/app-icon-192.png');
 assertFile('assets/app-icon-512.png');
 assertFile('assets/corso-logo.png');
 assertFile('about.html');
+assertFile('wrangler.toml');
+assertFile('_headers');
+assertFile('scripts/build-cloudflare-pages.js');
+assertFile('docs/cloudflare-pages-deploy.md');
 
 const brandFiles = [
   'index.html',
@@ -104,6 +108,21 @@ assert(/app-icon-192\.png/.test(serviceWorker) && /app-icon-512\.png/.test(servi
 assert(/assets\/corso-logo\.png/.test(serviceWorker), 'service worker should cache the supplied Corso logo');
 assert(/event\.request\.mode === 'navigate'/.test(serviceWorker), 'service worker should detect navigation requests');
 assert(/fetch\(event\.request\)[\s\S]+caches\.match\(event\.request\)[\s\S]+caches\.match\('\.\/index\.html'\)/.test(serviceWorker), 'service worker should use network-first navigation with cached fallback');
+
+const packageJson = JSON.parse(read('package.json'));
+assert(packageJson.scripts['build:cloudflare'] === 'node scripts/build-cloudflare-pages.js', 'package should expose a Cloudflare bundle build script');
+assert(/wrangler pages deploy dist-pages/.test(packageJson.scripts['deploy:cloudflare']), 'package should deploy the clean dist-pages bundle to Cloudflare');
+assert(/wrangler pages deploy dist-pages/.test(packageJson.scripts['deploy:cloudflare:preview']), 'package should deploy preview builds from dist-pages');
+const wranglerConfig = read('wrangler.toml');
+assert(/name = "corso-platform"/.test(wranglerConfig), 'wrangler config should use the Corso Pages project name');
+assert(/pages_build_output_dir = "dist-pages"/.test(wranglerConfig), 'wrangler config should publish the clean dist-pages output');
+const cloudflareBuildScript = read('scripts/build-cloudflare-pages.js');
+assert(/dist-pages/.test(cloudflareBuildScript), 'Cloudflare build script should create the dist-pages folder');
+assert(/docs\/beta-tester-checklist\.md/.test(cloudflareBuildScript), 'Cloudflare build should include linked beta tester docs');
+assert(/docs\/education-compliance-readiness\.md/.test(cloudflareBuildScript), 'Cloudflare build should include linked compliance docs');
+const cloudflareHeaders = read('_headers');
+assert(/X-Content-Type-Options: nosniff/.test(cloudflareHeaders), 'Cloudflare headers should include nosniff');
+assert(/Permissions-Policy: camera=\(self\)/.test(cloudflareHeaders), 'Cloudflare headers should allow same-origin camera scanning');
 
 const config = read('config.js');
 assert(/demoMode:\s*true/.test(config), 'config.js should enable safe demo mode');

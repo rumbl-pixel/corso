@@ -636,6 +636,15 @@ Recently completed:
 - Desktop browser sweep passed for home, about, privacy, student, parent, leaderboard, kiosk, and key admin deep links.
 - Phone-width browser sweep passed for home, about, student profile, admin help, sports, programming, and kiosk.
 - Remaining beta items are external/manual: real phone/iPad camera scan, Bluetooth scanner, browser-native print/download confirmations, hosted demo deployment, Supabase production/Auth/RLS, and school approval.
+- Cloudflare Pages prep started on 2026-06-25:
+  - Added `wrangler.toml` for the `corso-platform` Pages project.
+  - Added `_headers` with safe default browser security headers.
+  - Added `docs/cloudflare-pages-deploy.md`.
+  - Added npm scripts for `cloudflare:check`, `deploy:cloudflare`, and `deploy:cloudflare:preview`.
+  - Verified Wrangler is callable locally.
+  - Added `scripts/build-cloudflare-pages.js` to produce a clean `dist-pages` deployment bundle.
+  - Verified the generated `dist-pages` bundle locally on port 8090 for home/about/admin-login/kiosk routing basics.
+  - Cloudflare account login is still required before project creation/deployment.
 
 Still demo/local-only:
 
