@@ -176,7 +176,7 @@ Status: Done.
 - [x] ~~8.4 Granular privacy controls such as pseudonyms and consent flags.~~
 - [x] ~~8.5 Custom milestone thresholds.~~
 - [x] ~~8.6 Multi-school reporting.~~
-- [x] ~~8.7 Theme and branding settings.~~
+- [x] ~~8.7 School run club name setting only; colour/emblem customisation removed.~~
 - [x] ~~8.8 Accessibility audit and improvements.~~
 - [x] ~~8.9 Authorised Compass class-list sync, starting with Compass CSV import and only moving to API sync if school/department approval and credentials are provided.~~
 

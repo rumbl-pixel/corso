@@ -586,11 +586,11 @@ Most recent work focused on the Programming tab and Mini Coach:
   - confirmed medical notes are not exposed to public leaderboard or kiosk
   - confirmed backend readiness guards remain wired across sensitive write paths
 - Completed Stage 5 automated checks with portal, goals, backend/live-style, scanner live-mode, Supabase staging, syntax, and diff whitespace checks passing.
-- Tightened School Settings branding defaults:
-  - Corso now has explicit default platform colour constants for school blue and uniform gold.
-  - School colour changes only persist when a coach applies/saves them.
-  - Reset to Corso defaults now clears the custom school override from local storage instead of saving another override object.
-  - The shared theme script and admin dashboard colour tokens stay aligned so custom colours apply site-wide.
+- Simplified School Settings customisation:
+  - Corso stays as the platform brand, logo, colours, typography, and layout system.
+  - School customisation is intentionally limited to the school run club name shown in the top-right dashboard selector.
+  - School colour pickers, emblem upload, logo preview, and colour-token override logic were removed.
+  - Existing old local colour/emblem values in `rc_theme_settings` are ignored by `theme.js`; only `appTitle` is used.
 - Condensed the Admin Dashboard navigation:
   - Sports, Training, Programming, and Coach Tools now live inside one top-level Coach Hub.
   - Coach Hub has internal Sports, Training, Programming, and Insights pills.
@@ -603,10 +603,10 @@ Most recent work focused on the Programming tab and Mini Coach:
 
 Current relevant asset versions:
 
-- HTML pages load `styles.css?v=120`
-- HTML pages load `theme.js?v=15`
+- HTML pages load `styles.css?v=123`
+- HTML pages load `theme.js?v=16`
 - `admin.html` loads `admin.js?v=5`
-- `admin-dashboard.html` loads `admin-dashboard.js?v=86`
+- `admin-dashboard.html` loads `admin-dashboard.js?v=87`
 - `service-worker.js` cache is `gwynne-park-run-club-v168`
 
 ## Current Transfer Point - 2026-06-24

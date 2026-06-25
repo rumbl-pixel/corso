@@ -61,7 +61,7 @@ This is the quick-read roadmap. `FEATURES.md` remains the full source of truth.
 - [x] 8.4 Granular privacy controls completed with admin pseudonyms, consent status, public-name hiding, certificate-sharing flags, and privacy-aware leaderboard names.
 - [x] 8.5 Custom milestone thresholds completed with admin save/reset controls for lap awards.
 - [x] 8.6 Multi-school reporting completed with school-filtered summaries and CSV export.
-- [x] 8.7 Theme and branding settings completed with local title, blue, and gold controls.
+- [x] 8.7 School run club name setting completed; colour and emblem customisation removed so Corso keeps one consistent platform brand.
 - [x] 8.8 Accessibility audit and improvements completed with skip links, main landmarks, tab ARIA state, and visible keyboard focus.
 - [x] 8.9 Authorised Compass class-list sync completed as a CSV import pathway with template and authorisation notes.
 - [x] Priority 0 backend cutover completed with a visible backend readiness gate, live roster write guard, live scanner write guard, live scan-undo guard, live CSV/Compass import guard, live run-session guard, live manual-adjustment guard, live activity-credit guard, live guardian-link guard, live parent-access guard, live training-assignment guard, live training-event guard, live medical-note guard, Supabase student upsert, Supabase student batch import, Supabase student soft-delete, direct `record_lap_scan` calls, direct `record_scan_undo` calls, Supabase run session create/finish calls, manual adjustment, activity credit, guardian link, training assignment, training event, and medical safety note ledgers/RPCs, parent `guardian_access` Edge Function, and student privacy fields migration.
