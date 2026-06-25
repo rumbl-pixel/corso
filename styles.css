@@ -7298,3 +7298,509 @@ body:not(.page-kiosk) .corso-wordmark {
     min-height: 3.6rem;
   }
 }
+
+/* Corso command dashboard: faithful home screen pass. */
+:root {
+  --corso-cream: #fff8ea;
+  --corso-paper: #fffdf7;
+  --corso-paper-soft: rgba(255, 253, 247, 0.78);
+  --corso-red: #ff2f22;
+  --corso-red-dark: #dc2018;
+  --corso-ink: #172435;
+  --corso-muted: #506072;
+  --corso-line: rgba(36, 42, 51, 0.18);
+  --corso-line-red: rgba(255, 47, 34, 0.84);
+  --corso-shell-rail: 17.8rem;
+  --corso-canvas: 73.5rem;
+}
+
+body {
+  background:
+    radial-gradient(circle at 52% 18%, rgba(255, 236, 190, 0.38), transparent 30rem),
+    linear-gradient(180deg, #fffdf8 0%, var(--corso-cream) 100%);
+  color: var(--corso-ink);
+  font-family: "Open Sans", system-ui, sans-serif;
+}
+
+.page-home .beta-share-banner {
+  display: none;
+}
+
+.page-home .site-footer {
+  display: none;
+}
+
+.page-home .content {
+  padding-bottom: 2.2rem;
+}
+
+.command-topbar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 1.45rem;
+  min-height: 3rem;
+  margin-bottom: 1.35rem;
+}
+
+.school-switcher {
+  border: 0;
+  background: transparent;
+  color: var(--corso-ink);
+  font: 700 0.98rem/1.2 "Open Sans", system-ui, sans-serif;
+  cursor: pointer;
+  padding: 0.35rem 0;
+}
+
+.school-switcher:hover {
+  color: var(--corso-red);
+  background: transparent;
+  transform: none;
+}
+
+.coach-avatar {
+  display: inline-grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  border: 1.5px solid var(--corso-red);
+  border-radius: 999px;
+  color: var(--corso-red);
+  font-weight: 800;
+  background: rgba(255, 255, 255, 0.54);
+}
+
+.command-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(19rem, 1fr);
+  gap: 1.35rem 1.45rem;
+  align-items: start;
+}
+
+.command-panel {
+  position: relative;
+  border: 1px solid rgba(64, 55, 42, 0.20);
+  border-left: 4px solid var(--corso-line-red);
+  background: rgba(255, 253, 247, 0.72);
+  box-shadow: none;
+  border-radius: 0;
+  padding: 1.2rem 1.55rem;
+}
+
+.command-panel h2 {
+  margin: 0 0 0.95rem;
+  color: var(--corso-ink);
+  font: 800 1.2rem/1.2 "Open Sans", system-ui, sans-serif;
+}
+
+.command-panel-large {
+  min-height: 20.6rem;
+}
+
+.quick-action-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border: 1px solid rgba(64, 55, 42, 0.16);
+}
+
+.quick-action-card {
+  display: grid;
+  align-content: start;
+  min-height: 8.15rem;
+  padding: 1rem 1rem 0.85rem;
+  border-right: 1px solid rgba(64, 55, 42, 0.14);
+  border-bottom: 1px solid rgba(64, 55, 42, 0.14);
+  background: rgba(255, 253, 247, 0.5);
+  color: var(--corso-ink);
+  text-decoration: none;
+  line-height: 1.38;
+}
+
+.quick-action-card:nth-child(4n) {
+  border-right: 0;
+}
+
+.quick-action-card:nth-last-child(-n + 4) {
+  border-bottom: 0;
+}
+
+.quick-action-card:hover {
+  background: rgba(255, 47, 34, 0.055);
+  color: var(--corso-ink);
+  transform: none;
+}
+
+.quick-action-icon {
+  color: var(--corso-red);
+  font-size: 1.65rem;
+  line-height: 1;
+  margin-bottom: 0.7rem;
+}
+
+.quick-action-card strong {
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+.quick-action-card span:last-child {
+  margin-top: 0.25rem;
+  color: var(--corso-muted);
+  font-size: 0.86rem;
+}
+
+.command-stack {
+  display: grid;
+  gap: 1.35rem;
+}
+
+.access-panel {
+  min-height: 10.7rem;
+}
+
+.access-row {
+  display: grid;
+  grid-template-columns: 3.65rem 1fr;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.access-row p,
+.safety-row p {
+  margin: 0;
+  color: var(--corso-ink);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.access-badge {
+  display: grid;
+  place-items: center;
+  width: 3.3rem;
+  height: 3.3rem;
+  border-radius: 999px;
+  background: rgba(255, 47, 34, 0.09);
+  color: var(--corso-red);
+  font-size: 1.45rem;
+}
+
+.command-primary,
+.command-secondary {
+  display: inline-grid;
+  place-items: center;
+  width: 100%;
+  min-height: 2.35rem;
+  padding: 0.45rem 0.9rem;
+  border-radius: 3px;
+  border: 1px solid var(--corso-red);
+  font-weight: 800;
+  font-size: 0.88rem;
+  text-decoration: none;
+}
+
+.command-primary {
+  color: white;
+  background: linear-gradient(180deg, #ff392d, var(--corso-red-dark));
+}
+
+.command-secondary {
+  color: var(--corso-ink);
+  background: transparent;
+  margin-top: 0.75rem;
+}
+
+.command-secondary-red {
+  color: var(--corso-red);
+}
+
+.command-primary:hover,
+.command-secondary:hover {
+  background: var(--corso-red);
+  color: #fff;
+  transform: none;
+}
+
+.safety-panel {
+  min-height: 10.8rem;
+}
+
+.safety-row {
+  display: grid;
+  grid-template-columns: 3.25rem 1fr;
+  gap: 1rem;
+  align-items: center;
+}
+
+.safety-shield {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 3.15rem;
+  clip-path: polygon(50% 0, 88% 15%, 82% 72%, 50% 100%, 18% 72%, 12% 15%);
+  color: #fff;
+  background: linear-gradient(180deg, #ff3b30, #e82117);
+  font-weight: 900;
+}
+
+.command-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 1.25rem;
+  color: var(--corso-red);
+  font-size: 0.88rem;
+}
+
+.command-links a {
+  color: var(--corso-red);
+  text-decoration: none;
+}
+
+.checklist-panel {
+  min-height: 10.8rem;
+  padding-right: 5.4rem;
+}
+
+.launch-checklist {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  display: grid;
+  gap: 0.55rem;
+  color: var(--corso-ink);
+  font-size: 0.9rem;
+}
+
+.launch-checklist li {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.launch-checklist span {
+  display: inline-grid;
+  place-items: center;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 999px;
+  border: 1.5px solid rgba(23, 36, 53, 0.38);
+}
+
+.launch-checklist .done span {
+  border-color: var(--corso-red);
+  background: var(--corso-red);
+}
+
+.launch-checklist .done span::after {
+  content: "✓";
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 900;
+}
+
+.checklist-flag {
+  position: absolute;
+  right: 1.6rem;
+  top: 3.25rem;
+  color: var(--corso-red);
+  font-size: 3rem;
+  line-height: 1;
+}
+
+.tip-strip {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1.55rem;
+  padding: 1rem 1.35rem;
+  border: 1px solid rgba(64, 55, 42, 0.20);
+  background: rgba(255, 253, 247, 0.72);
+  color: var(--corso-ink);
+}
+
+.tip-strip p {
+  margin: 0;
+  font-size: 0.88rem;
+}
+
+.tip-strip a {
+  color: var(--corso-red);
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.tip-icon {
+  color: var(--corso-red);
+  font-size: 1.7rem;
+}
+
+.below-command-grid {
+  display: grid;
+  gap: 1.4rem;
+  margin-top: 1.55rem;
+}
+
+@media (min-width: 1024px) {
+  body:not(.page-kiosk) .site-header {
+    background: linear-gradient(180deg, #fffdf8 0%, var(--corso-cream) 100%);
+    border-right-color: rgba(64, 55, 42, 0.14);
+  }
+
+  body:not(.page-kiosk) .brand-logo {
+    width: 11.8rem;
+  }
+
+  body:not(.page-kiosk) .main-nav {
+    gap: 0.55rem;
+  }
+
+  body:not(.page-kiosk) .main-nav a,
+  body:not(.page-kiosk) .main-nav button {
+    min-height: 3.2rem;
+    gap: 0.85rem;
+    padding: 0.8rem 1rem;
+    border-left-width: 4px;
+    color: var(--corso-ink);
+    font-size: 0.96rem;
+    font-weight: 600;
+  }
+
+  body:not(.page-kiosk) .main-nav a[aria-current="page"],
+  body:not(.page-kiosk) .main-nav a:first-child {
+    background: rgba(255, 47, 34, 0.055);
+    color: var(--corso-red);
+    border-left-color: var(--corso-red);
+  }
+
+  body:not(.page-kiosk) .tagline {
+    margin-top: auto;
+    padding-top: 1.65rem;
+  }
+
+  body:not(.page-kiosk) .tagline a {
+    color: var(--corso-ink);
+    text-decoration: none;
+  }
+
+  body:not(.page-kiosk) .hero-section {
+    padding: 0;
+    margin: 0 0 1.15rem;
+  }
+
+  body:not(.page-kiosk) .hero-section::before {
+    font-size: 1.35rem;
+    margin-bottom: -1.15rem;
+  }
+
+  body:not(.page-kiosk) .hero-section h2 {
+    font-size: clamp(4.5rem, 6.4vw, 5.85rem);
+    line-height: 0.94;
+    margin-top: 0;
+    margin-bottom: 0.7rem;
+    max-width: none;
+  }
+
+  body:not(.page-kiosk) .hero-section p {
+    font-size: 1rem;
+    max-width: none;
+  }
+}
+
+@media (max-width: 1023px) {
+  .command-topbar {
+    margin-top: 0.4rem;
+    margin-bottom: 1rem;
+    justify-content: space-between;
+  }
+
+  .command-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .quick-action-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .quick-action-card:nth-child(2n) {
+    border-right: 0;
+  }
+
+  .quick-action-card:nth-last-child(-n + 4) {
+    border-bottom: 1px solid rgba(64, 55, 42, 0.14);
+  }
+
+  .quick-action-card:nth-last-child(-n + 2) {
+    border-bottom: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .command-topbar {
+    align-items: center;
+  }
+
+  .school-switcher {
+    font-size: 0.82rem;
+    max-width: 14rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .coach-avatar {
+    width: 2.35rem;
+    height: 2.35rem;
+    font-size: 0.82rem;
+  }
+
+  .quick-action-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .quick-action-card,
+  .quick-action-card:nth-child(2n),
+  .quick-action-card:nth-last-child(-n + 2),
+  .quick-action-card:nth-last-child(-n + 4) {
+    border-right: 0;
+    border-bottom: 1px solid rgba(64, 55, 42, 0.14);
+    min-height: auto;
+  }
+
+  .quick-action-card:last-child {
+    border-bottom: 0;
+  }
+
+  .command-panel {
+    padding: 1rem;
+  }
+
+  .access-row,
+  .safety-row {
+    grid-template-columns: 2.8rem 1fr;
+  }
+
+  .access-badge {
+    width: 2.6rem;
+    height: 2.6rem;
+    font-size: 1.1rem;
+  }
+
+  .checklist-panel {
+    padding-right: 1rem;
+  }
+
+  .checklist-flag {
+    display: none;
+  }
+
+  .tip-strip {
+    grid-template-columns: 1fr;
+    gap: 0.55rem;
+  }
+
+  .tip-strip a {
+    white-space: normal;
+  }
+}

@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Corso – School Running Platform</title>
-    <link rel="stylesheet" href="styles.css?v=122" />
+    <link rel="stylesheet" href="styles.css?v=123" />
     <link rel="manifest" href="manifest.webmanifest" />
     <meta name="theme-color" content="#0c5aa8" />
     <link rel="apple-touch-icon" href="assets/app-icon-192.png" />
@@ -19,152 +19,196 @@
           <img class="brand-logo" src="assets/corso-logo.png" alt="Corso" />
           <h1>Corso</h1>
         </div>
-        <nav class="main-nav">
-          <a href="admin-dashboard.html">Dashboard</a>
-          <a href="student.html">Student portal</a>
-          <a href="parent.html">Parent portal</a>
-          <a href="leaderboard.html">Leaderboard</a>
-          <a href="admin.html">Admin login</a>
+        <nav class="main-nav" aria-label="Primary navigation">
+          <a href="index.html" aria-current="page"><span class="nav-icon" aria-hidden="true">⌂</span> Home</a>
+          <a href="admin-dashboard.html?tab=students"><span class="nav-icon" aria-hidden="true">👥</span> Students</a>
+          <a href="admin-dashboard.html?tab=scanner"><span class="nav-icon" aria-hidden="true">⏱</span> Sessions</a>
+          <a href="admin-dashboard.html?tab=events"><span class="nav-icon" aria-hidden="true">▣</span> Events</a>
+          <a href="leaderboard.html"><span class="nav-icon" aria-hidden="true">🏆</span> Leaderboards</a>
+          <a href="admin-dashboard.html?tab=reports"><span class="nav-icon" aria-hidden="true">▮</span> Reports</a>
+          <a href="admin-dashboard.html?tab=awards"><span class="nav-icon" aria-hidden="true">✪</span> Awards</a>
+          <a href="admin-dashboard.html?tab=school-admin"><span class="nav-icon" aria-hidden="true">⚙</span> Settings</a>
+          <a href="admin.html"><span class="nav-icon" aria-hidden="true">↪</span> Admin login</a>
         </nav>
       </div>
-      <p class="tagline">The complete school running club platform – barcode scanning, lap tracking, leaderboards, awards &amp; more.</p>
+      <p class="tagline"><a href="admin-dashboard.html?tab=help">?&nbsp; Help &amp; resources</a></p>
     </header>
 
     <main id="main-content" class="content">
+      <div class="command-topbar" aria-label="School account">
+        <button class="school-switcher" type="button">School Run Club <span aria-hidden="true">⌄</span></button>
+        <span class="coach-avatar" aria-label="Coach account">CB</span>
+      </div>
 
-      <!-- HERO -->
       <section class="hero-section">
         <div class="hero-text">
           <div class="corso-wordmark" aria-label="Corso">Corso</div>
           <h2>Run. Track. Celebrate.</h2>
           <p>Simple tools to run your school's program and build a culture of movement.</p>
         </div>
-        <div class="hero-stats">
-          <div class="stat-chip">&#128205; Track laps &amp; km</div>
-          <div class="stat-chip">&#9201; Log active minutes</div>
-          <div class="stat-chip">&#127942; Milestone awards</div>
-          <div class="stat-chip">&#128202; Real-time leaderboards</div>
-          <div class="stat-chip">&#128101; Parent portal</div>
-          <div class="stat-chip">&#128247; Barcode scanning</div>
-          <div class="stat-chip">&#128197; Jog-a-thon events</div>
-          <div class="stat-chip">&#128196; Printable certificates</div>
+      </section>
+
+      <section class="command-grid" aria-label="Corso dashboard">
+        <div class="command-panel command-panel-large">
+          <h2>Coach quick actions</h2>
+          <div class="quick-action-grid">
+            <a href="admin-dashboard.html?tab=scanner" class="quick-action-card">
+              <span class="quick-action-icon" aria-hidden="true">⌗</span>
+              <strong>Start scanning</strong>
+              <span>Scan student barcodes</span>
+            </a>
+            <a href="admin-dashboard.html?tab=activity" class="quick-action-card">
+              <span class="quick-action-icon" aria-hidden="true">⏱</span>
+              <strong>Track setup</strong>
+              <span>Set lap distance, session type and active minutes</span>
+            </a>
+            <a href="admin-dashboard.html?tab=events" class="quick-action-card">
+              <span class="quick-action-icon" aria-hidden="true">▣</span>
+              <strong>Create event</strong>
+              <span>Set up a run day or challenge</span>
+            </a>
+            <a href="leaderboard.html" class="quick-action-card">
+              <span class="quick-action-icon" aria-hidden="true">♕</span>
+              <strong>View leaderboard</strong>
+              <span>See top students and classes</span>
+            </a>
+            <a href="admin-dashboard.html?tab=students" class="quick-action-card">
+              <span class="quick-action-icon" aria-hidden="true">👥</span>
+              <strong>Manage students</strong>
+              <span>Add, edit or import student profiles</span>
+            </a>
+            <a href="admin-dashboard.html?tab=students" class="quick-action-card">
+              <span class="quick-action-icon" aria-hidden="true">◎</span>
+              <strong>Set goals</strong>
+              <span>Create lap or time based goals</span>
+            </a>
+            <a href="admin-dashboard.html?tab=awards" class="quick-action-card">
+              <span class="quick-action-icon" aria-hidden="true">◉</span>
+              <strong>Give awards</strong>
+              <span>Milestones and certificates</span>
+            </a>
+            <a href="admin-dashboard.html?tab=reports" class="quick-action-card">
+              <span class="quick-action-icon" aria-hidden="true">▮</span>
+              <strong>View reports</strong>
+              <span>Explore progress and trends</span>
+            </a>
+          </div>
+        </div>
+
+        <aside class="command-stack">
+          <div class="command-panel access-panel">
+            <h2>Student access</h2>
+            <div class="access-row">
+              <span class="access-badge" aria-hidden="true">👟</span>
+              <p>Students can scan their own barcode to log laps and see progress.</p>
+            </div>
+            <a class="command-primary" href="student.html">Open student page</a>
+            <a class="command-secondary" href="admin-dashboard.html?tab=students">▣ Print barcode cards</a>
+          </div>
+
+          <div class="command-panel access-panel">
+            <h2>Parent portal</h2>
+            <div class="access-row">
+              <span class="access-badge" aria-hidden="true">👥</span>
+              <p>Parents can view their child's laps, distance, awards, goals, and training.</p>
+            </div>
+            <a class="command-secondary command-secondary-red" href="parent.html">Open parent portal ↗</a>
+          </div>
+        </aside>
+
+        <div class="command-panel safety-panel">
+          <h2>Live beta – safety first</h2>
+          <div class="safety-row">
+            <span class="safety-shield" aria-hidden="true">✓</span>
+            <p>This is a live beta. Student data stays in your school.<br>We never sell data and keep privacy by design.</p>
+          </div>
+          <div class="command-links">
+            <a href="privacy-policy.html">Privacy overview</a>
+            <span aria-hidden="true">·</span>
+            <a href="privacy-policy.html">Data stored locally</a>
+            <span aria-hidden="true">·</span>
+            <a href="about.html">Safety guidelines</a>
+          </div>
+        </div>
+
+        <div class="command-panel checklist-panel">
+          <h2>Launch checklist</h2>
+          <ul class="launch-checklist">
+            <li class="done"><span></span> Import or add your students</li>
+            <li class="done"><span></span> Run a test scan with 2–3 students</li>
+            <li><span></span> Schedule your first run or challenge</li>
+          </ul>
+          <span class="checklist-flag" aria-hidden="true">⚑</span>
+          <a class="command-primary" href="admin-dashboard.html?tab=help">View full setup guide</a>
         </div>
       </section>
 
-      <!-- HOW IT WORKS -->
-      <section class="card">
-        <h2>&#128161; How it works</h2>
-        <div class="steps-grid">
-          <div class="step">
-            <span class="step-num">1</span>
-            <strong>Set up your school</strong>
-            <p>Import students via CSV. Auto-generate barcode ID cards for every runner.</p>
+      <section class="tip-strip">
+        <span class="tip-icon" aria-hidden="true">▱</span>
+        <p><strong>Tip of the day</strong> Short, consistent sessions build long-term habits. 10–15 minutes is a great start.</p>
+        <a href="admin-dashboard.html?tab=training">View tips &amp; training ›</a>
+      </section>
+
+      <section class="below-command-grid">
+        <div class="command-panel beta-definition-card">
+          <h2>What This Is</h2>
+          <div class="beta-definition-grid">
+            <div>
+              <strong>This is a beta demo</strong>
+              <p>Use it to test the flow, design, and run club workflow with sample data only.</p>
+            </div>
+            <div>
+              <strong>This is not approved for real student data yet</strong>
+              <p>Live use still needs school approval, Supabase Auth, RLS, guardian access, and privacy checks.</p>
+            </div>
+            <div>
+              <strong>This is being prepared for school-specific deployment</strong>
+              <p>Each school should eventually have its own staff access, records, branding, and data boundary.</p>
+            </div>
           </div>
-          <div class="step">
-            <span class="step-num">2</span>
-            <strong>Scan on run day</strong>
-            <p>Use a Bluetooth barcode scanner or phone camera. Laps auto-log and sync instantly.</p>
-          </div>
-          <div class="step">
-            <span class="step-num">3</span>
-            <strong>Track &amp; celebrate</strong>
-            <p>Real-time leaderboards, milestone awards, printable certificates, and parent-visible progress.</p>
+        </div>
+
+        <div class="command-panel portal-links">
+          <h2>Access your portal</h2>
+          <div class="portal-grid">
+            <a href="admin-dashboard.html" class="portal-card">
+              <span class="portal-icon">▮</span>
+              <strong>Dashboard</strong>
+              <span>Scanner, leaderboards, reports, awards</span>
+            </a>
+            <a href="student.html" class="portal-card">
+              <span class="portal-icon">▣</span>
+              <strong>Student</strong>
+              <span>Log in with your code, see your progress</span>
+            </a>
+            <a href="parent.html" class="portal-card">
+              <span class="portal-icon">👥</span>
+              <strong>Parent</strong>
+              <span>Track your child's laps and milestones</span>
+            </a>
+            <a href="leaderboard.html" class="portal-card">
+              <span class="portal-icon">♕</span>
+              <strong>Leaderboard</strong>
+              <span>Whole school, divisions, and year groups</span>
+            </a>
+            <a href="privacy-policy.html" class="portal-card">
+              <span class="portal-icon">✓</span>
+              <strong>Privacy Policy</strong>
+              <span>How we handle student data</span>
+            </a>
+            <a href="about.html" class="portal-card">
+              <span class="portal-icon">i</span>
+              <strong>About Corso</strong>
+              <span>Why the platform exists</span>
+            </a>
+            <a href="admin.html" class="portal-card">
+              <span class="portal-icon">↪</span>
+              <strong>Admin Portal</strong>
+              <span>Manage school, students, programs</span>
+            </a>
           </div>
         </div>
       </section>
-
-      <!-- FEATURES -->
-      <section class="card beta-definition-card">
-        <h2>What This Is</h2>
-        <div class="beta-definition-grid">
-          <div>
-            <strong>This is a beta demo</strong>
-            <p>Use it to test the flow, design, and run club workflow with sample data only.</p>
-          </div>
-          <div>
-            <strong>This is not approved for real student data yet</strong>
-            <p>Live use still needs school approval, Supabase Auth, RLS, guardian access, and privacy checks.</p>
-          </div>
-          <div>
-            <strong>This is being prepared for school-specific deployment</strong>
-            <p>Each school should eventually have its own staff access, records, branding, and data boundary.</p>
-          </div>
-        </div>
-      </section>
-
-      <section class="card">
-        <h2>&#9989; Platform features</h2>
-        <div class="features-grid">
-          <div class="feature-item"><span>&#128247;</span><div><strong>Barcode &amp; QR scanning</strong><br>Bluetooth scanner or phone camera. Cuts tallying time by up to 90%.</div></div>
-          <div class="feature-item"><span>&#128200;</span><div><strong>Track setup</strong><br>Set lap distance, session type, duplicate scan cooldown, and scanner device names.</div></div>
-          <div class="feature-item"><span>&#127942;</span><div><strong>Automatic awards</strong><br>Milestone stickers at 5, 10, 25, 50, 100 &amp; 200 laps. Printable certificates.</div></div>
-          <div class="feature-item"><span>&#128202;</span><div><strong>Reports &amp; leaderboards</strong><br>By individual, class, year group. Filter by event, date range, or track.</div></div>
-          <div class="feature-item"><span>&#128101;</span><div><strong>Parent portal</strong><br>Parents can view their child's laps, distance, awards, goals, and training.</div></div>
-          <div class="feature-item"><span>&#128196;</span><div><strong>Roster upload</strong><br>Bulk import via CSV. Auto-create classes. Print barcode cards (4 sizes).</div></div>
-          <div class="feature-item"><span>&#128197;</span><div><strong>Jog-a-thon support</strong><br>Tag laps to fundraising events. Filter reports by event type.</div></div>
-          <div class="feature-item"><span>&#9201;</span><div><strong>Timed lap events</strong><br>Timed mile tracking. Record split times and best lap times per student.</div></div>
-          <div class="feature-item"><span>&#127968;</span><div><strong>Coach-managed activity</strong><br>Staff record approved activity minutes so students cannot add their own totals.</div></div>
-          <div class="feature-item"><span>&#127966;</span><div><strong>Multiple programs</strong><br>Run Club, PE class, recess, Move-a-thon, Brain Booster, Girls Run Club.</div></div>
-          <div class="feature-item"><span>&#128274;</span><div><strong>Privacy-first</strong><br>No student emails. Code-only login. Row-level security per school.</div></div>
-          <div class="feature-item"><span>&#9889;</span><div><strong>Offline-ready</strong><br>Scan without Wi-Fi. Data syncs when connection returns.</div></div>
-        </div>
-      </section>
-
-      <!-- PORTALS -->
-      <section class="card portal-links">
-        <h2>&#128197; Access your portal</h2>
-        <div class="portal-grid">
-          <a href="admin-dashboard.html" class="portal-card">
-            <span class="portal-icon">&#128200;</span>
-            <strong>Dashboard</strong>
-            <span>Scanner, leaderboards, reports, awards</span>
-          </a>
-          <a href="student.html" class="portal-card">
-            <span class="portal-icon">&#128179;</span>
-            <strong>Student</strong>
-            <span>Log in with your code, see your progress</span>
-          </a>
-          <a href="parent.html" class="portal-card">
-            <span class="portal-icon">&#128106;</span>
-            <strong>Parent</strong>
-            <span>Track your child's laps and milestones</span>
-          </a>
-          <a href="leaderboard.html" class="portal-card">
-            <span class="portal-icon">&#127942;</span>
-            <strong>Leaderboard</strong>
-            <span>Whole school, divisions, and year groups</span>
-          </a>
-          <a href="privacy-policy.html" class="portal-card">
-            <span class="portal-icon">&#128274;</span>
-            <strong>Privacy Policy</strong>
-            <span>How we handle student data</span>
-          </a>
-          <a href="about.html" class="portal-card">
-            <span class="portal-icon">&#8505;</span>
-            <strong>About Corso</strong>
-            <span>Why the platform exists</span>
-          </a>
-          <a href="admin.html" class="portal-card">
-            <span class="portal-icon">&#128101;</span>
-            <strong>Admin Portal</strong>
-            <span>Manage school, students, programs</span>
-          </a>
-        </div>
-      </section>
-
-      <!-- IMPLEMENTATION MODES -->
-      <section class="card">
-        <h2>&#127966; Ways to run your program</h2>
-        <div class="impl-grid">
-          <div class="impl-item"><strong>&#127974; Run Club</strong><p>Before or after school sessions with barcode scanning.</p></div>
-          <div class="impl-item"><strong>&#127943; PE Class</strong><p>Integrates with physical education curriculum and class rosters.</p></div>
-          <div class="impl-item"><strong>&#128197; Move-a-thon</strong><p>Fundraising events with lap-based tracking per student.</p></div>
-          <div class="impl-item"><strong>&#129504; Brain Booster</strong><p>Active time in the classroom logged as activity minutes.</p></div>
-          <div class="impl-item"><strong>&#9917; Recess</strong><p>Capture extra laps during breaks with self-scan stations.</p></div>
-          <div class="impl-item"><strong>&#128105; Girls Run Club</strong><p>Dedicated group programs with separate leaderboards.</p></div>
-        </div>
-      </section>
-
     </main>
 
     <footer class="site-footer">
