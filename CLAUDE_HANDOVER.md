@@ -1,6 +1,6 @@
 # Claude Start Here - Corso
 
-Last updated: 2026-06-24
+Last updated: 2026-06-25
 
 ## What Corso Is
 
@@ -13,6 +13,7 @@ The product is currently a beta/demo static web app with local-first data and Su
 - GitHub: `rumbl-pixel/runclub-platform`
 - Local path: `C:\Users\jerem\Documents\Codex\runclub-platform`
 - Local URL: `http://127.0.0.1:8080`
+- Hosted demo beta: `https://corso-platform.pages.dev/`
 - Run locally:
 
 ```powershell
@@ -39,12 +40,14 @@ python -m http.server 8080
 - Compliance workspace with vendor posture, signup/use attestation, evidence exports, parent notice, breach log, and launch readiness checks.
 - School Settings for school name, logo, colour override, reset to Corso defaults.
 - Beta Testing Toolkit in Admin Help with demo snapshot export, confirmed demo reset, first-time admin guide, feature status badges, page health labels, and tester checklist link.
-- Cloudflare Pages deployment prep:
+- Cloudflare Pages hosted demo beta:
   - `wrangler.toml`
   - `_headers`
   - `docs/cloudflare-pages-deploy.md`
   - `scripts/build-cloudflare-pages.js`
   - npm scripts `cloudflare:check`, `deploy:cloudflare`, and `deploy:cloudflare:preview`
+  - Cloudflare Pages project: `corso-platform`
+  - URL: `https://corso-platform.pages.dev/`
 - Backend adapter and live-style tests for future Supabase work.
 - Claude transition plan, first-review brief, and beta-readiness sweep docs.
 - Beta prep completion report at `docs/beta-prep-completion-report.md`.
@@ -128,11 +131,10 @@ Real student data is blocked until all of these are finished:
 
 1. Freeze feature expansion except small beta safety/guidance wins.
 2. Complete real-device beta checks: phone camera, iPad camera, Bluetooth scanner, print/download confirmations.
-3. Log into Cloudflare and deploy the hosted demo beta with demo data only.
-4. Run a second-agent code review focused on bugs, privacy risks, and `admin-dashboard.js` modularisation.
-5. Fix review findings before major refactor.
-6. Build production Supabase Auth/RLS in a separate hardening pass.
-7. Only after school approval and backend proof, consider real student data.
+3. Run a second-agent code review focused on bugs, privacy risks, and `admin-dashboard.js` modularisation.
+4. Fix review findings before major refactor.
+5. Build production Supabase Auth/RLS in a separate hardening pass.
+6. Only after school approval and backend proof, consider real student data.
 
 ## Test Commands
 
