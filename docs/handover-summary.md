@@ -644,7 +644,9 @@ Recently completed:
   - Verified Wrangler is callable locally.
   - Added `scripts/build-cloudflare-pages.js` to produce a clean `dist-pages` deployment bundle.
   - Verified the generated `dist-pages` bundle locally on port 8090 for home/about/admin-login/kiosk routing basics.
-  - Cloudflare account login is still required before project creation/deployment.
+  - Cloudflare OAuth login completed.
+  - Created the Cloudflare Pages project `corso-platform`.
+  - Deployed the demo beta to `https://corso-platform.pages.dev/`.
 
 Still demo/local-only:
 

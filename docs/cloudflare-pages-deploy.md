@@ -6,6 +6,7 @@ Use this for the July 20 beta target. Deploy demo data only until Supabase Auth,
 
 - Cloudflare Pages project name: `corso-platform`
 - Temporary beta URL: `https://corso-platform.pages.dev`
+- First direct upload deployment URL: `https://a4fb2f2b.corso-platform.pages.dev`
 - Production custom domain later: decide after domain purchase/ownership.
 - Build output folder: `dist-pages`
 
@@ -66,12 +67,13 @@ Completed on 2026-06-25:
 - `npm run cloudflare:check` passes.
 - `npm run build:cloudflare` creates `dist-pages`.
 - Generated `dist-pages` bundle was served locally and public pages loaded without missing images, console errors, or horizontal overflow.
+- Cloudflare OAuth login completed.
+- Cloudflare Pages project `corso-platform` created.
+- `npm run deploy:cloudflare` completed successfully.
+- Stable hosted demo beta URL is responding: `https://corso-platform.pages.dev/`.
 
 Still required:
 
-- Jeremy must log in to Cloudflare.
-- Create/connect the Cloudflare Pages project.
-- Deploy the `dist-pages` bundle.
 - Check the real `pages.dev` URL on phone/iPad/laptop.
 
 ## Safety Checks Before Sharing The Beta Link
