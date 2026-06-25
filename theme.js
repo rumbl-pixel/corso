@@ -3,10 +3,8 @@
 
   var STORAGE_KEY = 'gp_run_club_theme';
   var BRANDING_KEY = 'rc_theme_settings';
-  var DEFAULT_APP_TITLE = 'Corso';
+  var DEFAULT_RUN_CLUB_NAME = 'School Run Club';
   var DEFAULT_LOGO = 'assets/corso-logo.png';
-  var DEFAULT_SCHOOL_BLUE = '#003880';
-  var DEFAULT_UNIFORM_GOLD = '#c99722';
   var root = document.documentElement;
   var savedTheme = localStorage.getItem(STORAGE_KEY);
   var activeTheme = savedTheme === 'dark' ? 'dark' : 'light';
@@ -14,33 +12,12 @@
   function brandingSettings() {
     try {
       var saved = JSON.parse(localStorage.getItem(BRANDING_KEY) || '{}');
-      var logoDataUrl = saved.logoDataUrl === 'assets/corso-logo.svg' ? DEFAULT_LOGO : saved.logoDataUrl;
       return {
-        appTitle: String(saved.appTitle || DEFAULT_APP_TITLE).trim() || DEFAULT_APP_TITLE,
-        schoolBlue: saved.schoolBlue || DEFAULT_SCHOOL_BLUE,
-        uniformGold: saved.uniformGold || DEFAULT_UNIFORM_GOLD,
-        logoDataUrl: logoDataUrl || DEFAULT_LOGO,
-        logoName: saved.logoName || ''
+        appTitle: String(saved.appTitle || DEFAULT_RUN_CLUB_NAME).trim() || DEFAULT_RUN_CLUB_NAME
       };
     } catch (error) {
-      return { appTitle: DEFAULT_APP_TITLE, schoolBlue: DEFAULT_SCHOOL_BLUE, uniformGold: DEFAULT_UNIFORM_GOLD, logoDataUrl: DEFAULT_LOGO, logoName: '' };
+      return { appTitle: DEFAULT_RUN_CLUB_NAME };
     }
-  }
-
-  function applyBrandColors(settings) {
-    root.style.setProperty('--school-blue', settings.schoolBlue);
-    root.style.setProperty('--school-blue-2', 'color-mix(in srgb, ' + settings.schoolBlue + ' 86%, #ffffff 14%)');
-    root.style.setProperty('--school-blue-3', 'color-mix(in srgb, ' + settings.schoolBlue + ' 76%, #ffffff 24%)');
-    root.style.setProperty('--obsidian-navy', 'color-mix(in srgb, ' + settings.schoolBlue + ' 72%, #071426 28%)');
-    root.style.setProperty('--obsidian-navy-2', 'color-mix(in srgb, ' + settings.schoolBlue + ' 56%, #071426 44%)');
-    root.style.setProperty('--obsidian-navy-3', 'color-mix(in srgb, ' + settings.schoolBlue + ' 82%, #ffffff 18%)');
-    root.style.setProperty('--uniform-gold', settings.uniformGold);
-    root.style.setProperty('--uniform-gold-dark', 'color-mix(in srgb, ' + settings.uniformGold + ' 74%, #071426 26%)');
-    root.style.setProperty('--uniform-gold-soft', 'color-mix(in srgb, ' + settings.uniformGold + ' 28%, transparent)');
-    root.style.setProperty('--uniform-gold-wash', 'color-mix(in srgb, ' + settings.uniformGold + ' 10%, transparent)');
-    root.style.setProperty('--uniform-gold-hover', 'color-mix(in srgb, ' + settings.uniformGold + ' 22%, transparent)');
-    root.style.setProperty('--gold-glass-wash', 'color-mix(in srgb, ' + settings.uniformGold + ' 8%, transparent)');
-    root.style.setProperty('--gold-glass-line', 'color-mix(in srgb, ' + settings.uniformGold + ' 34%, transparent)');
   }
 
   function replaceTextNode(parent, value) {
@@ -56,21 +33,19 @@
 
   function applyBrandingSettings() {
     var settings = brandingSettings();
-    applyBrandColors(settings);
     document.querySelectorAll('.brand h1').forEach(function (el) {
-      el.textContent = settings.appTitle;
+      el.textContent = 'Corso';
     });
     document.querySelectorAll('.brand-logo, .kiosk-brand-logo').forEach(function (img) {
-      img.src = settings.logoDataUrl || DEFAULT_LOGO;
-      img.alt = settings.logoName ? settings.appTitle + ' emblem' : 'Corso';
+      img.src = DEFAULT_LOGO;
+      img.alt = 'Corso';
+    });
+    document.querySelectorAll('.school-switcher').forEach(function (el) {
+      replaceTextNode(el, settings.appTitle + ' ');
     });
     document.querySelectorAll('.kiosk-brand').forEach(function (el) {
-      replaceTextNode(el, settings.appTitle);
+      replaceTextNode(el, 'Corso');
     });
-    if (document.title && /^Corso\b/.test(document.title) === false) { return; }
-    if (document.title) {
-      document.title = document.title.replace(/^Corso\b/, settings.appTitle);
-    }
   }
 
   function applyTheme(theme) {

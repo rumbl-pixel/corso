@@ -9,7 +9,7 @@
     <meta name="theme-color" content="#0c5aa8" />
     <link rel="apple-touch-icon" href="assets/app-icon-192.png" />
     <script src="config.js"></script>
-    <script src="theme.js?v=15"></script>
+    <script src="theme.js?v=16"></script>
   </head>
   <body class="page page-admin-dashboard">
     <a class="skip-link" href="#main-content">Skip to main content</a>
@@ -942,7 +942,7 @@
             </article>
             <article>
               <strong>Settings</strong>
-              <span>School name, emblem, colours, and default branding.</span>
+              <span>School run club name and setup defaults.</span>
             </article>
             <article>
               <strong>Compliance</strong>
@@ -1154,43 +1154,22 @@
       <div class="tab-panel admin-hub-section" id="tab-school-settings">
         <div class="card" id="branding-settings-card">
           <h2>School Settings</h2>
-          <p class="muted-copy">Set the name and emblem coaches want this school run club to use. If nothing is saved, Corso and the default Corso mark stay active.</p>
+          <p class="muted-copy">Set the school run club name shown in the top-right dashboard selector. Corso stays as the platform brand, logo, and default visual style.</p>
           <form id="branding-settings-form" class="compact-form">
             <div class="form-grid">
               <div class="branding-name-control">
                 <label>Run club name
-                  <input type="text" id="branding-app-title" placeholder="Corso" />
+                  <input type="text" id="branding-app-title" placeholder="School Run Club" />
                 </label>
                 <button id="apply-branding-title-btn" type="button" class="secondary">Apply run club name</button>
               </div>
-              <div class="branding-field-control">
-                <span class="branding-field-label">School emblem</span>
-                <input class="branding-file-input" type="file" id="branding-logo-upload" accept="image/png,image/jpeg,image/svg+xml,image/webp" />
-              </div>
-              <div class="branding-field-control branding-color-control">
-                <span class="branding-field-label">School blue</span>
-                <input class="branding-color-input" type="color" id="branding-school-blue" value="#003880" aria-label="School blue" />
-              </div>
-              <div class="branding-field-control branding-color-control">
-                <span class="branding-field-label">Uniform gold</span>
-                <input class="branding-color-input" type="color" id="branding-uniform-gold" value="#c99722" aria-label="Uniform gold" />
-              </div>
-              <button id="apply-branding-colors-btn" type="button" class="secondary branding-colors-apply-btn">Apply colours</button>
             </div>
-            <p class="settings-helper-note">Corso keeps a default palette for every school until a coach chooses custom colours. Use Reset to Corso defaults to clear the school override.</p>
+            <p class="settings-helper-note">School customisation is intentionally limited to this run club name. Colours, logo, typography, and layout remain Corso defaults so the platform stays consistent and supportable.</p>
             <div class="settings-action-row">
-              <button id="save-branding-btn" type="submit">Save school settings</button>
-              <button id="clear-branding-logo-btn" type="button" class="secondary">Clear uploaded emblem</button>
-              <button id="reset-branding-btn" type="button" class="secondary">Reset to Corso defaults</button>
+              <button id="save-branding-btn" type="submit">Save run club name</button>
+              <button id="reset-branding-btn" type="button" class="secondary">Clear run club name</button>
             </div>
           </form>
-          <div class="branding-logo-preview-row">
-            <img id="branding-logo-preview" class="branding-logo-preview" src="assets/corso-logo.png" alt="Active run club emblem preview" />
-            <div>
-              <strong>Active emblem</strong>
-              <p id="branding-logo-note">Using the default Corso mark until a school emblem is uploaded.</p>
-            </div>
-          </div>
           <div id="branding-settings-result" class="inline-save-status" hidden></div>
         </div>
       </div>
@@ -1623,7 +1602,7 @@
     <script src="goals.js?v=5"></script>
     <script src="admin-goals.js?v=5"></script>
     <script src="assets/qrcode-generator.js"></script>
-    <script src="admin-dashboard.js?v=86"></script>
+    <script src="admin-dashboard.js?v=87"></script>
     <script src="pwa.js"></script>
         <script src='https://storage.ko-fi.com/cdn/scripts/overlay-widget.js'></script>
     <script>

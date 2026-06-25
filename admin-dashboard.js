@@ -45,10 +45,8 @@
   var SCHOOL_SIGNUP_KEY = 'rc_school_admin_signup';
   var BREACH_LOG_KEY = 'rc_breach_log';
   var THEME_SETTINGS_KEY = 'rc_theme_settings';
-  var DEFAULT_BRAND_TITLE = 'Corso';
+  var DEFAULT_RUN_CLUB_NAME = 'School Run Club';
   var DEFAULT_BRAND_LOGO = 'assets/corso-logo.png';
-  var DEFAULT_SCHOOL_BLUE = '#003880';
-  var DEFAULT_UNIFORM_GOLD = '#c99722';
 
   var ATHLETICS_EVENT_OPTIONS = [
     {id:'xc',name:'Cross Country',category:'cross-country',measure:'time',points:true},
@@ -112,16 +110,14 @@
   function programSettings(){ var settings=window.RunClubScan&&window.RunClubScan.programSettings?window.RunClubScan.programSettings():load(K.programSettings,{schoolName:'Gwynne Park Schools',lapDistanceKm:0.25,defaultSessionType:'Run Club',activeYears:['Year 1','Year 2','Year 3','Year 4','Year 5','Year 6'],classNames:['1A','2A','3A','4C','5B','6A'],awardThresholds:[5,10,25,50,100,200,500]}); var lapDistanceKm=Number(settings.lapDistanceKm); if(!isFinite(lapDistanceKm)||lapDistanceKm<=0){lapDistanceKm=0.25;} return {schoolName:String(settings.schoolName||'Gwynne Park Schools'),lapDistanceKm:lapDistanceKm,defaultSessionType:String(settings.defaultSessionType||'Run Club'),activeYears:cleanList(settings.activeYears,['Year 1','Year 2','Year 3','Year 4','Year 5','Year 6']),classNames:cleanList(settings.classNames,['1A','2A','3A','4C','5B','6A']),awardThresholds:cleanThresholds(settings.awardThresholds)}; }
   function saveProgramSettings(partial){ save(K.programSettings,Object.assign({},programSettings(),partial)); }
   function themeSettings(){
-    var settings=Object.assign({appTitle:DEFAULT_BRAND_TITLE,schoolBlue:DEFAULT_SCHOOL_BLUE,uniformGold:DEFAULT_UNIFORM_GOLD,logoDataUrl:DEFAULT_BRAND_LOGO,logoName:''},load(THEME_SETTINGS_KEY,{}));
-    if(settings.logoDataUrl==='assets/corso-logo.svg'){settings.logoDataUrl=DEFAULT_BRAND_LOGO;}
-    return settings;
+    var saved=load(THEME_SETTINGS_KEY,{});
+    return {appTitle:String(saved.appTitle||DEFAULT_RUN_CLUB_NAME).trim()||DEFAULT_RUN_CLUB_NAME};
   }
   function applyThemeSettings(){
     var settings=themeSettings();
-    applyBrandColorTokens(settings);
-    document.querySelectorAll('.brand h1').forEach(function(el){el.textContent=settings.appTitle;});
-    document.querySelectorAll('.brand-logo, .kiosk-brand-logo').forEach(function(img){img.src=settings.logoDataUrl||DEFAULT_BRAND_LOGO; img.alt=settings.logoName?settings.appTitle+' emblem':'Corso';});
-    if(document.title){document.title=document.title.replace(/^(?:[^-–]+(?=\s[-–]\s)|Corso\b)/,settings.appTitle);}
+    document.querySelectorAll('.brand h1').forEach(function(el){el.textContent='Corso';});
+    document.querySelectorAll('.brand-logo, .kiosk-brand-logo').forEach(function(img){img.src=DEFAULT_BRAND_LOGO; img.alt='Corso';});
+    document.querySelectorAll('.school-switcher').forEach(function(el){el.innerHTML=escapeHtml(settings.appTitle)+' <span aria-hidden="true">⌄</span>';});
   }
   function duplicateWindowMs(){ return scannerSettings().duplicateCooldownSeconds*1000; }
   function scannerId(){ var settings=scannerSettings(); return settings.deviceName+(settings.deviceLocation?' - '+settings.deviceLocation:''); }
@@ -4193,12 +4189,6 @@
   var brandingFormEl=document.getElementById('branding-settings-form');
   var brandingAppTitleEl=document.getElementById('branding-app-title');
   var applyBrandingTitleBtn=document.getElementById('apply-branding-title-btn');
-  var applyBrandingColorsBtn=document.getElementById('apply-branding-colors-btn');
-  var brandingLogoUploadEl=document.getElementById('branding-logo-upload');
-  var brandingLogoPreviewEl=document.getElementById('branding-logo-preview');
-  var brandingLogoNoteEl=document.getElementById('branding-logo-note');
-  var brandingSchoolBlueEl=document.getElementById('branding-school-blue');
-  var brandingUniformGoldEl=document.getElementById('branding-uniform-gold');
   var brandingResultEl=document.getElementById('branding-settings-result');
   var backendReadinessSummaryEl=document.getElementById('backend-readiness-summary');
   var backendReadinessBlockersEl=document.getElementById('backend-readiness-blockers');
@@ -4297,89 +4287,35 @@
   function renderBrandingSettings(){
     var settings=themeSettings();
     brandingAppTitleEl.value=settings.appTitle;
-    if(brandingLogoUploadEl){brandingLogoUploadEl.value='';}
-    if(brandingLogoPreviewEl){brandingLogoPreviewEl.src=settings.logoDataUrl||DEFAULT_BRAND_LOGO;}
-    if(brandingLogoNoteEl){brandingLogoNoteEl.textContent=settings.logoName?'Using uploaded emblem: '+settings.logoName:'Using the default Corso mark until a school emblem is uploaded.';}
-    brandingSchoolBlueEl.value=settings.schoolBlue;
-    brandingUniformGoldEl.value=settings.uniformGold;
   }
 
-  function brandSettingsPayload(extra){
-    var current=themeSettings();
-    return Object.assign({},current,{
-      appTitle:brandingAppTitleEl.value.trim()||DEFAULT_BRAND_TITLE,
-      schoolBlue:brandingSchoolBlueEl.value||DEFAULT_SCHOOL_BLUE,
-      uniformGold:brandingUniformGoldEl.value||DEFAULT_UNIFORM_GOLD
-    },extra||{});
+  function brandSettingsPayload(){
+    return {
+      appTitle:brandingAppTitleEl.value.trim()||DEFAULT_RUN_CLUB_NAME
+    };
   }
 
   function persistBrandingSettings(settings,message){
     save(THEME_SETTINGS_KEY,settings);
     applyThemeSettings();
     renderBrandingSettings();
-    showInlineStatus(brandingResultEl,true,message||'Theme and branding settings saved.','Name: '+settings.appTitle+' · Blue: '+settings.schoolBlue+' · Gold: '+settings.uniformGold);
+    showInlineStatus(brandingResultEl,true,message||'Run club name saved.','Top-right selector: '+settings.appTitle);
   }
 
   function saveBrandingSettings(e){
     e.preventDefault();
-    var file=brandingLogoUploadEl&&brandingLogoUploadEl.files&&brandingLogoUploadEl.files[0];
-    if(!file){
-      persistBrandingSettings(brandSettingsPayload(), 'Theme and branding settings saved.');
-      return;
-    }
-    if(!/^image\/(png|jpe?g|svg\+xml|webp)$/i.test(file.type)){
-      showInlineStatus(brandingResultEl,false,'Upload a PNG, JPG, SVG, or WebP emblem.','The school emblem was not changed.');
-      return;
-    }
-    if(file.size>750000){
-      showInlineStatus(brandingResultEl,false,'Keep the emblem under 750 KB for browser storage.','The school emblem was not changed.');
-      return;
-    }
-    var reader=new FileReader();
-    reader.onload=function(){
-      persistBrandingSettings(brandSettingsPayload({logoDataUrl:String(reader.result||DEFAULT_BRAND_LOGO),logoName:file.name}), 'Theme and branding settings saved with uploaded emblem.');
-    };
-    reader.onerror=function(){showInlineStatus(brandingResultEl,false,'Could not read that emblem file.','Try a PNG, JPG, SVG, or WebP under 750 KB.');};
-    reader.readAsDataURL(file);
+    persistBrandingSettings(brandSettingsPayload(), 'Run club name saved.');
   }
 
   function saveBrandingTitleOnly(){
     persistBrandingSettings(brandSettingsPayload(), 'Run club name applied.');
   }
 
-  function applyBrandColorTokens(settings){
-    document.documentElement.style.setProperty('--school-blue',settings.schoolBlue);
-    document.documentElement.style.setProperty('--school-blue-2','color-mix(in srgb, '+settings.schoolBlue+' 86%, #ffffff 14%)');
-    document.documentElement.style.setProperty('--school-blue-3','color-mix(in srgb, '+settings.schoolBlue+' 76%, #ffffff 24%)');
-    document.documentElement.style.setProperty('--obsidian-navy','color-mix(in srgb, '+settings.schoolBlue+' 72%, #071426 28%)');
-    document.documentElement.style.setProperty('--obsidian-navy-2','color-mix(in srgb, '+settings.schoolBlue+' 56%, #071426 44%)');
-    document.documentElement.style.setProperty('--obsidian-navy-3','color-mix(in srgb, '+settings.schoolBlue+' 82%, #ffffff 18%)');
-    document.documentElement.style.setProperty('--uniform-gold',settings.uniformGold);
-    document.documentElement.style.setProperty('--uniform-gold-dark','color-mix(in srgb, '+settings.uniformGold+' 74%, #071426 26%)');
-    document.documentElement.style.setProperty('--uniform-gold-soft','color-mix(in srgb, '+settings.uniformGold+' 28%, transparent)');
-    document.documentElement.style.setProperty('--uniform-gold-wash','color-mix(in srgb, '+settings.uniformGold+' 10%, transparent)');
-    document.documentElement.style.setProperty('--uniform-gold-hover','color-mix(in srgb, '+settings.uniformGold+' 22%, transparent)');
-    document.documentElement.style.setProperty('--gold-glass-wash','color-mix(in srgb, '+settings.uniformGold+' 8%, transparent)');
-    document.documentElement.style.setProperty('--gold-glass-line','color-mix(in srgb, '+settings.uniformGold+' 34%, transparent)');
-  }
-
-  function previewBrandingColors(){
-    applyBrandColorTokens(brandSettingsPayload());
-  }
-
-  function saveBrandingColorsOnly(){
-    persistBrandingSettings(brandSettingsPayload(), 'School colours applied.');
-  }
-
-  function clearBrandingLogo(){
-    persistBrandingSettings(brandSettingsPayload({logoDataUrl:DEFAULT_BRAND_LOGO,logoName:''}), 'Uploaded emblem cleared. Using the default Corso mark.');
-  }
-
   function resetBrandingSettings(){
     localStorage.removeItem(THEME_SETTINGS_KEY);
     applyThemeSettings();
     renderBrandingSettings();
-    showInlineStatus(brandingResultEl,true,'Reset to Corso defaults.','Custom school name, colours and emblem overrides have been cleared.');
+    showInlineStatus(brandingResultEl,true,'Run club name cleared.','The top-right selector now uses the default School Run Club label.');
   }
 
   function backendBlockerLabel(blocker){
@@ -5768,10 +5704,6 @@
   document.getElementById('export-multi-school-csv-btn').addEventListener('click',exportMultiSchoolCsv);
   brandingFormEl.addEventListener('submit',saveBrandingSettings);
   applyBrandingTitleBtn.addEventListener('click',saveBrandingTitleOnly);
-  applyBrandingColorsBtn.addEventListener('click',saveBrandingColorsOnly);
-  brandingSchoolBlueEl.addEventListener('input',previewBrandingColors);
-  brandingUniformGoldEl.addEventListener('input',previewBrandingColors);
-  document.getElementById('clear-branding-logo-btn').addEventListener('click',clearBrandingLogo);
   document.getElementById('reset-branding-btn').addEventListener('click',resetBrandingSettings);
   adjustmentFormEl.addEventListener('submit',createManualAdjustment);
   document.getElementById('download-admin-templates-btn').addEventListener('click',downloadAdminTemplates);
