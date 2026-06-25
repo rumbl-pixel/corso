@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,600..800&family=Space+Grotesk:wght@500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,600..800&family=Open+Sans:wght@400;600;700;800&family=Space+Grotesk:wght@500;700&display=swap');
 
 /* ===========================
    Reset + base
@@ -6487,4 +6487,478 @@ html[data-theme="dark"] .athletics-event-chip small {
   margin: 0.85rem 0 0;
   color: var(--muted);
   font-size: 0.82rem;
+}
+
+/* ===========================
+   Corso command layout refresh
+   Original adaptation inspired by a clean editorial guide rhythm.
+=========================== */
+:root {
+  --corso-cream: #fff7df;
+  --corso-cream-2: #fff1c6;
+  --corso-paper: #fffdf5;
+  --corso-ink: #2f2d2d;
+  --corso-ink-2: #161616;
+  --corso-muted: #6d665c;
+  --corso-red: #ff3a28;
+  --corso-red-dark: #d42f22;
+  --corso-red-soft: rgba(255, 58, 40, 0.10);
+  --corso-line: rgba(47, 45, 45, 0.22);
+  --corso-line-strong: rgba(47, 45, 45, 0.58);
+  --corso-black-panel: #2f2d2d;
+  --corso-command-shadow: 0 16px 0 rgba(47, 45, 45, 0.06);
+  --paper: var(--corso-cream);
+  --surface: var(--corso-paper);
+  --surface-tint: #fff9e8;
+  --ink: var(--corso-ink);
+  --muted: var(--corso-muted);
+  --line: var(--corso-line);
+  --line-strong: var(--corso-line-strong);
+  --obsidian-blue: var(--corso-red-dark);
+  --obsidian-navy: var(--corso-ink);
+  --obsidian-navy-2: #242222;
+  --obsidian-navy-3: #3f3b38;
+  --uniform-gold: var(--corso-red);
+  --uniform-gold-dark: var(--corso-red-dark);
+  --uniform-gold-soft: rgba(255, 58, 40, 0.16);
+  --uniform-gold-wash: rgba(255, 58, 40, 0.08);
+  --uniform-gold-hover: rgba(255, 58, 40, 0.14);
+  --glass-surface: var(--corso-paper);
+  --glass-surface-strong: #fffefa;
+  --shadow-sm: none;
+  --shadow-md: var(--corso-command-shadow);
+  --shadow-glass-soft: var(--corso-command-shadow);
+  --shadow-glass: 0 18px 0 rgba(47, 45, 45, 0.08);
+}
+
+html[data-theme="dark"] {
+  --corso-cream: #191716;
+  --corso-cream-2: #231f1d;
+  --corso-paper: #242120;
+  --corso-ink: #fff7df;
+  --corso-ink-2: #fffdf5;
+  --corso-muted: #dacdb0;
+  --corso-line: rgba(255, 247, 223, 0.22);
+  --corso-line-strong: rgba(255, 247, 223, 0.46);
+  --corso-black-panel: #fff7df;
+  --paper: var(--corso-cream);
+  --surface: var(--corso-paper);
+  --surface-tint: #2c2825;
+  --ink: var(--corso-ink);
+  --muted: var(--corso-muted);
+  --line: var(--corso-line);
+  --line-strong: var(--corso-line-strong);
+  --obsidian-blue: #ff715f;
+  --obsidian-navy: #fff7df;
+  --obsidian-navy-2: #fff1c6;
+  --obsidian-navy-3: #f1d596;
+  --glass-surface: #242120;
+  --glass-surface-strong: #2d2926;
+}
+
+body {
+  font-family: "Open Sans", var(--brand-ui-font);
+  background:
+    linear-gradient(180deg, rgba(255, 58, 40, 0.045), transparent 18rem),
+    var(--corso-cream);
+  color: var(--corso-ink);
+}
+
+html[data-theme="dark"] body:not(.page-kiosk) {
+  background:
+    linear-gradient(180deg, rgba(255, 58, 40, 0.08), transparent 18rem),
+    var(--corso-cream);
+  color: var(--corso-ink);
+}
+
+a {
+  color: var(--corso-red-dark);
+  font-weight: 800;
+}
+
+html[data-theme="dark"] a {
+  color: #ff8b7d;
+}
+
+.content {
+  width: min(1120px, calc(100% - 2rem));
+  margin-inline: auto;
+}
+
+.page-home .content,
+.page-privacy .content,
+.page-about .content {
+  width: min(980px, calc(100% - 2rem));
+}
+
+.site-header {
+  background: var(--corso-cream);
+  color: var(--corso-ink);
+  border-bottom: 2px solid var(--corso-ink);
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.site-header::after {
+  inset: auto 0 0;
+  height: 4px;
+  background: var(--corso-red);
+}
+
+.brand h1,
+.brand-home-link,
+.brand-home-link:hover {
+  color: var(--corso-ink);
+}
+
+.brand-logo {
+  filter: none;
+}
+
+.tagline,
+.session-bar {
+  color: var(--corso-muted);
+}
+
+.main-nav {
+  background: var(--corso-paper);
+  border: 2px solid var(--corso-ink);
+  border-radius: 0;
+  box-shadow: 8px 8px 0 rgba(47, 45, 45, 0.14);
+  backdrop-filter: none;
+}
+
+.main-nav a,
+.main-nav button,
+.menu-toggle,
+.theme-toggle {
+  min-height: 40px;
+  border: 2px solid var(--corso-ink);
+  border-radius: 0;
+  background: var(--corso-paper);
+  color: var(--corso-ink);
+  font-family: var(--brand-ui-font);
+  font-weight: 900;
+  box-shadow: none;
+}
+
+.main-nav a:hover,
+.main-nav button:hover,
+.menu-toggle:hover,
+.theme-toggle:hover {
+  background: var(--corso-red);
+  color: #fffdf5;
+  text-decoration: none;
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0 var(--corso-ink);
+}
+
+.theme-toggle {
+  border-color: var(--corso-line-strong);
+}
+
+.card,
+.step,
+.feature-item,
+.portal-card,
+.impl-item,
+.stat-chip,
+.beta-definition-grid > div,
+.resource-card,
+.coach-tool-card,
+.future-skeleton-card,
+.student-summary-card,
+.award-card,
+.report-card,
+.training-card,
+.school-settings-card,
+.student-profile-card,
+.form-panel,
+.tab-panel .card {
+  border: 2px solid var(--corso-line-strong);
+  border-left: 7px solid var(--corso-red);
+  border-radius: 0;
+  background: var(--corso-paper);
+  color: var(--corso-ink);
+  box-shadow: var(--corso-command-shadow);
+  backdrop-filter: none;
+}
+
+.card {
+  padding: clamp(1rem, 2.5vw, 1.65rem);
+}
+
+.card h2,
+.card h3,
+.hero-section h2,
+.brand h1,
+.corso-wordmark {
+  font-family: var(--brand-display-font);
+  color: var(--corso-ink);
+  letter-spacing: 0;
+}
+
+.card h2,
+.tab-panel h2 {
+  font-size: clamp(1.45rem, 3vw, 2.15rem);
+  line-height: 1.05;
+}
+
+.hero-section {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(260px, 0.9fr);
+  align-items: start;
+  gap: clamp(1rem, 4vw, 2.4rem);
+  margin-top: 1.5rem;
+  padding: clamp(1.4rem, 5vw, 3rem) 0 1rem;
+}
+
+.hero-section .hero-text {
+  max-width: 680px;
+}
+
+.corso-wordmark {
+  color: var(--corso-red);
+  font-size: clamp(2.7rem, 10vw, 6.8rem);
+  line-height: 0.85;
+  font-weight: 900;
+  margin-bottom: 0.75rem;
+  text-transform: uppercase;
+}
+
+.hero-section h2 {
+  font-size: clamp(2.3rem, 7vw, 5.5rem);
+  line-height: 0.92;
+  margin: 0 0 1rem;
+  max-width: 760px;
+}
+
+.hero-section p {
+  max-width: 660px;
+  color: var(--corso-muted);
+  font-size: clamp(1rem, 2vw, 1.22rem);
+  line-height: 1.7;
+}
+
+.hero-stats {
+  display: grid;
+  gap: 0.75rem;
+  align-self: stretch;
+}
+
+.stat-chip {
+  justify-content: flex-start;
+  padding: 0.85rem 1rem;
+  font-size: 0.98rem;
+  font-weight: 900;
+  min-height: auto;
+}
+
+.steps-grid,
+.features-grid,
+.portal-grid,
+.impl-grid,
+.beta-definition-grid {
+  gap: 1rem;
+}
+
+.feature-item,
+.portal-card,
+.impl-item,
+.step,
+.beta-definition-grid > div {
+  padding: 1rem;
+}
+
+.feature-item span,
+.portal-icon,
+.step-num {
+  border-radius: 0;
+  background: var(--corso-black-panel);
+  color: var(--corso-cream);
+}
+
+.portal-card:hover,
+.feature-item:hover {
+  transform: translate(-2px, -2px);
+  border-color: var(--corso-ink);
+  box-shadow: 6px 6px 0 rgba(47, 45, 45, 0.16);
+  text-decoration: none;
+}
+
+.tabs {
+  gap: 0.7rem;
+  margin: 1.25rem 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--corso-line);
+}
+
+.tab-btn,
+button,
+.button,
+.secondary,
+input[type="submit"] {
+  border-radius: 0;
+  border: 2px solid var(--corso-line-strong);
+  background: var(--corso-paper);
+  color: var(--corso-ink);
+  box-shadow: none;
+  font-family: var(--brand-ui-font);
+  font-weight: 900;
+}
+
+.tab-btn {
+  padding: 0.75rem 1rem;
+  min-height: 44px;
+}
+
+.tab-btn.active,
+button:not(.link-btn):hover,
+.button:hover,
+.secondary:hover,
+input[type="submit"]:hover {
+  background: var(--corso-red);
+  border-color: var(--corso-ink);
+  color: #fffdf5;
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0 var(--corso-ink);
+}
+
+.secondary {
+  background: var(--corso-paper);
+  color: var(--corso-ink);
+}
+
+input,
+select,
+textarea {
+  border-radius: 0;
+  border: 2px solid var(--corso-line);
+  background: #fffefa;
+  color: #2f2d2d;
+  box-shadow: none;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--corso-red);
+  box-shadow: 4px 4px 0 rgba(255, 58, 40, 0.20);
+}
+
+pre,
+code,
+.barcode-code {
+  border-radius: 0;
+}
+
+pre {
+  background: var(--corso-black-panel);
+  color: var(--corso-cream);
+  border: 2px solid var(--corso-line-strong);
+}
+
+.admin-beta-safety-banner,
+.beta-banner,
+.session-state,
+.status-pill,
+.pill,
+.badge,
+.coach-workflow-status {
+  border-radius: 0;
+  border: 2px solid var(--corso-line-strong);
+  background: var(--corso-red-soft);
+  color: var(--corso-ink);
+}
+
+.session-state--open,
+.coach-workflow-status--resolved,
+.status-success {
+  background: rgba(40, 167, 69, 0.12);
+}
+
+.modal,
+.modal-content,
+.ag-modal,
+.coach-tool-modal,
+.athletics-event-modal,
+.dialog,
+[role="dialog"] {
+  border-radius: 0 !important;
+  border: 2px solid var(--corso-ink) !important;
+  background: var(--corso-paper) !important;
+  color: var(--corso-ink) !important;
+  box-shadow: 12px 12px 0 rgba(47, 45, 45, 0.18) !important;
+}
+
+.site-footer {
+  background: var(--corso-ink);
+  color: var(--corso-cream);
+  border-top: 4px solid var(--corso-red);
+}
+
+.site-footer a {
+  color: #fff7df;
+  text-decoration: underline;
+}
+
+.feature-suggestion-btn,
+.support-project-btn {
+  background: var(--corso-cream);
+  color: var(--corso-ink);
+  border: 2px solid var(--corso-cream);
+  border-radius: 0;
+}
+
+html[data-theme="dark"] .barcode-card-preview,
+html[data-theme="dark"] input,
+html[data-theme="dark"] select,
+html[data-theme="dark"] textarea {
+  background: #fffefa;
+  color: #2f2d2d;
+}
+
+html[data-theme="dark"] .barcode-card-preview strong,
+html[data-theme="dark"] .barcode-card-name,
+html[data-theme="dark"] .barcode-code {
+  color: #2f2d2d;
+}
+
+@media (max-width: 760px) {
+  .content,
+  .page-home .content,
+  .page-privacy .content,
+  .page-about .content {
+    width: min(100% - 1rem, 100%);
+  }
+
+  .site-header {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .main-nav {
+    right: 1rem;
+    width: min(300px, calc(100vw - 2rem));
+  }
+
+  .hero-section {
+    grid-template-columns: 1fr;
+    padding-top: 1.1rem;
+  }
+
+  .hero-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .tabs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    display: grid;
+  }
+
+  .tab-btn {
+    width: 100%;
+    padding: 0.65rem 0.6rem;
+    font-size: 0.9rem;
+  }
 }
