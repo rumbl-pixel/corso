@@ -1,6 +1,6 @@
 # Corso Handover Summary
 
-Last updated: 2026-06-24
+Last updated: 2026-06-26
 
 ## Product Snapshot
 
@@ -58,6 +58,13 @@ Key files:
 - `docs/beta-tester-checklist.md` - simple demo-review checklist for testers
 
 ## Current Technical Shape
+
+2026-06-26 update:
+
+- Corso's tracked feature priorities are complete; the active lane is now launch proof rather than new feature build.
+- Admin Help includes a Current Next Stage card pointing staff to Supabase production/Auth/RLS, real-device scanning, barcode print proof, school approval, and final QA freeze.
+- Launch Readiness Checklist includes real phone camera scan, real iPad camera scan, Bluetooth scanner, barcode card print/download, and fake roster import rehearsal proof items.
+- School settings guidance was corrected so only the school run club name is customisable; colour/emblem customisation remains removed to keep the Corso platform brand consistent.
 
 This is still primarily a static vanilla HTML/CSS/JS app with local-first demo storage and guarded Supabase/live-style paths.
 

@@ -1,6 +1,6 @@
 # Corso - Progress Checklist
 
-Last updated: 2026-06-22
+Last updated: 2026-06-26
 
 This is the quick-read roadmap. `FEATURES.md` remains the full source of truth.
 
@@ -20,6 +20,7 @@ This is the quick-read roadmap. `FEATURES.md` remains the full source of truth.
 ## Current Focus
 
 - [x] All core tracked feature priorities are complete. Remaining launch work is operational setup, school approval, and real Supabase/Auth configuration before live student data is entered.
+- [x] Current next stage is launch proof: Supabase production/Auth/RLS, real phone/iPad camera scan tests, Bluetooth scanner test, barcode card print/download proof, fake roster rehearsal, and school approval.
 - [x] Priority 9 shared smart-coach insight engine created for needs attention, close-to-award runners, unopened training, PBs, class trends, celebration candidates, and next-best actions. Coach Tools modals now support staff notes, categories, follow-up dates, resolved/follow-up workflow states, and staff-reviewed Mini Coach summaries with safe next steps. Full autonomous AI advice is still parked for later privacy review.
 - [x] 3.1 Backend stack decision completed: Supabase Postgres/Auth/RLS/Edge Functions.
 - [x] 3.2 Initial production schema completed with RLS enabled on student/school data tables.

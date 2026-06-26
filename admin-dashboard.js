@@ -4456,7 +4456,12 @@
       {state:reviewState('breach-path'),label:'Information breach response path recorded',detail:'Identify the school contact pathway, evidence to preserve, notification decision process, and breach register expectations.'},
       {state:reviewState('retention'),label:'Data retention and deletion schedule recorded',detail:'Set term/year retention for scans, reports, training, guardian access, audit logs, and medical safety notes.'},
       {state:reviewState('demo-clear'),label:'Demo data cleared or exported',detail:'Export testing data, then clear demo rosters before entering real students.'},
-      {state:'review',label:'Parent/student access boundaries checked',detail:'Parents see only linked children. Students see only their own profile. Schools see only their own students.'}
+      {state:'review',label:'Parent/student access boundaries checked',detail:'Parents see only linked children. Students see only their own profile. Schools see only their own students.'},
+      {state:'review',label:'Real phone camera scan tested',detail:'Open the hosted beta on a real phone, allow camera permission, and scan demo barcode cards only.'},
+      {state:'review',label:'Real iPad camera scan tested',detail:'Open the hosted beta on an iPad, allow camera permission, and confirm the scanner flow works at school-use size.'},
+      {state:'review',label:'Bluetooth scanner tested',detail:'Pair the scanner as keyboard input, focus the barcode field, scan demo cards, and confirm duplicate cooldown behaviour.'},
+      {state:'review',label:'Barcode card print/download tested',detail:'Print or download demo barcode cards and confirm the credit-card sizing, QR/barcode readability, and school workflow.'},
+      {state:'review',label:'Real roster import rehearsed with fake data',detail:'Use a school-shaped fake CSV to prove import mapping, duplicate handling, and rollback before any real class list is used.'}
     ];
   }
 
