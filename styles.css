@@ -5461,6 +5461,10 @@ input.resource-activity-minutes::-webkit-outer-spin-button {
   overflow-x: auto;
 }
 
+.report-mini + .report-mini {
+  margin-top: 0.85rem;
+}
+
 .report-mini h3 {
   margin: 0 0 0.55rem;
   color: var(--school-blue);
