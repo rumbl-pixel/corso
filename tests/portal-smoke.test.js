@@ -500,7 +500,8 @@ assert(!/class="tab-btn"[^>]*data-tab="reports"/.test(adminDashboardHtml), 'admi
 assert(!/class="tab-btn"[^>]*data-tab="school-settings"/.test(adminDashboardHtml), 'admin top-level tabs should not expose School Settings as a separate main pill');
 assert(!/class="tab-btn"[^>]*data-tab="import"/.test(adminDashboardHtml), 'admin top-level tabs should not expose Import as a separate main pill');
 assert(!/class="tab-btn"[^>]*data-tab="help"/.test(adminDashboardHtml), 'admin top-level tabs should not expose Help as a separate main pill');
-assert(/coach-hub-tab[\s\S]*data-coach-section="sports"[\s\S]*data-coach-section="training"[\s\S]*data-coach-section="resources"[\s\S]*data-coach-section="future-intelligence"/.test(adminDashboardHtml), 'Coach Hub should contain Sports, Training, Programming, and Insights sub-sections');
+assert(/coach-hub-tile[\s\S]*data-coach-section="sports"[\s\S]*data-coach-section="training"[\s\S]*data-coach-section="resources"[\s\S]*data-coach-section="future-intelligence"/.test(adminDashboardHtml), 'Coach Hub should contain selectable Sports, Training, Programming, and Insights tiles');
+assert(!/coach-hub-tab/.test(adminDashboardHtml), 'Coach Hub should not duplicate the large tiles with a second pill tab row');
 assert(/admin-hub-tab[\s\S]*data-admin-section="reports"[\s\S]*data-admin-section="school-settings"[\s\S]*data-admin-section="compliance"[\s\S]*data-admin-section="import"[\s\S]*data-admin-section="help"/.test(adminDashboardHtml), 'School Admin should contain Reports, Settings, Compliance, Import, and Help sub-sections');
 assert(/id="tab-compliance"[\s\S]*Vendor Compliance Posture[\s\S]*school-admin-signup-card[\s\S]*compliance-auto-checks-card[\s\S]*compliance-checklist-card[\s\S]*compliance-data-map-card[\s\S]*parent-notice-card[\s\S]*breach-log-card/.test(adminDashboardHtml), 'Compliance tab should present a vendor posture with signup, auto checks, sign-off, data map, parent notice, and breach log cards');
 assert(/School Admin Signup &amp; Use Attestation/.test(adminDashboardHtml), 'Compliance tab should include a school admin signup and use attestation sheet');
@@ -557,7 +558,7 @@ assert(/training-status-list/.test(adminDashboardHtml), 'admin training tab shou
 assert(/role="tablist"/.test(adminDashboardHtml), 'admin tabs should expose a tablist role');
 assert(/aria-selected="true"/.test(adminDashboardHtml), 'admin active tab should expose selected state');
 assert(/aria-controls="tab-scanner"/.test(adminDashboardHtml), 'admin tabs should reference tab panels');
-assert(/admin-dashboard\.js\?v=87/.test(adminDashboardHtml), 'admin dashboard should request the current live beta dashboard script');
+assert(/admin-dashboard\.js\?v=88/.test(adminDashboardHtml), 'admin dashboard should request the current live beta dashboard script');
 assert(/backend\.js\?v=23/.test(adminDashboardHtml), 'admin dashboard should load the current backend adapter before app scripts');
 
 const adminDashboardJs = read('admin-dashboard.js');
@@ -1090,8 +1091,8 @@ assert(/\.student-editor-modal\.athletics-team-modal[\s\S]*width:\s*min\(100%,\s
 assert(/athletics-consent-status-select/.test(styles), 'styles should support inline consent status dropdowns in the modal checklist');
 assert(/athletics-consent-status-select--pending/.test(styles) && /athletics-consent-status-select--granted/.test(styles) && /athletics-consent-status-select--declined/.test(styles), 'styles should colour pending, approved, and declined consent pills');
 assert(/athletics-consent-saved-list/.test(styles), 'styles should support the saved consent list inside team overview');
-assert(/styles\.css\?v=125/.test(leaderboardHtml), 'leaderboard page should request the current stylesheet version');
-assert(/styles\.css\?v=125/.test(interschoolTeamHtml), 'interschool team page should request the current stylesheet');
+assert(/styles\.css\?v=126/.test(leaderboardHtml), 'leaderboard page should request the current stylesheet version');
+assert(/styles\.css\?v=126/.test(interschoolTeamHtml), 'interschool team page should request the current stylesheet');
 assert(/theme\.js\?v=16/.test(studentProfileHtml), 'student profile should load the shared light/dark theme switch');
 assert(/data-theme="dark"/.test(styles), 'site styles should define dark theme overrides');
 assert(/html\[data-theme="dark"\] \.privacy-badge--public[\s\S]*color:\s*#fff3c4/.test(styles), 'dark mode should keep public-name privacy badges readable');
@@ -1187,7 +1188,7 @@ assert(/advertising trackers/.test(privacyPolicyHtml), 'privacy policy should ru
 assert(/School and Department approval/.test(privacyPolicyHtml), 'privacy policy should explain school and Department approval expectations');
 assert(/Medical and safety notes/.test(privacyPolicyHtml), 'privacy policy should explain medical and safety note boundaries');
 assert(/Security and breach response/.test(privacyPolicyHtml), 'privacy policy should explain breach response expectations');
-assert(/admin-dashboard\.js\?v=87/.test(adminDashboardHtml), 'admin dashboard should request the current live beta dashboard script');
+assert(/admin-dashboard\.js\?v=88/.test(adminDashboardHtml), 'admin dashboard should request the current live beta dashboard script');
 assert(/goals\.js\?v=5/.test(adminDashboardHtml), 'admin dashboard should request a fresh goals script after interschool goals changes');
 assert(/admin-goals\.js\?v=5/.test(adminDashboardHtml), 'admin dashboard should request a fresh admin goals script after interschool goals changes');
 assert(/student\.js\?v=21/.test(studentProfileHtml), 'student profile should request the current student portal script');
