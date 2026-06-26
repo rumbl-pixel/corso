@@ -1661,11 +1661,39 @@ html[data-theme="dark"] .tab-btn:not(.active) {
 }
 
 .coach-hub-summary-grid article,
+.coach-hub-tile,
 .admin-hub-summary-grid article {
   border: 1px solid rgba(18,54,93,0.16);
   border-radius: 8px;
   background: linear-gradient(135deg, rgba(255,255,255,0.74), rgba(255,248,221,0.34));
+  color: var(--obsidian-navy);
   padding: 0.85rem;
+}
+
+.coach-hub-tile {
+  display: grid;
+  gap: 0.25rem;
+  width: 100%;
+  min-height: 9.1rem;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: none;
+  transition: background 0.16s ease, border-color 0.16s ease, color 0.16s ease, transform 0.16s ease;
+}
+
+.coach-hub-tile:hover,
+.coach-hub-tile:focus-visible {
+  background: rgba(255, 47, 34, 0.055);
+  border-color: var(--corso-red-dark);
+  color: var(--corso-ink);
+  transform: none;
+}
+
+.coach-hub-tile.active {
+  background: #172435;
+  border-color: #172435;
+  border-left: 5px solid var(--corso-red-dark);
+  color: #fff7df;
 }
 
 .coach-hub-summary-grid strong,
@@ -1674,6 +1702,11 @@ html[data-theme="dark"] .tab-btn:not(.active) {
   color: var(--obsidian-navy-3);
   font-size: 0.95rem;
   margin-bottom: 0.25rem;
+}
+
+.coach-hub-tile.active strong,
+.coach-hub-tile.active span {
+  color: #fff7df;
 }
 
 .coach-hub-summary-grid span,
@@ -1724,9 +1757,11 @@ html[data-theme="dark"] .tab-btn:not(.active) {
 }
 
 html[data-theme="dark"] .coach-hub-summary-grid article,
+html[data-theme="dark"] .coach-hub-tile,
 html[data-theme="dark"] .admin-hub-summary-grid article {
   background: linear-gradient(135deg, rgba(255,255,255,0.075), rgba(242,216,145,0.08));
   border-color: rgba(255,255,255,0.16);
+  color: #fff7df;
 }
 
 html[data-theme="dark"] .coach-hub-summary-grid strong,
@@ -1737,6 +1772,24 @@ html[data-theme="dark"] .admin-hub-summary-grid strong {
 html[data-theme="dark"] .coach-hub-summary-grid span,
 html[data-theme="dark"] .admin-hub-summary-grid span {
   color: var(--muted);
+}
+
+html[data-theme="dark"] .coach-hub-tile:hover,
+html[data-theme="dark"] .coach-hub-tile:focus-visible {
+  background: rgba(255, 247, 223, 0.10);
+  border-color: #fff7df;
+}
+
+html[data-theme="dark"] .coach-hub-tile.active {
+  background: #fff7df;
+  border-color: #fff7df;
+  border-left-color: var(--corso-red-dark);
+  color: #191716;
+}
+
+html[data-theme="dark"] .coach-hub-tile.active strong,
+html[data-theme="dark"] .coach-hub-tile.active span {
+  color: #191716;
 }
 
 html[data-theme="dark"] .coach-hub-tab,
@@ -1778,8 +1831,10 @@ html[data-theme="dark"] .admin-hub-tab.active {
   }
 
   .coach-hub-summary-grid article,
+  .coach-hub-tile,
   .admin-hub-summary-grid article {
     padding: 0.62rem;
+    min-height: 7.4rem;
   }
 
   .coach-hub-summary-grid strong,

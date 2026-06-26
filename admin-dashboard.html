@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Corso - Admin Dashboard</title>
-    <link rel="stylesheet" href="styles.css?v=125" />
+    <link rel="stylesheet" href="styles.css?v=126" />
     <link rel="manifest" href="manifest.webmanifest" />
     <meta name="theme-color" content="#0c5aa8" />
     <link rel="apple-touch-icon" href="assets/app-icon-192.png" />
@@ -311,29 +311,23 @@
             </div>
             <span class="bookmark-pill">Planning workspace</span>
           </div>
-          <div class="coach-hub-summary-grid" aria-label="Coach Hub sections">
-            <article>
+          <div class="coach-hub-summary-grid" role="tablist" aria-label="Coach Hub tools">
+            <button class="coach-hub-tile active" type="button" data-coach-section="sports" role="tab" aria-selected="true" aria-controls="tab-sports">
               <strong>Sports</strong>
               <span>Interschool teams, consent, PBs, results, Cross Country.</span>
-            </article>
-            <article>
+            </button>
+            <button class="coach-hub-tile" type="button" data-coach-section="training" role="tab" aria-selected="false" aria-controls="tab-training">
               <strong>Training</strong>
               <span>Assign student tasks and track opens/completion.</span>
-            </article>
-            <article>
+            </button>
+            <button class="coach-hub-tile" type="button" data-coach-section="resources" role="tab" aria-selected="false" aria-controls="tab-resources">
               <strong>Programming</strong>
               <span>Build PE/session plans with Mini Coach support.</span>
-            </article>
-            <article>
+            </button>
+            <button class="coach-hub-tile" type="button" data-coach-section="future-intelligence" role="tab" aria-selected="false" aria-controls="tab-future-intelligence">
               <strong>Insights</strong>
               <span>Needs attention, close to award, notes, trends.</span>
-            </article>
-          </div>
-          <div class="coach-hub-tabs" role="tablist" aria-label="Coach Hub tools">
-            <button class="coach-hub-tab active" type="button" data-coach-section="sports" role="tab" aria-selected="true" aria-controls="tab-sports">&#127967; Sports</button>
-            <button class="coach-hub-tab" type="button" data-coach-section="training" role="tab" aria-selected="false" aria-controls="tab-training">&#127947; Training</button>
-            <button class="coach-hub-tab" type="button" data-coach-section="resources" role="tab" aria-selected="false" aria-controls="tab-resources">&#128218; Programming</button>
-            <button class="coach-hub-tab" type="button" data-coach-section="future-intelligence" role="tab" aria-selected="false" aria-controls="tab-future-intelligence">&#129504; Insights</button>
+            </button>
           </div>
         </div>
       </div>
@@ -1602,7 +1596,7 @@
     <script src="goals.js?v=5"></script>
     <script src="admin-goals.js?v=5"></script>
     <script src="assets/qrcode-generator.js"></script>
-    <script src="admin-dashboard.js?v=87"></script>
+    <script src="admin-dashboard.js?v=88"></script>
     <script src="pwa.js"></script>
         <script src='https://storage.ko-fi.com/cdn/scripts/overlay-widget.js'></script>
     <script>
