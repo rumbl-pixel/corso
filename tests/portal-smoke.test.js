@@ -488,6 +488,8 @@ assert(/Do not enter real student data until Priority 0 is complete/.test(adminD
 assert(/backend-readiness-card/.test(adminDashboardHtml), 'admin dashboard should include a live backend readiness gate card');
 assert(/backend-readiness-summary/.test(adminDashboardHtml), 'backend readiness card should include a summary target');
 assert(/Backend Storage Gate/.test(adminDashboardHtml), 'backend readiness card should be labelled as the backend storage gate');
+assert(/help-current-next-stage/.test(adminDashboardHtml), 'admin help should include the current next launch stage card');
+assert(/Current Next Stage/.test(adminDashboardHtml), 'admin help should label the current next launch stage');
 assert(/launch-readiness-panel/.test(adminDashboardHtml), 'admin help should include a launch readiness checklist panel');
 assert(/launch-readiness-checklist/.test(adminDashboardHtml), 'admin help should render launch readiness checklist rows');
 assert(/print-launch-readiness-btn/.test(adminDashboardHtml), 'admin help should let staff print the launch readiness checklist');
@@ -558,7 +560,7 @@ assert(/training-status-list/.test(adminDashboardHtml), 'admin training tab shou
 assert(/role="tablist"/.test(adminDashboardHtml), 'admin tabs should expose a tablist role');
 assert(/aria-selected="true"/.test(adminDashboardHtml), 'admin active tab should expose selected state');
 assert(/aria-controls="tab-scanner"/.test(adminDashboardHtml), 'admin tabs should reference tab panels');
-assert(/admin-dashboard\.js\?v=88/.test(adminDashboardHtml), 'admin dashboard should request the current live beta dashboard script');
+assert(/admin-dashboard\.js\?v=89/.test(adminDashboardHtml), 'admin dashboard should request the current live beta dashboard script');
 assert(/backend\.js\?v=23/.test(adminDashboardHtml), 'admin dashboard should load the current backend adapter before app scripts');
 
 const adminDashboardJs = read('admin-dashboard.js');
@@ -636,6 +638,11 @@ assert(/Platform admin access stays separate and owner-only/.test(adminDashboard
 assert(/RLS and role policies reviewed/.test(adminDashboardJs), 'launch readiness should include Supabase role and RLS review');
 assert(/Information breach response path recorded/.test(adminDashboardJs), 'launch readiness should include breach response review');
 assert(/Data retention and deletion schedule recorded/.test(adminDashboardJs), 'launch readiness should include retention review');
+assert(/Real phone camera scan tested/.test(adminDashboardJs), 'launch readiness should include real phone camera scan proof');
+assert(/Real iPad camera scan tested/.test(adminDashboardJs), 'launch readiness should include real iPad camera scan proof');
+assert(/Bluetooth scanner tested/.test(adminDashboardJs), 'launch readiness should include Bluetooth scanner proof');
+assert(/Barcode card print\/download tested/.test(adminDashboardJs), 'launch readiness should include barcode print/download proof');
+assert(/Real roster import rehearsed with fake data/.test(adminDashboardJs), 'launch readiness should include fake roster rehearsal');
 assert(/printLaunchReadiness/.test(adminDashboardJs), 'admin dashboard should print launch readiness checklist');
 assert(/liveRosterGuard/.test(adminDashboardJs), 'admin dashboard should guard roster writes when live data mode is enabled');
 assert(/saveStudentsWithBackend/.test(adminDashboardJs), 'admin dashboard should route roster saves through the backend when live-ready');
@@ -1188,7 +1195,7 @@ assert(/advertising trackers/.test(privacyPolicyHtml), 'privacy policy should ru
 assert(/School and Department approval/.test(privacyPolicyHtml), 'privacy policy should explain school and Department approval expectations');
 assert(/Medical and safety notes/.test(privacyPolicyHtml), 'privacy policy should explain medical and safety note boundaries');
 assert(/Security and breach response/.test(privacyPolicyHtml), 'privacy policy should explain breach response expectations');
-assert(/admin-dashboard\.js\?v=88/.test(adminDashboardHtml), 'admin dashboard should request the current live beta dashboard script');
+assert(/admin-dashboard\.js\?v=89/.test(adminDashboardHtml), 'admin dashboard should request the current live beta dashboard script');
 assert(/goals\.js\?v=5/.test(adminDashboardHtml), 'admin dashboard should request a fresh goals script after interschool goals changes');
 assert(/admin-goals\.js\?v=5/.test(adminDashboardHtml), 'admin dashboard should request a fresh admin goals script after interschool goals changes');
 assert(/student\.js\?v=21/.test(studentProfileHtml), 'student profile should request the current student portal script');
