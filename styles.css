@@ -268,11 +268,14 @@ body.mobile-nav-open .main-nav {
   order: 2;
   display: inline-flex;
   align-items: center;
-  min-height: 18px;
+  justify-content: center;
+  min-height: 40px;
+  width: 47px;
   padding: 0;
-  border: 0;
-  background: transparent;
-  color: #fff;
+  border: 2px solid var(--corso-ink);
+  border-radius: 0;
+  background: var(--corso-paper);
+  color: var(--corso-ink);
   font: inherit;
   font-size: 0.62rem;
   font-weight: 700;
@@ -280,8 +283,8 @@ body.mobile-nav-open .main-nav {
 }
 
 .theme-toggle:hover {
-  background: transparent;
-  color: #fff;
+  background: var(--corso-red);
+  color: #fffdf5;
 }
 
 .theme-toggle-track {
@@ -292,8 +295,8 @@ body.mobile-nav-open .main-nav {
   height: 18px;
   padding: 2px;
   border-radius: 999px;
-  background: rgba(255,255,255,0.18);
-  border: 1px solid rgba(255,255,255,0.26);
+  background: #fffdf7;
+  border: 1px solid rgba(23, 36, 53, 0.5);
 }
 
 .theme-toggle-thumb {
@@ -303,8 +306,8 @@ body.mobile-nav-open .main-nav {
   width: 22px;
   height: 12px;
   border-radius: 999px;
-  background: linear-gradient(180deg, #fff, #f7e7b4);
-  color: var(--obsidian-navy);
+  background: var(--corso-ink);
+  color: #fffdf5;
   font-size: 0.62rem;
   font-weight: 800;
   transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease;
@@ -312,8 +315,23 @@ body.mobile-nav-open .main-nav {
 
 .theme-toggle[aria-pressed="true"] .theme-toggle-thumb {
   transform: translateX(17px);
-  background: linear-gradient(180deg, var(--obsidian-navy-2), var(--obsidian-navy));
-  color: #fff;
+  background: var(--corso-ink);
+  color: #fffdf5;
+}
+
+html[data-theme="dark"] .theme-toggle-track {
+  background: #191716;
+  border-color: rgba(255, 247, 223, 0.64);
+}
+
+html[data-theme="dark"] .theme-toggle-thumb {
+  background: var(--corso-red);
+  color: #fffdf5;
+}
+
+html[data-theme="dark"] .theme-toggle[aria-pressed="true"] .theme-toggle-thumb {
+  background: #fff7df;
+  color: #191716;
 }
 
 .mobile-menu-toggle {
@@ -324,10 +342,10 @@ body.mobile-nav-open .main-nav {
   width: 38px;
   height: 34px;
   padding: 0;
-  border: 1px solid var(--gold-glass-line);
+  border: 2px solid var(--corso-ink);
   border-radius: 999px;
-  background: rgba(255,255,255,0.12);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.18);
+  background: var(--corso-paper);
+  box-shadow: none;
   position: static;
   flex: 0 0 auto;
   order: 3;
@@ -341,7 +359,11 @@ body.mobile-nav-open .main-nav {
   width: 15px;
   height: 2px;
   border-radius: 999px;
-  background: #fff;
+  background: var(--corso-ink);
+}
+
+html[data-theme="dark"] .mobile-menu-toggle span {
+  background: #fff7df;
 }
 
 .mobile-menu-toggle span + span {
@@ -7725,4 +7747,76 @@ body {
   .tip-strip a {
     white-space: normal;
   }
+}
+
+/* Final contrast hardening for the command-shell refresh. */
+body:not(.page-kiosk) .quick-action-icon,
+body:not(.page-kiosk) .coach-avatar,
+body:not(.page-kiosk) .school-switcher:hover,
+body:not(.page-kiosk) .tip-icon,
+body:not(.page-kiosk) .tip-link,
+body:not(.page-kiosk) .launch-check-list li.done::before {
+  color: var(--corso-red-dark);
+}
+
+body:not(.page-kiosk) .coach-avatar {
+  border-color: var(--corso-red-dark);
+}
+
+body:not(.page-kiosk) .tab-btn.active {
+  background: var(--corso-red-dark);
+  border-color: var(--corso-red-dark);
+  color: #fffdf5;
+}
+
+body:not(.page-kiosk) [style*="color:#888"],
+body:not(.page-kiosk) [style*="color: #888"],
+body:not(.page-kiosk) [style*="color:#667085"],
+body:not(.page-kiosk) [style*="color: #667085"],
+body:not(.page-kiosk) [style*="color:#64748b"],
+body:not(.page-kiosk) [style*="color: #64748b"] {
+  color: var(--corso-muted) !important;
+}
+
+body:not(.page-kiosk) .site-footer {
+  background: #172435;
+  color: #fff7df;
+}
+
+body:not(.page-kiosk) .site-footer p,
+body:not(.page-kiosk) .site-footer .privacy-pledge,
+body:not(.page-kiosk) .site-footer a {
+  color: #fff7df;
+}
+
+body:not(.page-kiosk) .site-footer .feature-suggestion-btn {
+  background-color: #fff7df;
+  color: var(--corso-ink);
+}
+
+html[data-theme="dark"] body:not(.page-kiosk) .beta-share-banner__status {
+  background: #191716;
+  color: #fff7df;
+}
+
+html[data-theme="dark"] body:not(.page-kiosk) .coach-avatar {
+  background: #fff7df;
+  border-color: #fff7df;
+  color: #191716;
+}
+
+html[data-theme="dark"] body:not(.page-kiosk) .site-footer {
+  background: #191716;
+  color: #fff7df;
+}
+
+html[data-theme="dark"] body:not(.page-kiosk) .site-footer p,
+html[data-theme="dark"] body:not(.page-kiosk) .site-footer .privacy-pledge,
+html[data-theme="dark"] body:not(.page-kiosk) .site-footer a {
+  color: #fff7df;
+}
+
+html[data-theme="dark"] body:not(.page-kiosk) .site-footer .feature-suggestion-btn {
+  background-color: #fff7df;
+  color: #191716;
 }

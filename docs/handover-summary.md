@@ -188,7 +188,7 @@ Admin:
 - Admin stays in admin mode when viewing student profiles.
 - CSV import path and Compass CSV import placeholder/direction.
 - Reports and exports.
-- School settings tab for app/school name, colour/theme, logo upload and branding.
+- School settings tab now keeps school customisation limited to the displayed run club name. Platform colours, Corso branding, and the app logo stay fixed.
 - Support widget changed from Buy Me a Coffee to Ko-fi overlay, positioned smaller/right.
 
 Scanner/Kiosk:
