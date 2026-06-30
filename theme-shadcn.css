@@ -219,6 +219,30 @@ html[data-skin="shadcn"] .tile {
   backdrop-filter: none;
 }
 
+/* Footer: the Corso layer hard-codes a dark navy footer with cream text.
+   Flatten it to a neutral shadcn surface. Higher specificity + later source
+   order than body:not(.page-kiosk) .site-footer, so these win. */
+html[data-skin="shadcn"] body:not(.page-kiosk) .site-footer {
+  background: var(--secondary);
+  color: var(--muted-foreground);
+  border-top: 1px solid var(--border);
+}
+html[data-skin="shadcn"] body:not(.page-kiosk) .site-footer p,
+html[data-skin="shadcn"] body:not(.page-kiosk) .site-footer .privacy-pledge {
+  color: var(--muted-foreground);
+}
+html[data-skin="shadcn"] body:not(.page-kiosk) .site-footer a {
+  color: var(--foreground);
+}
+html[data-skin="shadcn"] body:not(.page-kiosk) .site-footer .feature-suggestion-btn {
+  background: var(--background);
+  background-image: none;
+  color: var(--foreground);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: none;
+}
+
 /* Floating skin toggle (injected by skin.js) */
 .skin-toggle {
   position: fixed;
