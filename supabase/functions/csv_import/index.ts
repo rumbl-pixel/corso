@@ -24,6 +24,58 @@ function jsonResponse(body: Record<string, unknown>, status = 200) {
   });
 }
 
+function bearerToken(req: Request): string {
+  const header = req.headers.get("authorization") || "";
+  const match = header.match(/^Bearer\s+(.+)$/i);
+  return match ? match[1].trim() : "";
+}
+
+function isUuid(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+}
+
+async function authorisedForSchool(supabase: ReturnType<typeof createClient>, req: Request, school_id: string) {
+  const token = bearerToken(req);
+  if (!token) {
+    return { ok: false, status: 401, error: "missing_staff_token" };
+  }
+
+  const { data: userData, error: userError } = await supabase.auth.getUser(token);
+  const userId = userData?.user?.id;
+  if (userError || !userId) {
+    return { ok: false, status: 401, error: "invalid_staff_token" };
+  }
+
+  const { data: platformAdmin, error: platformError } = await supabase
+    .from("platform_admins")
+    .select("user_id")
+    .eq("user_id", userId)
+    .eq("active", true)
+    .maybeSingle();
+  if (platformError) {
+    return { ok: false, status: 500, error: "platform_admin_check_failed" };
+  }
+  if (platformAdmin) {
+    return { ok: true, userId };
+  }
+
+  const { data: schoolUser, error: roleError } = await supabase
+    .from("school_users")
+    .select("user_id, role")
+    .eq("school_id", school_id)
+    .eq("user_id", userId)
+    .eq("role", "coach")
+    .maybeSingle();
+  if (roleError) {
+    return { ok: false, status: 500, error: "school_role_check_failed" };
+  }
+  if (!schoolUser) {
+    return { ok: false, status: 403, error: "not_authorised_for_school" };
+  }
+
+  return { ok: true, userId };
+}
+
 function parseCsvLine(line: string): string[] {
   const cells: string[] = [];
   let current = "";
@@ -103,8 +155,8 @@ Deno.serve(async (req) => {
     return jsonResponse({ ok: false, error: "method_not_allowed" }, 405);
   }
 
-  const supabaseUrl = Deno.env.get("SUPABASE_URL");
-  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const supabaseUrl = Deno.env.get("CORSO_SUPABASE_URL") || Deno.env.get("SUPABASE_URL");
+  const serviceRoleKey = Deno.env.get("CORSO_SUPABASE_SERVICE_ROLE_KEY") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   if (!supabaseUrl || !serviceRoleKey) {
     return jsonResponse({ ok: false, error: "missing_server_config" }, 500);
   }
@@ -116,6 +168,17 @@ Deno.serve(async (req) => {
 
   if (!school_id) {
     return jsonResponse({ ok: false, error: "missing_school_id" }, 400);
+  }
+  if (!isUuid(school_id)) {
+    return jsonResponse({ ok: false, error: "invalid_school_id" }, 400);
+  }
+
+  const supabase = createClient(supabaseUrl, serviceRoleKey, {
+    auth: { persistSession: false },
+  });
+  const auth = await authorisedForSchool(supabase, req, school_id);
+  if (!auth.ok) {
+    return jsonResponse({ ok: false, error: auth.error }, auth.status);
   }
 
   const parsed = parseCsv(csv, school_id);
@@ -129,9 +192,6 @@ Deno.serve(async (req) => {
     });
   }
 
-  const supabase = createClient(supabaseUrl, serviceRoleKey, {
-    auth: { persistSession: false },
-  });
   const { data, error } = await supabase
     .from("students")
     .upsert(parsed.rows, { onConflict: "school_id,barcode" })

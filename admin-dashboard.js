@@ -48,6 +48,16 @@
   var DEFAULT_RUN_CLUB_NAME = 'School Run Club';
   var DEFAULT_BRAND_LOGO = 'assets/corso-logo.png';
 
+  function schedulePrintWindow(printWin) {
+    var trigger = function () {
+      setTimeout(function () {
+        try { printWin.focus(); printWin.print(); } catch (error) {}
+      }, 120);
+    };
+    if (printWin.document.readyState === 'complete') { trigger(); }
+    else { printWin.addEventListener('load', trigger, { once: true }); }
+  }
+
   var ATHLETICS_EVENT_OPTIONS = [
     {id:'xc',name:'Cross Country',category:'cross-country',measure:'time',points:true},
     {id:'junior-50m',name:'Junior 50m',category:'sprint',measure:'time',points:true,division:'Junior'},
@@ -406,8 +416,7 @@
       '</div></body></html>';
     win.document.write(html);
     win.document.close();
-    win.focus();
-    win.print();
+    schedulePrintWindow(win);
   }
 
   function generateBarcodeId(first, last, students) {
@@ -3652,7 +3661,7 @@
     html+='<h1>Run Club Leaderboard</h1><table><thead><tr><th>Rank</th><th>Student</th><th>Class</th><th>Distance</th><th>Medal</th></tr></thead><tbody>';
     sorted.forEach(function(s,i){html+='<tr><td class="rank">#'+(i+1)+'</td><td>'+s.name+'</td><td>'+s.cls+'</td><td>'+totalKm(s).toFixed(2)+' km</td><td>'+medalFor(s).name+'</td></tr>';});
     html+='</tbody></table></body></html>';
-    win.document.write(html); win.document.close(); win.print();
+    win.document.write(html); win.document.close(); schedulePrintWindow(win);
   }
   document.getElementById('print-leaderboard-btn').addEventListener('click',printLeaderboardPoster);
 
@@ -4921,7 +4930,7 @@
     var win=window.open('','_blank');
     if(!win){return;}
     win.document.write('<html><head><title>'+escapeHtml(title)+'</title><style>body{font-family:Arial,sans-serif;color:#102a43;padding:20px;}h1{color:#003880;}table{width:100%;border-collapse:collapse;font-size:12px;}th,td{border-bottom:1px solid #d9e2ec;text-align:left;padding:7px;}th{background:#f4f7fb;}@media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact;}}</style></head><body>'+body+'</body></html>');
-    win.document.close(); win.focus(); win.print();
+    win.document.close(); schedulePrintWindow(win);
   }
 
   function printProgramResources(){
@@ -5920,7 +5929,7 @@
       html+='<div class="barcode-card-print"><div class="barcode-card-school">Corso</div><strong class="barcode-card-name">'+escapeHtml(s.name)+'</strong><div class="barcode-card-meta">'+escapeHtml(s.year)+' / '+escapeHtml(s.cls)+'</div><div class="barcode-qr-row">'+barcodeBarsHtml(code)+qrCodeHtml(code)+'</div><div class="barcode-code">'+escapeHtml(code)+'</div></div>';
     });
     html+='</div></body></html>';
-    win.document.write(html); win.document.close(); win.focus(); win.print();
+    win.document.write(html); win.document.close(); schedulePrintWindow(win);
   });
 
 })();
