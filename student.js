@@ -27,6 +27,16 @@
 
   var currentStudent = null;
 
+  function schedulePrintWindow(printWin) {
+    var trigger = function () {
+      setTimeout(function () {
+        try { printWin.focus(); printWin.print(); } catch (error) {}
+      }, 120);
+    };
+    if (printWin.document.readyState === 'complete') { trigger(); }
+    else { printWin.addEventListener('load', trigger, { once: true }); }
+  }
+
   function getStudentSession() {
     try {
       return JSON.parse(localStorage.getItem(STUDENT_SESSION_KEY));
@@ -223,8 +233,7 @@
       '</div></body></html>';
     win.document.write(html);
     win.document.close();
-    win.focus();
-    win.print();
+    schedulePrintWindow(win);
   }
 
   function renderStudentBarcode(student) {
@@ -343,8 +352,7 @@
       '</body></html>';
     win.document.write(html);
     win.document.close();
-    win.focus();
-    win.print();
+    schedulePrintWindow(win);
   }
 
   function wireStudentTermReport(student) {
