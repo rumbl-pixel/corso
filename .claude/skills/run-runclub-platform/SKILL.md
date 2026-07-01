@@ -1,6 +1,6 @@
 ---
 name: run-runclub-platform
-description: Build, run, and drive Corso (runclub-platform). Use when asked to start the app, serve it locally, take a screenshot of a page, drive the shadcn/Classic skin toggle, exercise the student/admin login flows, or run its test suite.
+description: Build, run, and drive Corso (runclub-platform). Use when asked to start the app, serve it locally, take a screenshot of a page, exercise the student/admin login flows, or run its test suite.
 ---
 
 Corso is a static multi-page app (plain HTML + `styles.css` + per-page
@@ -72,21 +72,21 @@ There is no dedicated `navigate` tool in this MCP — set
 after. `preview_start` itself opens the server's root; on subsequent
 pages, this `preview_eval` pattern is how you move around.
 
-**2. Toggle the shadcn skin and verify a computed style (proves the
-CSS actually applied, not just that the tag exists):**
+**2. Verify a computed style on a themed component (proves the CSS
+actually applied, not just that the tag exists):**
 
 ```
-preview_eval({ serverId, expression:
-  "window.location.href='/about.html?skin=shadcn&cb='+Date.now(); 'ok'" })
+preview_eval({ serverId, expression: "window.location.href='/about.html?cb='+Date.now(); 'ok'" })
 preview_eval({ serverId, expression:
   "getComputedStyle(document.querySelector('.site-footer')).backgroundColor" })
-  → e.g. "oklch(0.967 0.001 286.375)"   // shadcn --secondary, not the classic dark navy
+  → e.g. "oklch(0.967 0.001 286.375)"   // shadcn --secondary
 preview_screenshot({ serverId })
 ```
 
-`?skin=shadcn` persists to `localStorage['corsoSkin']` via `skin.js`,
-so once set it sticks across navigations in the same session until you
-pass `?skin=classic` or `?skin=off`.
+The shadcn look is the app's only theme — every page sets
+`<html data-skin="shadcn">` statically, no toggle or query param
+involved (see Gotchas: this used to be an A/B-toggleable overlay via
+`skin.js`; that mechanism was removed and shadcn made permanent).
 
 **3. Drive the student DEMO login (deterministic, no real credentials
 needed — `student.js`'s `authenticateStudent` special-cases the
@@ -126,8 +126,7 @@ npx http-server -p 8080 -c-1
 ```
 
 Then open `http://localhost:8080/index.html` in a real browser.
-`Ctrl+C` to stop. Append `?skin=shadcn` to any URL, or use the
-floating "Theme" toggle (bottom-right), to compare the two skins.
+`Ctrl+C` to stop.
 
 ## Test
 
@@ -172,11 +171,12 @@ Fast syntax-only check on the two largest hand-written JS files
   through. Set `background` (shorthand) and `background-image: none`
   explicitly, then re-screenshot to confirm (checking `computedStyle`
   alone can lie if you only inspect the property you set).
-- **The shadcn skin is inert until `html[data-skin="shadcn"]` is set.**
-  Editing `theme-shadcn.css` and reloading a plain URL shows *no*
-  visible change — you must load with `?skin=shadcn` (or have the
-  toggle/localStorage already set) or you'll wrongly conclude the CSS
-  change didn't work.
+- **The shadcn overlay is scoped to `html[data-skin="shadcn"]`.** Every
+  page sets that attribute statically now (no toggle, no query param,
+  no localStorage) — it's the app's only theme, not an A/B option
+  anymore. If you ever see a page *not* picking up a `theme-shadcn.css`
+  change, check the `<html>` tag has the attribute before suspecting
+  the CSS itself.
 - **Cache-buster query strings (`?v=N`) must be bumped by hand** on
   every `<link>`/`<script>` tag across all ~11 HTML pages whenever the
   referenced file changes. The local dev server (`-c-1`, no caching)
