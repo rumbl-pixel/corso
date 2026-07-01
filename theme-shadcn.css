@@ -1,11 +1,9 @@
 /* ============================================================
-   shadcn skin overlay (preview)
+   shadcn skin
    ------------------------------------------------------------
-   A non-destructive alternative palette. Everything is scoped
-   under html[data-skin="shadcn"], so the Classic look stays the
-   default and this only applies when the skin is toggled on
-   (skin.js, or ?skin=shadcn). Loaded AFTER styles.css so these
-   rules win.
+   The app's current look. Scoped under html[data-skin="shadcn"],
+   which every page sets statically. Loaded AFTER styles.css so
+   these rules win.
 
    Approach: define the shadcn design tokens, remap the app's
    existing semantic variables onto them (so variable-driven
@@ -268,28 +266,4 @@ html[data-skin="shadcn"] body:not(.page-kiosk) .site-footer .feature-suggestion-
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: none;
-}
-
-/* Floating skin toggle (injected by skin.js) */
-.skin-toggle {
-  position: fixed;
-  right: 14px;
-  bottom: 14px;
-  z-index: 9999;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.5rem 0.85rem;
-  font: 600 0.82rem/1 var(--brand-ui-font, system-ui, sans-serif);
-  color: #fff;
-  background: #0c5aa8;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: 999px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
-  cursor: pointer;
-}
-.skin-toggle:hover { filter: brightness(1.06); }
-html[data-skin="shadcn"] .skin-toggle {
-  background: var(--primary);
-  border-radius: var(--radius);
 }
