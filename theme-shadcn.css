@@ -143,6 +143,33 @@ html[data-skin="shadcn"] .site-header::before {
   content: none;
 }
 
+/* Mobile nav dropdown: the Corso layer renders a dark navy glass panel with
+   gold-bordered white pills. Flatten it to a shadcn popover so the open menu
+   matches the flat header. (Loaded after styles.css, so ties break our way.) */
+html[data-skin="shadcn"] .main-nav {
+  background: var(--popover);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  backdrop-filter: none;
+}
+html[data-skin="shadcn"] .main-nav a,
+html[data-skin="shadcn"] .main-nav button {
+  color: var(--popover-foreground);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  box-shadow: none;
+  backdrop-filter: none;
+}
+html[data-skin="shadcn"] .main-nav a:hover,
+html[data-skin="shadcn"] .main-nav button:hover {
+  background: var(--accent);
+  color: var(--accent-foreground);
+  border-color: var(--border);
+  transform: none;
+}
+
 /* Primary buttons */
 html[data-skin="shadcn"] button,
 html[data-skin="shadcn"] .btn-primary {
