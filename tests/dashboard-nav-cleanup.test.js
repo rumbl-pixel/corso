@@ -37,4 +37,22 @@ const dashboardJs = read('admin-dashboard.js');
 assert(/navTabMirrorEl\.appendChild\(mirrorBtn\)/.test(dashboardJs), 'admin-dashboard.js should clone tab buttons into the nav-tab-mirror container');
 assert(/activateAdminTab\(tabBtn\.dataset\.tab\)/.test(dashboardJs), 'the dropdown mirror should reuse activateAdminTab rather than duplicating tab-switch logic');
 
+// --- Task 3: Scanner/Activity merge ---
+const dashboardHtmlV2 = read('admin-dashboard.html');
+assert(!/data-tab="scanner"/.test(dashboardHtmlV2), 'admin-dashboard.html should no longer have a separate Scanner tab id');
+const activityDataTabCount = (dashboardHtmlV2.match(/data-tab="activity"/g) || []).length;
+assert(activityDataTabCount === 1, 'admin-dashboard.html should have exactly one data-tab="activity" button, found ' + activityDataTabCount);
+const activityPanelIdCount = (dashboardHtmlV2.match(/id="tab-activity"/g) || []).length;
+assert(activityPanelIdCount === 1, 'admin-dashboard.html should have exactly one id="tab-activity" panel, found ' + activityPanelIdCount);
+const activityPanelMatch = dashboardHtmlV2.match(/<div class="tab-panel active" id="tab-activity">([\s\S]*?)<!-- STUDENTS TAB -->/);
+assert(activityPanelMatch, 'admin-dashboard.html should have a tab-activity panel followed by the Students tab');
+assert(/id="scan-input"/.test(activityPanelMatch[1]), 'merged Activity panel should still contain the live scanner input');
+assert(/id="log-activity-btn"/.test(activityPanelMatch[1]), 'merged Activity panel should contain the manual activity logging form');
+
+const dashboardJs2 = read('admin-dashboard.js');
+assert(/setProgrammingCoachWidgetVisibility\(activeTopTab&&activeTopTab\.dataset\.tab==='coach-hub'\?activeCoachHubSection:\(activeTopTab\?activeTopTab\.dataset\.tab:'activity'\)\);/.test(dashboardJs2), 'admin-dashboard.js tab fallback default should be activity, not scanner');
+
+const indexHtmlV2 = read('index.html');
+assert(!/tab=scanner/.test(indexHtmlV2), 'index.html should no longer link to the old scanner tab id');
+
 console.log('dashboard nav cleanup checks passed');

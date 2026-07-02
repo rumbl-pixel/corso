@@ -289,7 +289,7 @@ assert(/Track setup/.test(homeHtml), 'home page should describe track setup more
 assert(/Parents can view their child's laps, distance, awards, goals, and training/.test(homeHtml), 'home page parent portal copy should stay read-only and not suggest home activity logging');
 assert(!/Log effort from home/.test(homeHtml), 'home page should not suggest parents or students can self-report home activity');
 assert(/href="leaderboard\.html"/.test(homeHtml), 'home page should link to the public leaderboard page');
-assert(homeHtml.indexOf('Admin login</a>') > homeHtml.indexOf('Parent portal</a>'), 'home nav should place admin login at the far right');
+assert(/href="admin\.html">Admin<\/a>/.test(homeHtml), 'home nav should have a simplified admin login link');
 assert(!/class="hero-buttons"/.test(homeHtml), 'home page should not show duplicate hero login buttons');
 assert(/<span class="school-switcher" aria-label="Current school">School Run Club<\/span>/.test(homeHtml), 'home topbar school label should be a status chip, not a pointless button');
 assert(/<span class="coach-avatar" aria-label="Coach account">CO<\/span>/.test(homeHtml), 'home topbar coach avatar should have a neutral fallback before sign-in');
@@ -569,7 +569,7 @@ assert(/training-student-list/.test(adminDashboardHtml), 'admin training form sh
 assert(/training-status-list/.test(adminDashboardHtml), 'admin training tab should show assignment click status');
 assert(/role="tablist"/.test(adminDashboardHtml), 'admin tabs should expose a tablist role');
 assert(/aria-selected="true"/.test(adminDashboardHtml), 'admin active tab should expose selected state');
-assert(/aria-controls="tab-scanner"/.test(adminDashboardHtml), 'admin tabs should reference tab panels');
+assert(/aria-controls="tab-activity"/.test(adminDashboardHtml), 'admin tabs should reference tab panels');
 assert(/admin-dashboard\.js\?v=89/.test(adminDashboardHtml), 'admin dashboard should request the current live beta dashboard script');
 assert(/backend\.js\?v=23/.test(adminDashboardHtml), 'admin dashboard should load the current backend adapter before app scripts');
 

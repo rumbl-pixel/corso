@@ -37,11 +37,10 @@
 
       <!-- TABS -->
       <div class="tabs" role="tablist" aria-label="Admin dashboard sections">
-        <button class="tab-btn active" data-tab="scanner" role="tab" aria-selected="true" aria-controls="tab-scanner">&#128247; Scanner</button>
+        <button class="tab-btn active" data-tab="activity" role="tab" aria-selected="true" aria-controls="tab-activity">&#128247; Activity</button>
         <button class="tab-btn" data-tab="students" role="tab" aria-selected="false" aria-controls="tab-students">&#128101; Students</button>
         <button class="tab-btn" data-tab="coach-hub" role="tab" aria-selected="false" aria-controls="tab-coach-hub">&#127947; Coach Hub</button>
         <button class="tab-btn" data-tab="leaderboard" role="tab" aria-selected="false" aria-controls="tab-leaderboard">&#127942; Leaderboard</button>
-        <button class="tab-btn" data-tab="activity" role="tab" aria-selected="false" aria-controls="tab-activity">&#9201; Activity</button>
         <button class="tab-btn" data-tab="events" role="tab" aria-selected="false" aria-controls="tab-events">&#128197; Events</button>
         <button class="tab-btn" data-tab="awards" role="tab" aria-selected="false" aria-controls="tab-awards">&#127885; Awards</button>
         <button class="tab-btn" data-tab="school-admin" role="tab" aria-selected="false" aria-controls="tab-school-admin">&#9881; School Admin</button>
@@ -52,8 +51,8 @@
         <span>Do not enter real student data yet. Use sample names only until Supabase Auth, RLS, school approval, and live privacy checks are complete.</span>
       </div>
 
-      <!-- SCANNER TAB -->
-      <div class="tab-panel active" id="tab-scanner">
+      <!-- ACTIVITY TAB -->
+      <div class="tab-panel active" id="tab-activity">
         <div class="card">
           <h2>&#128247; Run Session Scanner</h2>
           <p style="color:#555;font-size:0.9rem;">Scan a student barcode or type an ID and press Enter. Bluetooth scanners work as keyboard input and auto-submit.</p>
@@ -143,6 +142,16 @@
           </div>
           <p id="timed-state" style="margin-top:0.75rem;font-size:0.88rem;color:#555;">No timed run active.</p>
           <div id="timed-results" style="margin-top:0.75rem;"></div>
+        </div>
+        <div class="card">
+          <h2>&#9201; Log Activity Minutes</h2>
+          <p style="color:#555;font-size:0.9rem;">Record distance-learning or off-track activity. 20 minutes of heart-pumping activity = 1 km credit.</p>
+          <label>Student <select id="activity-student"></select></label>
+          <label>Activity type <input type="text" id="activity-type" placeholder="e.g. Lunch run, home activity" /></label>
+          <label>Minutes <input type="number" id="activity-minutes" min="1" placeholder="20" /></label>
+          <button id="log-activity-btn" type="button">Log activity</button>
+          <pre id="activity-result" hidden></pre>
+          <div id="activity-log-list" style="margin-top:1rem;"></div>
         </div>
       </div>
 
@@ -602,21 +611,6 @@
           </div>
           <div id="leaderboard-table"></div>
         </div>
-      </div>
-
-      <!-- ACTIVITY TAB -->
-      <div class="tab-panel" id="tab-activity">
-        <div class="card">
-          <h2>&#9201; Log Activity Minutes</h2>
-          <p style="color:#555;font-size:0.9rem;">Record distance-learning or off-track activity. 20 minutes of heart-pumping activity = 1 km credit.</p>
-          <label>Student <select id="activity-student"></select></label>
-          <label>Activity type <input type="text" id="activity-type" placeholder="e.g. Lunch run, home activity" /></label>
-          <label>Minutes <input type="number" id="activity-minutes" min="1" placeholder="20" /></label>
-          <button id="log-activity-btn" type="button">Log activity</button>
-          <pre id="activity-result" hidden></pre>
-          <div id="activity-log-list" style="margin-top:1rem;"></div>
-        </div>
-
       </div>
 
       <!-- EVENTS TAB -->

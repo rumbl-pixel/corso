@@ -1685,7 +1685,7 @@
     document.body.appendChild(resourceMiniCoachWidgetEl);
   }
   var activeTopTab=document.querySelector('.tab-btn.active');
-  setProgrammingCoachWidgetVisibility(activeTopTab&&activeTopTab.dataset.tab==='coach-hub'?activeCoachHubSection:(activeTopTab?activeTopTab.dataset.tab:'scanner'));
+  setProgrammingCoachWidgetVisibility(activeTopTab&&activeTopTab.dataset.tab==='coach-hub'?activeCoachHubSection:(activeTopTab?activeTopTab.dataset.tab:'activity'));
   var activeResourceSessionId='run-club-session';
   var WA_HPE_CURRICULUM_URL='https://k10outline.scsa.wa.edu.au/home/wa-curriculum/learning-areas/health-and-physical-education/p-10-hpe-curriculum/p-10-hpe-curriculum';
   var ASC_PLAYING_FOR_LIFE_URL='https://www.ausport.gov.au/p4l';
