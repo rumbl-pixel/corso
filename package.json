@@ -6,7 +6,7 @@
     "build": "node scripts/build.js",
     "build:cloudflare": "node scripts/build-cloudflare-pages.js",
     "deploy": "node scripts/build.js --deploy",
-    "test": "node tests/portal-smoke.test.js && node tests/goals-baseline.test.js && node tests/backend-live-style.test.js && node tests/scanning-live-mode.test.js && node tests/supabase-staging.test.js && node tests/sync-workflow.test.js",
+    "test": "node tests/portal-smoke.test.js && node tests/goals-baseline.test.js && node tests/backend-live-style.test.js && node tests/scanning-live-mode.test.js && node tests/supabase-staging.test.js && node tests/sync-workflow.test.js && node tests/dashboard-nav-cleanup.test.js",
     "test:backend-live-style": "node tests/backend-live-style.test.js",
     "test:supabase-staging": "node tests/supabase-staging.test.js",
     "cloudflare:check": "npm test && node --check admin-dashboard.js && node --check theme.js && npm run build:cloudflare",
