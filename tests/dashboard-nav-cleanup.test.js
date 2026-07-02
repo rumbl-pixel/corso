@@ -69,4 +69,12 @@ const sportsPanelMatch = dashboardHtmlV3.match(/<div class="tab-panel coach-hub-
 assert(sportsPanelMatch, 'admin-dashboard.html should have a tab-sports panel followed by the Training tab');
 assert(/id="start-timed-btn"/.test(sportsPanelMatch[1]), 'Timed Lap Events should now be inside the Sports tile panel');
 
+// --- Task 6: Coach Hub tile contrast fix ---
+const shadcnCss = read('theme-shadcn.css');
+assert(/html\[data-skin="shadcn"\] \.coach-hub-tile:not\(\.active\) \{[^}]*background: var\(--card\)/.test(shadcnCss), 'theme-shadcn.css should give non-active Coach Hub tiles a flat --card background');
+
+// --- Task 7: dark-mode active-tab color ---
+const shadcnCssV2 = read('theme-shadcn.css');
+assert(/html\[data-skin="shadcn"\] \.tab-btn\.active \{[^}]*background: var\(--primary\)/.test(shadcnCssV2), 'theme-shadcn.css should route .tab-btn.active through var(--primary) instead of a hardcoded hex');
+
 console.log('dashboard nav cleanup checks passed');
