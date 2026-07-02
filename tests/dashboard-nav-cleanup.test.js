@@ -55,4 +55,10 @@ assert(/setProgrammingCoachWidgetVisibility\(activeTopTab&&activeTopTab\.dataset
 const indexHtmlV2 = read('index.html');
 assert(!/tab=scanner/.test(indexHtmlV2), 'index.html should no longer link to the old scanner tab id');
 
+// --- Task 4: WA School Holidays year filter ---
+const dashboardJs3 = read('admin-dashboard.js');
+assert(/WA_SCHOOL_HOLIDAYS\.filter\(function\(item\)\{return dateFromIso\(item\.start\)\.getFullYear\(\)===displayYear;\}\)/.test(dashboardJs3), 'renderWaHolidaySummary should filter WA_SCHOOL_HOLIDAYS down to the calendar\'s displayed year');
+const calendarNavCallSites = (dashboardJs3.match(/renderEventCalendar\(\);renderWaHolidaySummary\(\);/g) || []).length;
+assert(calendarNavCallSites === 4, 'all 4 places that change eventCalendarDate (prev/next/today/create-event) should also re-render the holiday list, found ' + calendarNavCallSites);
+
 console.log('dashboard nav cleanup checks passed');
