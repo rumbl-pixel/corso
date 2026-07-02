@@ -349,6 +349,12 @@
           <div class="athletics-mode-shell" id="athletics-mode-shell">
             <p class="sports-mode-note">When off, student goals stay focused on Laps, Lap Time, and Distance. When on, the command centre opens Athletics and Cross Country tools without adding anything to Run Club lap totals.</p>
             <div id="athletics-mode-panel" class="athletics-mode-panel" hidden>
+              <div id="athletics-command-centre" class="athletics-command-centre">
+                <div id="athletics-consent-summary" class="athletics-consent-summary"></div>
+                <div id="athletics-helper-cards" class="athletics-helper-cards" aria-label="Interschool athletics planning summary"></div>
+                <div id="athletics-category-controls" class="athletics-category-controls" aria-label="Interschool athletics event categories"></div>
+                <div id="interschool-athletics-events" class="athletics-event-list"></div>
+              </div>
               <div class="sports-workflow-strip" aria-label="Sports workflow">
                 <span><strong>1</strong> Confirm consent</span>
                 <span><strong>2</strong> Pick event teams</span>
@@ -446,6 +452,23 @@
                   <option value="Intermediate">Intermediate</option>
                   <option value="Senior">Senior</option>
                 </select>
+              </label>
+              <label>Year
+                <select id="athletics-team-year-filter">
+                  <option value="">All years</option>
+                </select>
+              </label>
+              <label>Division
+                <select id="athletics-team-division-filter">
+                  <option value="">All divisions</option>
+                  <option value="Junior">Junior</option>
+                  <option value="Intermediate">Intermediate</option>
+                  <option value="Senior">Senior</option>
+                </select>
+              </label>
+              <label class="checkbox-row athletics-pending-toggle">
+                <input type="checkbox" id="athletics-team-show-pending" />
+                <span>Show pending consent</span>
               </label>
               <label>Search students
                 <input type="search" id="athletics-team-search" placeholder="Search name, class, year, house..." autocomplete="off" />
