@@ -3894,7 +3894,9 @@
     }else if(nextBreak){
       waHolidayNextEl.textContent='Next WA school break starts '+formatShortDate(nextBreak.start)+' and runs for '+daysInclusive(nextBreak.start,nextBreak.end)+' days.';
     }
-    waHolidayListEl.innerHTML=WA_SCHOOL_HOLIDAYS.map(function(item){
+    var displayYear=eventCalendarDate.getFullYear();
+    var yearHolidays=WA_SCHOOL_HOLIDAYS.filter(function(item){return dateFromIso(item.start).getFullYear()===displayYear;});
+    waHolidayListEl.innerHTML=yearHolidays.map(function(item){
       var active=today>=item.start&&today<=item.end;
       return '<div class="'+(active?'wa-holiday-item wa-holiday-item--active':'wa-holiday-item')+'"><strong>'+escapeHtml(item.name)+'</strong><span>'+escapeHtml(formatShortDate(item.start))+' - '+escapeHtml(formatShortDate(item.end))+' · '+daysInclusive(item.start,item.end)+' days</span></div>';
     }).join('');
@@ -3952,13 +3954,13 @@
   renderEventCalendar();
 
   if(eventCalendarPrevEl){
-    eventCalendarPrevEl.addEventListener('click',function(){eventCalendarDate.setMonth(eventCalendarDate.getMonth()-1);renderEventCalendar();});
+    eventCalendarPrevEl.addEventListener('click',function(){eventCalendarDate.setMonth(eventCalendarDate.getMonth()-1);renderEventCalendar();renderWaHolidaySummary();});
   }
   if(eventCalendarNextEl){
-    eventCalendarNextEl.addEventListener('click',function(){eventCalendarDate.setMonth(eventCalendarDate.getMonth()+1);renderEventCalendar();});
+    eventCalendarNextEl.addEventListener('click',function(){eventCalendarDate.setMonth(eventCalendarDate.getMonth()+1);renderEventCalendar();renderWaHolidaySummary();});
   }
   if(eventCalendarTodayEl){
-    eventCalendarTodayEl.addEventListener('click',function(){eventCalendarDate=new Date();eventCalendarDate.setDate(1);renderEventCalendar();});
+    eventCalendarTodayEl.addEventListener('click',function(){eventCalendarDate=new Date();eventCalendarDate.setDate(1);renderEventCalendar();renderWaHolidaySummary();});
   }
 
   document.getElementById('create-event-btn').addEventListener('click',function(){
@@ -3973,7 +3975,7 @@
     renderEvents();
     eventCalendarDate=dateFromIso(date);
     eventCalendarDate.setDate(1);
-    renderEventCalendar();
+    renderEventCalendar();renderWaHolidaySummary();
     document.getElementById('event-name').value='';
   });
 
