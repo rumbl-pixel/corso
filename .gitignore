@@ -7,5 +7,7 @@ dist-pages/
 # Superpowers brainstorming visual companion (local scratch, not for commit)
 .superpowers/
 
-# Personal Obsidian-sync hook scripts (hardcoded to this machine's vault path)
-.claude/hooks/
+# Local dev tooling config and working notes (not part of the shipped product)
+.claude/
+docs/superpowers/
+CLAUDE_HANDOVER.md
