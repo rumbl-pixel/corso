@@ -61,4 +61,12 @@ assert(/WA_SCHOOL_HOLIDAYS\.filter\(function\(item\)\{return dateFromIso\(item\.
 const calendarNavCallSites = (dashboardJs3.match(/renderEventCalendar\(\);renderWaHolidaySummary\(\);/g) || []).length;
 assert(calendarNavCallSites === 4, 'all 4 places that change eventCalendarDate (prev/next/today/create-event) should also re-render the holiday list, found ' + calendarNavCallSites);
 
+// --- Task 5: Timed Lap Events relocation ---
+const dashboardHtmlV3 = read('admin-dashboard.html');
+const activityPanelV2 = dashboardHtmlV3.match(/<div class="tab-panel active" id="tab-activity">([\s\S]*?)<!-- STUDENTS TAB -->/)[1];
+assert(!/id="start-timed-btn"/.test(activityPanelV2), 'Timed Lap Events should no longer be inside the Activity panel');
+const sportsPanelMatch = dashboardHtmlV3.match(/<div class="tab-panel coach-hub-section" id="tab-sports">([\s\S]*?)<!-- TRAINING TAB -->/);
+assert(sportsPanelMatch, 'admin-dashboard.html should have a tab-sports panel followed by the Training tab');
+assert(/id="start-timed-btn"/.test(sportsPanelMatch[1]), 'Timed Lap Events should now be inside the Sports tile panel');
+
 console.log('dashboard nav cleanup checks passed');

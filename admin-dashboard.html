@@ -128,21 +128,6 @@
           <p style="color:#555;font-size:0.9rem;">Review kiosk scan batches that were captured while offline, then merge them into the main records.</p>
           <div id="offline-queue-list"></div>
         </div>
-
-        <!-- TIMED LAP / TIMED MILE -->
-        <div class="card">
-          <h2>&#9201; Timed Lap Events</h2>
-          <p style="color:#555;font-size:0.9rem;">Record split times and best times. Use for timed mile or timed lap events.</p>
-          <label>Student
-            <select id="timed-student"></select>
-          </label>
-          <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-            <button id="start-timed-btn" type="button">Start timer</button>
-            <button id="stop-timed-btn" type="button" class="secondary">Stop &amp; save</button>
-          </div>
-          <p id="timed-state" style="margin-top:0.75rem;font-size:0.88rem;color:#555;">No timed run active.</p>
-          <div id="timed-results" style="margin-top:0.75rem;"></div>
-        </div>
         <div class="card">
           <h2>&#9201; Log Activity Minutes</h2>
           <p style="color:#555;font-size:0.9rem;">Record distance-learning or off-track activity. 20 minutes of heart-pumping activity = 1 km credit.</p>
@@ -429,6 +414,20 @@
               </section>
             </div>
           </div>
+        </div>
+
+        <div class="card">
+          <h2>&#9201; Timed Lap Events</h2>
+          <p style="color:#555;font-size:0.9rem;">Record split times and best times. Use for timed mile or timed lap events.</p>
+          <label>Student
+            <select id="timed-student"></select>
+          </label>
+          <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+            <button id="start-timed-btn" type="button">Start timer</button>
+            <button id="stop-timed-btn" type="button" class="secondary">Stop &amp; save</button>
+          </div>
+          <p id="timed-state" style="margin-top:0.75rem;font-size:0.88rem;color:#555;">No timed run active.</p>
+          <div id="timed-results" style="margin-top:0.75rem;"></div>
         </div>
 
         <div class="student-editor-overlay" id="athletics-event-modal" hidden>
