@@ -370,6 +370,12 @@ assert(/toggle-athletics-team-overview-btn/.test(adminDashboardHtml), 'admin ath
 assert(/print-athletics-team-list-btn/.test(adminDashboardHtml), 'admin Sports tab should print interschool team lists');
 assert(/export-athletics-team-list-btn/.test(adminDashboardHtml), 'admin Sports tab should export interschool team lists');
 assert(/athletics-team-overview/.test(adminDashboardHtml), 'admin athletics mode should include a team list overview');
+assert(/athletics-command-centre/.test(adminDashboardHtml), 'admin athletics mode should render a command centre panel');
+assert(/athletics-helper-cards/.test(adminDashboardHtml), 'admin athletics command centre should include helper cards');
+assert(/athletics-category-controls/.test(adminDashboardHtml), 'admin athletics command centre should include category slider controls');
+assert(/athletics-team-year-filter/.test(adminDashboardHtml), 'admin athletics team modal should filter by year');
+assert(/athletics-team-division-filter/.test(adminDashboardHtml), 'admin athletics team modal should filter by division');
+assert(/athletics-team-show-pending/.test(adminDashboardHtml), 'admin athletics team modal should optionally show pending consent students');
 assert(/cross-country-visible-toggle/.test(adminDashboardHtml), 'admin Cross Country courses should have a show/hide pill toggle');
 assert(/cross-country-course-panel/.test(adminDashboardHtml), 'admin Cross Country courses should hide seasonal course controls behind the toggle');
 assert(/cross-country-course-form/.test(adminDashboardHtml), 'admin dashboard should include a Cross Country course form');
@@ -708,6 +714,11 @@ assert(!/studentOptedIntoAthletics/.test(adminDashboardJs), 'admin athletics eve
 assert(/setStudentAthleticsConsent/.test(adminDashboardJs), 'admin athletics mode should save consent from the main checklist');
 assert(/athletics-team-student-check/.test(adminDashboardJs), 'admin athletics team selector should use checkbox selection');
 assert(!/interschool-team\.html\?event=/.test(adminDashboardJs), 'admin athletics event pills should not navigate away from the dashboard');
+assert(/ATHLETICS_CATEGORY_STATE_KEY/.test(adminDashboardJs), 'admin dashboard should persist athletics category open state');
+assert(/renderAthleticsHelperCards/.test(adminDashboardJs), 'admin dashboard should render athletics helper cards');
+assert(/toggleAthleticsCategory/.test(adminDashboardJs), 'admin dashboard should toggle athletics event categories');
+assert(/studentMatchesAthleticsDivision/.test(adminDashboardJs), 'admin athletics team selector should filter students by division');
+assert(/athletics-team-student-option--disabled/.test(adminDashboardJs), 'admin athletics team selector should disable pending consent rows');
 assert(/CROSS_COUNTRY_COURSES_KEY/.test(adminDashboardJs), 'admin dashboard should store Cross Country courses');
 assert(/CROSS_COUNTRY_VISIBLE_KEY/.test(adminDashboardJs), 'admin dashboard should store Cross Country seasonal visibility');
 assert(/crossCountryCourses/.test(adminDashboardJs), 'admin dashboard should read saved Cross Country courses');
@@ -1026,6 +1037,9 @@ assert(/\.compliance-checklist-item/.test(styles), 'Compliance checklist rows sh
 assert(/\.parent-notice-preview/.test(styles), 'Parent notice preview should have readable styling');
 assert(/\.breach-log-item/.test(styles), 'Breach log entries should have readable styling');
 assert(/\.vendor-posture-status--review/.test(styles), 'Vendor compliance posture review status should have readable styling');
+assert(/\.athletics-command-centre/.test(styles), 'styles should include athletics command centre layout');
+assert(/\.athletics-category-toggle/.test(styles), 'styles should include category slider controls');
+assert(/\.athletics-helper-card/.test(styles), 'styles should include helper card styles');
 const designMd = read('DESIGN.md');
 assert(/The Track Ledger/.test(designMd), 'DESIGN.md should define the Track Ledger design direction');
 assert(/data-skin="shadcn"/.test(designMd) || /shadcn/i.test(designMd), 'DESIGN.md should document the shadcn token system');
