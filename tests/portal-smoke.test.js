@@ -1027,8 +1027,9 @@ assert(/\.parent-notice-preview/.test(styles), 'Parent notice preview should hav
 assert(/\.breach-log-item/.test(styles), 'Breach log entries should have readable styling');
 assert(/\.vendor-posture-status--review/.test(styles), 'Vendor compliance posture review status should have readable styling');
 const designMd = read('DESIGN.md');
-assert(/Obsidian Glass/.test(designMd), 'DESIGN.md should define the obsidian glass design direction');
-assert(/navy/i.test(designMd) && /white trim/i.test(designMd), 'DESIGN.md should capture navy glass and white trim guidance');
+assert(/The Track Ledger/.test(designMd), 'DESIGN.md should define the Track Ledger design direction');
+assert(/data-skin="shadcn"/.test(designMd) || /shadcn/i.test(designMd), 'DESIGN.md should document the shadcn token system');
+assert(/Obsidian Glass/.test(designMd), 'DESIGN.md should name the retired Obsidian Glass direction as an anti-reference');
 assert(/--obsidian-navy:\s*#071426/.test(styles), 'site theme should expose the obsidian navy token');
 assert(/--glass-surface:/.test(styles), 'site theme should expose glass surface tokens');
 assert(/backdrop-filter:\s*blur/.test(styles), 'site surfaces should use glass blur where supported');
