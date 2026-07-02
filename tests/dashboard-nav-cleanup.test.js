@@ -27,4 +27,14 @@ assert(/href="admin\.html"/.test(indexNav), 'index.html dropdown should link Adm
 assert(/href="leaderboard\.html"/.test(indexNav), 'index.html dropdown should link Leaderboard');
 assert(!/href="admin-dashboard\.html\?tab=/.test(indexNav), 'index.html dropdown should not deep-link into admin-dashboard tabs (they require login)');
 
+// --- Task 2: admin-dashboard.html dropdown tab mirror ---
+const dashboardHtml = read('admin-dashboard.html');
+const dashboardNavMatch = dashboardHtml.match(/<nav class="main-nav"[^>]*>([\s\S]*?)<\/nav>/);
+assert(dashboardNavMatch, 'admin-dashboard.html should have a <nav class="main-nav"> block');
+assert(/id="nav-tab-mirror"/.test(dashboardNavMatch[1]), 'admin-dashboard.html dropdown should have a nav-tab-mirror container for the JS-mirrored tabs');
+
+const dashboardJs = read('admin-dashboard.js');
+assert(/navTabMirrorEl\.appendChild\(mirrorBtn\)/.test(dashboardJs), 'admin-dashboard.js should clone tab buttons into the nav-tab-mirror container');
+assert(/activateAdminTab\(tabBtn\.dataset\.tab\)/.test(dashboardJs), 'the dropdown mirror should reuse activateAdminTab rather than duplicating tab-switch logic');
+
 console.log('dashboard nav cleanup checks passed');

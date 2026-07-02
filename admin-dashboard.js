@@ -635,6 +635,23 @@
   if (requestedAdminTab) { activateAdminTab(requestedAdminTab); }
   applyThemeSettings();
 
+  // --- Dropdown tab mirror: reflect the live top tab bar into the nav dropdown,
+  // so a coach scrolled deep into the page doesn't need to scroll back to the top. ---
+  var navTabMirrorEl = document.getElementById('nav-tab-mirror');
+  if (navTabMirrorEl) {
+    tabBtns.forEach(function (tabBtn) {
+      var mirrorBtn = document.createElement('button');
+      mirrorBtn.type = 'button';
+      mirrorBtn.className = 'main-nav-tab-mirror';
+      mirrorBtn.textContent = tabBtn.textContent;
+      mirrorBtn.addEventListener('click', function () {
+        activateAdminTab(tabBtn.dataset.tab);
+        document.body.classList.remove('mobile-nav-open');
+      });
+      navTabMirrorEl.appendChild(mirrorBtn);
+    });
+  }
+
   // === SCANNER ===
   var scanInput=document.getElementById('scan-input');
   var scanBtn=document.getElementById('scan-btn');
