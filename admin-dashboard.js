@@ -635,6 +635,23 @@
   if (requestedAdminTab) { activateAdminTab(requestedAdminTab); }
   applyThemeSettings();
 
+  // --- Dropdown tab mirror: reflect the live top tab bar into the nav dropdown,
+  // so a coach scrolled deep into the page doesn't need to scroll back to the top. ---
+  var navTabMirrorEl = document.getElementById('nav-tab-mirror');
+  if (navTabMirrorEl) {
+    tabBtns.forEach(function (tabBtn) {
+      var mirrorBtn = document.createElement('button');
+      mirrorBtn.type = 'button';
+      mirrorBtn.className = 'main-nav-tab-mirror';
+      mirrorBtn.textContent = tabBtn.textContent;
+      mirrorBtn.addEventListener('click', function () {
+        activateAdminTab(tabBtn.dataset.tab);
+        document.body.classList.remove('mobile-nav-open');
+      });
+      navTabMirrorEl.appendChild(mirrorBtn);
+    });
+  }
+
   // === SCANNER ===
   var scanInput=document.getElementById('scan-input');
   var scanBtn=document.getElementById('scan-btn');
@@ -1668,7 +1685,7 @@
     document.body.appendChild(resourceMiniCoachWidgetEl);
   }
   var activeTopTab=document.querySelector('.tab-btn.active');
-  setProgrammingCoachWidgetVisibility(activeTopTab&&activeTopTab.dataset.tab==='coach-hub'?activeCoachHubSection:(activeTopTab?activeTopTab.dataset.tab:'scanner'));
+  setProgrammingCoachWidgetVisibility(activeTopTab&&activeTopTab.dataset.tab==='coach-hub'?activeCoachHubSection:(activeTopTab?activeTopTab.dataset.tab:'activity'));
   var activeResourceSessionId='run-club-session';
   var WA_HPE_CURRICULUM_URL='https://k10outline.scsa.wa.edu.au/home/wa-curriculum/learning-areas/health-and-physical-education/p-10-hpe-curriculum/p-10-hpe-curriculum';
   var ASC_PLAYING_FOR_LIFE_URL='https://www.ausport.gov.au/p4l';
@@ -3877,7 +3894,9 @@
     }else if(nextBreak){
       waHolidayNextEl.textContent='Next WA school break starts '+formatShortDate(nextBreak.start)+' and runs for '+daysInclusive(nextBreak.start,nextBreak.end)+' days.';
     }
-    waHolidayListEl.innerHTML=WA_SCHOOL_HOLIDAYS.map(function(item){
+    var displayYear=eventCalendarDate.getFullYear();
+    var yearHolidays=WA_SCHOOL_HOLIDAYS.filter(function(item){return dateFromIso(item.start).getFullYear()===displayYear;});
+    waHolidayListEl.innerHTML=yearHolidays.map(function(item){
       var active=today>=item.start&&today<=item.end;
       return '<div class="'+(active?'wa-holiday-item wa-holiday-item--active':'wa-holiday-item')+'"><strong>'+escapeHtml(item.name)+'</strong><span>'+escapeHtml(formatShortDate(item.start))+' - '+escapeHtml(formatShortDate(item.end))+' · '+daysInclusive(item.start,item.end)+' days</span></div>';
     }).join('');
@@ -3935,13 +3954,13 @@
   renderEventCalendar();
 
   if(eventCalendarPrevEl){
-    eventCalendarPrevEl.addEventListener('click',function(){eventCalendarDate.setMonth(eventCalendarDate.getMonth()-1);renderEventCalendar();});
+    eventCalendarPrevEl.addEventListener('click',function(){eventCalendarDate.setMonth(eventCalendarDate.getMonth()-1);renderEventCalendar();renderWaHolidaySummary();});
   }
   if(eventCalendarNextEl){
-    eventCalendarNextEl.addEventListener('click',function(){eventCalendarDate.setMonth(eventCalendarDate.getMonth()+1);renderEventCalendar();});
+    eventCalendarNextEl.addEventListener('click',function(){eventCalendarDate.setMonth(eventCalendarDate.getMonth()+1);renderEventCalendar();renderWaHolidaySummary();});
   }
   if(eventCalendarTodayEl){
-    eventCalendarTodayEl.addEventListener('click',function(){eventCalendarDate=new Date();eventCalendarDate.setDate(1);renderEventCalendar();});
+    eventCalendarTodayEl.addEventListener('click',function(){eventCalendarDate=new Date();eventCalendarDate.setDate(1);renderEventCalendar();renderWaHolidaySummary();});
   }
 
   document.getElementById('create-event-btn').addEventListener('click',function(){
@@ -3956,7 +3975,7 @@
     renderEvents();
     eventCalendarDate=dateFromIso(date);
     eventCalendarDate.setDate(1);
-    renderEventCalendar();
+    renderEventCalendar();renderWaHolidaySummary();
     document.getElementById('event-name').value='';
   });
 
