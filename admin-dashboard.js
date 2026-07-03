@@ -3069,6 +3069,18 @@
     return [student.name,student.id,student.year,student.cls,student.house,student.team,student.pseudonym].join(' ').toLowerCase();
   }
 
+  function divisionForStudentFilter(student){
+    var yearNumber=Number(String(student.year||'').match(/\d+/));
+    if(yearNumber>=5){return 'Senior';}
+    if(yearNumber>=3){return 'Intermediate';}
+    if(yearNumber>=1){return 'Junior';}
+    return '';
+  }
+
+  function studentMatchesAthleticsDivision(student,division){
+    return !division||divisionForStudentFilter(student)===division;
+  }
+
   function selectedAthleticsTeamIds(eventId){
     var event=currentAthleticsTeamEvent||athleticsGoalEventById(eventId);
     var division=event&&isBallGameEvent(event)?selectedDivisionForCurrentEvent():'';
@@ -3114,29 +3126,42 @@
     updateAthleticsTeamPendingSummary();
   }
 
+  function populateAthleticsTeamYearFilter(){
+    if(!athleticsTeamYearFilterEl){return;}
+    var selected=athleticsTeamYearFilterEl.value;
+    var years=Array.from(new Set(getStudents().map(function(student){return student.year;}).filter(Boolean))).sort();
+    athleticsTeamYearFilterEl.innerHTML='<option value="">All years</option>'+years.map(function(year){return '<option value="'+escapeAttr(year)+'">'+escapeHtml(year)+'</option>';}).join('');
+    if(selected&&years.indexOf(selected)!==-1){athleticsTeamYearFilterEl.value=selected;}
+  }
+
   function renderAthleticsTeamModal(){
     if(!currentAthleticsTeamEvent||!athleticsTeamStudentListEl){return;}
     var event=currentAthleticsTeamEvent;
     var q=(athleticsTeamSearchEl&&athleticsTeamSearchEl.value||'').toLowerCase().trim();
-    var division=selectedDivisionForCurrentEvent();
+    var year=athleticsTeamYearFilterEl&&athleticsTeamYearFilterEl.value||'';
+    var division=athleticsTeamDivisionFilterEl&&athleticsTeamDivisionFilterEl.value||'';
+    var showPending=!!(athleticsTeamShowPendingEl&&athleticsTeamShowPendingEl.checked);
     var selected=selectedAthleticsTeamIds(event.id);
     var selectedMap={};
     selected.forEach(function(id){selectedMap[id]=true;});
     var eligible=getStudents().filter(function(student){
-      return studentEligibleForAthleticsEvent(student,event,division);
+      var consent=String(student.consent_status||'pending').toLowerCase();
+      return consent==='granted'||(showPending&&consent==='pending');
     });
     var filtered=eligible.filter(function(student){
-      return !q||athleticsStudentSearchText(student).includes(q);
+      return (!q||athleticsStudentSearchText(student).includes(q))&&
+        (!year||student.year===year)&&
+        studentMatchesAthleticsDivision(student,division);
     }).sort(function(a,b){
       return String(a.year||'').localeCompare(String(b.year||''))||String(a.cls||'').localeCompare(String(b.cls||''))||String(a.name||'').localeCompare(String(b.name||''));
     });
+    var pendingShown=eligible.filter(function(student){return String(student.consent_status||'pending').toLowerCase()==='pending';}).length;
     if(athleticsTeamSummaryEl){
-      var approvedShown=filtered.filter(function(student){return consentStatusForStudent(student)==='granted';}).length;
       athleticsTeamSummaryEl.innerHTML=
         '<span>'+selected.length+' selected</span>'+
         '<span>'+eligible.length+' eligible</span>'+
-        '<span>'+filtered.length+' shown</span>'+
-        '<span>'+approvedShown+' consent approved</span>';
+        '<span>'+pendingShown+' pending shown</span>'+
+        '<span>'+filtered.length+' filtered</span>';
     }
     if(athleticsEventModalStatusEl){
       var selectedStudents=eligible.filter(function(student){return selectedMap[student.id];});
@@ -3157,15 +3182,16 @@
       return;
     }
     athleticsTeamStudentListEl.innerHTML=filtered.map(function(student){
-      var checked=selectedMap[student.id]?' checked':'';
-      var consentStatus=consentStatusForStudent(student);
+      var consent=String(student.consent_status||'pending').toLowerCase();
+      var disabled=consent!=='granted';
+      var checked=!disabled&&selectedMap[student.id]?' checked':'';
       var pb=studentPbForEvent(student.id,event.id);
-      var meta=[student.year,student.cls,divisionForStudent(student),student.house||student.team||'No house/team'].filter(Boolean).join(' · ');
-      return '<label class="athletics-team-student-option">'+
-        '<input type="checkbox" class="athletics-team-student-check" value="'+escapeAttr(student.id)+'" data-consent="'+escapeAttr(consentStatus)+'"'+checked+' />'+
-        '<span><strong>'+escapeHtml(student.name)+'</strong><small>'+escapeHtml(meta)+'</small></span>'+
+      var meta=[student.year,student.cls,divisionForStudentFilter(student),student.house||student.team||'No house/team'].filter(Boolean).join(' · ');
+      return '<label class="athletics-team-student-option '+(disabled?'athletics-team-student-option--disabled':'')+'">'+
+        '<input type="checkbox" class="athletics-team-student-check" value="'+escapeAttr(student.id)+'"'+checked+(disabled?' disabled':'')+' />'+
+        '<span><strong>'+escapeHtml(student.name)+'</strong><small>'+escapeHtml(meta)+(disabled?' · consent pending':'')+'</small></span>'+
         '<span class="athletics-team-row-meta">'+
-          '<em class="'+consentBadgeClass(consentStatus)+'">'+consentLabel(consentStatus)+'</em>'+
+          '<em class="'+consentBadgeClass(consent)+'">'+consentLabel(consent)+'</em>'+
           '<small>'+(pb?'PB '+escapeHtml(resultDisplay(pb)):'No PB yet')+'</small>'+
         '</span>'+
       '</label>';
@@ -3198,6 +3224,10 @@
     if(athleticsEventModalSubtitleEl){athleticsEventModalSubtitleEl.textContent=currentAthleticsTeamEvent.group+' · Eligible: '+currentAthleticsTeamEvent.years+' · Showing eligible students only.';}
     if(athleticsTeamSearchEl){athleticsTeamSearchEl.value='';}
     if(athleticsTeamResultEl){athleticsTeamResultEl.hidden=true;}
+    populateAthleticsTeamYearFilter();
+    if(athleticsTeamYearFilterEl){athleticsTeamYearFilterEl.value='';}
+    if(athleticsTeamDivisionFilterEl){athleticsTeamDivisionFilterEl.value='';}
+    if(athleticsTeamShowPendingEl){athleticsTeamShowPendingEl.checked=false;}
     renderAthleticsTeamModal();
     openAdminModalAt(athleticsEventModalEl,trigger);
     if(athleticsTeamSearchEl){athleticsTeamSearchEl.focus();}
@@ -3435,6 +3465,9 @@
   if(athleticsTeamSearchEl){
     athleticsTeamSearchEl.addEventListener('input',renderAthleticsTeamModal);
   }
+  if(athleticsTeamYearFilterEl){athleticsTeamYearFilterEl.addEventListener('change',renderAthleticsTeamModal);}
+  if(athleticsTeamDivisionFilterEl){athleticsTeamDivisionFilterEl.addEventListener('change',renderAthleticsTeamModal);}
+  if(athleticsTeamShowPendingEl){athleticsTeamShowPendingEl.addEventListener('change',renderAthleticsTeamModal);}
   if(selectVisibleAthletesBtn){selectVisibleAthletesBtn.addEventListener('click',function(){setVisibleAthleteChecks('select');});}
   if(selectApprovedAthletesBtn){selectApprovedAthletesBtn.addEventListener('click',function(){setVisibleAthleteChecks('approved');});}
   if(clearVisibleAthletesBtn){clearVisibleAthletesBtn.addEventListener('click',function(){setVisibleAthleteChecks('clear');});}
