@@ -280,7 +280,10 @@
   function resultMetaText(payload){
     if(!payload||typeof payload!=='object'){return '';}
     return Object.keys(payload).filter(function(key){
-      return ['success','message','error'].indexOf(key)===-1;
+      if(['success','message','error'].indexOf(key)!==-1){return false;}
+      var value=payload[key];
+      // Skip empty values so meta lines never render noise like "milestone: null".
+      return value!==null&&value!==undefined&&value!=='';
     }).map(function(key){
       var value=payload[key];
       if(value&&typeof value==='object'){
