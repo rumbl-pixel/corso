@@ -38,6 +38,7 @@
   var ATHLETICS_RESULTS_KEY = 'rc_athletics_results';
   var ATHLETICS_TEAM_SELECTIONS_KEY = 'rc_athletics_team_selections';
   var ATHLETICS_CONSENT_SELECTIONS_KEY = 'rc_athletics_consent_selections';
+  var ATHLETICS_CATEGORY_STATE_KEY = 'rc_athletics_category_state';
   var CROSS_COUNTRY_VISIBLE_KEY = 'rc_cross_country_visible';
   var BUILDER_WORKOUTS_KEY = 'rc_builder_workouts';
   var RESOURCE_SESSION_PLANS_KEY = 'rc_resource_session_plans';
@@ -2759,6 +2760,11 @@
   var sportsPbSummaryEl=document.getElementById('sports-pb-summary');
   var sportsHouseSummaryEl=document.getElementById('sports-house-summary');
   var sportsXcSummaryEl=document.getElementById('sports-xc-summary');
+  var athleticsHelperCardsEl=document.getElementById('athletics-helper-cards');
+  var athleticsCategoryControlsEl=document.getElementById('athletics-category-controls');
+  var athleticsTeamYearFilterEl=document.getElementById('athletics-team-year-filter');
+  var athleticsTeamDivisionFilterEl=document.getElementById('athletics-team-division-filter');
+  var athleticsTeamShowPendingEl=document.getElementById('athletics-team-show-pending');
   var currentAthleticsTeamEvent=null;
   var crossCountryCourseFormEl=document.getElementById('cross-country-course-form');
   var crossCountryCourseNameEl=document.getElementById('cross-country-course-name');
@@ -2768,6 +2774,65 @@
   var crossCountryResultEl=document.getElementById('cross-country-result');
   var crossCountryCourseListEl=document.getElementById('cross-country-course-list');
 
+  function athleticsCategoryState(){
+    var state=load(ATHLETICS_CATEGORY_STATE_KEY,null);
+    if(state&&typeof state==='object'&&!Array.isArray(state)){return state;}
+    return {'Sprints':true,'Middle Distance':true};
+  }
+
+  function saveAthleticsCategoryState(state){
+    save(ATHLETICS_CATEGORY_STATE_KEY,state);
+  }
+
+  function toggleAthleticsCategory(group){
+    var state=athleticsCategoryState();
+    state[group]=!state[group];
+    saveAthleticsCategoryState(state);
+    renderInterschoolAthleticsEvents();
+  }
+
+  function readyTargetForAthleticsEvent(event){
+    var group=String(event.group||event.category||'').toLowerCase();
+    if(group.indexOf('relay')!==-1||group.indexOf('ball')!==-1){return 4;}
+    return 1;
+  }
+
+  function selectedAthleticsCount(eventId){
+    return selectedAthleticsTeamIds(eventId).length;
+  }
+
+  function athleticsEventStatus(event,eventId){
+    var count=selectedAthleticsCount(eventId);
+    var target=readyTargetForAthleticsEvent(event);
+    if(count>=target){return 'ready';}
+    if(count>0){return 'partial';}
+    return 'empty';
+  }
+
+  function renderAthleticsHelperCards(){
+    if(!athleticsHelperCardsEl){return;}
+    var students=getStudents();
+    var pending=students.filter(function(student){return String(student.consent_status||'pending').toLowerCase()==='pending';}).length;
+    var declined=students.filter(function(student){return String(student.consent_status||'pending').toLowerCase()==='declined';}).length;
+    var events=window.RunClubGoals.INTERSCHOOL_ATHLETICS_EVENTS||[];
+    var empty=0;
+    var ready=0;
+    var studentEventCounts={};
+    events.forEach(function(event){
+      var eventId=athleticsEventIdForName(event.name);
+      var selected=selectedAthleticsTeamIds(eventId);
+      if(!selected.length){empty+=1;}
+      if(selected.length>=readyTargetForAthleticsEvent(event)){ready+=1;}
+      selected.forEach(function(studentId){studentEventCounts[studentId]=(studentEventCounts[studentId]||0)+1;});
+    });
+    var multi=Object.keys(studentEventCounts).filter(function(studentId){return studentEventCounts[studentId]>=2;}).length;
+    athleticsHelperCardsEl.innerHTML=
+      '<article class="athletics-helper-card"><span>Consent Follow-Up</span><strong>'+pending+' pending / '+declined+' declined</strong><small>Resolve before team sheets go home.</small></article>'+
+      '<article class="athletics-helper-card"><span>Empty Events</span><strong>'+empty+'</strong><small>Events needing athlete selection.</small></article>'+
+      '<article class="athletics-helper-card"><span>Multi-Event Athletes</span><strong>'+multi+'</strong><small>Check workload and clashes.</small></article>'+
+      '<article class="athletics-helper-card"><span>Team Ready</span><strong>'+ready+' / '+events.length+'</strong><small>Based on simple default team targets.</small></article>';
+  }
+
   function renderInterschoolAthleticsEvents(){
     if(!interschoolAthleticsEventsEl){return;}
     var events=window.RunClubGoals.INTERSCHOOL_ATHLETICS_EVENTS||[];
@@ -2776,16 +2841,32 @@
       if(!groups[event.group]){groups[event.group]=[];}
       groups[event.group].push(event);
     });
-    interschoolAthleticsEventsEl.innerHTML=Object.keys(groups).map(function(group){
+    var state=athleticsCategoryState();
+    var groupNames=Object.keys(groups);
+    if(athleticsCategoryControlsEl){
+      athleticsCategoryControlsEl.innerHTML=groupNames.map(function(group){
+        var selectedTotal=groups[group].reduce(function(total,event){return total+selectedAthleticsCount(athleticsEventIdForName(event.name));},0);
+        var expanded=state[group]!==false;
+        return '<button type="button" class="athletics-category-toggle '+(expanded?'is-active':'')+'" aria-expanded="'+(expanded?'true':'false')+'" data-athletics-group="'+escapeAttr(group)+'"><span>'+escapeHtml(group)+'</span><small>'+groups[group].length+' events · '+selectedTotal+' selected</small></button>';
+      }).join('');
+      Array.prototype.forEach.call(athleticsCategoryControlsEl.querySelectorAll('[data-athletics-group]'),function(btn){
+        btn.addEventListener('click',function(){toggleAthleticsCategory(btn.dataset.athleticsGroup);});
+      });
+    }
+    interschoolAthleticsEventsEl.innerHTML=groupNames.map(function(group){
+      var expanded=state[group]!==false;
+      if(!expanded){return '';}
       return '<div class="athletics-event-group"><strong>'+escapeHtml(group)+'</strong><div>'+groups[group].map(function(event){
         var eventId=athleticsEventIdForName(event.name);
-        var selected=athleticsSelectedCountForEvent(eventId,event);
-        return '<button type="button" class="athletics-event-chip" data-athletics-event="'+escapeAttr(eventId)+'">'+escapeHtml(event.name)+' <small>'+escapeHtml(event.years)+' · '+selected+' selected</small></button>';
+        var selected=selectedAthleticsCount(eventId);
+        var status=athleticsEventStatus(event,eventId);
+        return '<button type="button" class="athletics-event-chip athletics-event-chip--'+escapeAttr(status)+'" data-athletics-event="'+escapeAttr(eventId)+'">'+escapeHtml(event.name)+' <small>'+escapeHtml(event.years)+' · '+selected+' selected</small></button>';
       }).join('')+'</div></div>';
     }).join('');
     Array.prototype.forEach.call(interschoolAthleticsEventsEl.querySelectorAll('[data-athletics-event]'),function(btn){
-      btn.addEventListener('click',function(e){openAthleticsTeamModal(btn.dataset.athleticsEvent,e.currentTarget);});
+      btn.addEventListener('click',function(){openAthleticsTeamModal(btn.dataset.athleticsEvent);});
     });
+    renderAthleticsHelperCards();
   }
 
   function athleticsEventIdForName(name){
