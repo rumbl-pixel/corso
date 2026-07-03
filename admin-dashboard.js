@@ -3728,7 +3728,7 @@
       result_number:numeric,
       attempts:attempts,
       place:athleticsResultPlaceEl.value,
-      points:housePointsForPlace(athleticsResultPlaceEl.value),
+      points:carnivalPointsForPlace(athleticsResultPlaceEl.value),
       date:new Date().toISOString().slice(0,10),
       created_at:new Date().toISOString(),
       created_by:session.email
@@ -3762,6 +3762,7 @@
       renderHousePoints();
       renderAthleticsTeamOverview();
       refreshSportsCommandSummary();
+      renderCarnivalDay();
     });
   }
 
@@ -3809,6 +3810,192 @@
     renderPBTracking();
     renderAgeChampionScoring();
     renderHousePoints();
+  }
+
+  // === CARNIVAL DAY ===
+  // Local-first carnival leg (CarnivalHQ-style): one active carnival, program
+  // running order, live faction scoreboard scoped to results dated on carnival
+  // day, cross country first-four team scoring, printable program.
+  // ponytail: single active carnival, no archive — history lives in the dated
+  // results; add a carnival log if a school asks for one.
+  var CARNIVAL_KEY='rc_carnival';
+  var SWIMMING_EVENT_OPTIONS=[
+    // Skeleton only: data for the future swimming carnival leg. 50m strokes per
+    // division plus a relay, mirroring common AU primary swimming programs.
+    {id:'swim-junior-50-free',name:'Junior 50m Freestyle',category:'swimming',measure:'time',division:'Junior'},
+    {id:'swim-intermediate-50-free',name:'Intermediate 50m Freestyle',category:'swimming',measure:'time',division:'Intermediate'},
+    {id:'swim-senior-50-free',name:'Senior 50m Freestyle',category:'swimming',measure:'time',division:'Senior'},
+    {id:'swim-senior-50-back',name:'Senior 50m Backstroke',category:'swimming',measure:'time',division:'Senior'},
+    {id:'swim-senior-50-breast',name:'Senior 50m Breaststroke',category:'swimming',measure:'time',division:'Senior'},
+    {id:'swim-freestyle-relay',name:'4x25m Freestyle Relay',category:'swimming',measure:'time'}
+  ];
+  var carnivalCreateFormEl=document.getElementById('carnival-create-form');
+  var carnivalNameEl=document.getElementById('carnival-name-input');
+  var carnivalDateEl=document.getElementById('carnival-date-input');
+  var carnivalTypeEl=document.getElementById('carnival-type-select');
+  var carnivalPointsEl=document.getElementById('carnival-points-input');
+  var carnivalEventPickerEl=document.getElementById('carnival-event-picker');
+  var carnivalActivePanelEl=document.getElementById('carnival-active-panel');
+  var carnivalTitleEl=document.getElementById('carnival-active-title');
+  var carnivalMetaEl=document.getElementById('carnival-active-meta');
+  var carnivalProgramListEl=document.getElementById('carnival-program-list');
+  var carnivalScoreboardEl=document.getElementById('carnival-scoreboard');
+  var carnivalXcWrapEl=document.getElementById('carnival-xc-wrap');
+  var carnivalXcScoresEl=document.getElementById('carnival-xc-scores');
+  var carnivalPrintBtn=document.getElementById('carnival-print-btn');
+  var carnivalEndBtn=document.getElementById('carnival-end-btn');
+  var carnivalOutputEl=document.getElementById('carnival-output');
+
+  function activeCarnival(){
+    var carnival=load(CARNIVAL_KEY,null);
+    return carnival&&typeof carnival==='object'&&carnival.date?carnival:null;
+  }
+
+  function parsePointsScheme(raw){
+    var list=String(raw||'').split(',').map(function(part){return Number(part.trim());}).filter(function(n){return isFinite(n)&&n>=0;});
+    return list.length?list:null;
+  }
+
+  function carnivalPointsForPlace(place){
+    // Single scoring entry point: an active carnival's custom scheme wins on
+    // carnival day; otherwise the school default applies.
+    var carnival=activeCarnival();
+    var p=Number(place);
+    if(carnival&&carnival.points_scheme&&carnival.points_scheme.length&&carnival.date===new Date().toISOString().slice(0,10)){
+      return p>=1&&p<=carnival.points_scheme.length?carnival.points_scheme[p-1]:0;
+    }
+    return housePointsForPlace(place);
+  }
+
+  function carnivalEventPool(type){
+    if(type==='swimming'){return SWIMMING_EVENT_OPTIONS;}
+    if(type==='cross-country'){
+      return ATHLETICS_EVENT_OPTIONS.filter(function(event){return event.category==='cross-country';})
+        .concat([
+          {id:'xc-junior',name:'Junior Cross Country',category:'cross-country',measure:'time',division:'Junior'},
+          {id:'xc-intermediate',name:'Intermediate Cross Country',category:'cross-country',measure:'time',division:'Intermediate'},
+          {id:'xc-senior',name:'Senior Cross Country',category:'cross-country',measure:'time',division:'Senior'}
+        ]);
+    }
+    return ATHLETICS_EVENT_OPTIONS;
+  }
+
+  function renderCarnivalEventPicker(){
+    if(!carnivalEventPickerEl){return;}
+    var pool=carnivalEventPool(carnivalTypeEl?carnivalTypeEl.value:'athletics');
+    carnivalEventPickerEl.innerHTML='<p class="sports-mode-note">Tick events in the order they should run:</p>'+pool.map(function(event){
+      return '<label class="carnival-event-option"><input type="checkbox" value="'+escapeAttr(event.id)+'" data-carnival-event-name="'+escapeAttr(event.name)+'" /> '+escapeHtml(event.name)+(event.division?' <small>('+escapeHtml(event.division)+')</small>':'')+'</label>';
+    }).join('');
+  }
+
+  function carnivalDayResults(carnival){
+    return athleticsResults().filter(function(row){return row.date===carnival.date;});
+  }
+
+  function crossCountryTeamScores(carnival){
+    // Universal AU cross country scoring: per house, sum the finishing places
+    // of the first four placed runners on carnival day. Lowest total wins.
+    // Houses with fewer than four placed finishers are marked incomplete.
+    var byHouse={};
+    carnivalDayResults(carnival).filter(function(row){return Number(row.place)>=1;}).forEach(function(row){
+      (byHouse[row.house]=byHouse[row.house]||[]).push(Number(row.place));
+    });
+    return Object.keys(byHouse).map(function(house){
+      var places=byHouse[house].sort(function(a,b){return a-b;}).slice(0,4);
+      return {house:house,counted:places.length,score:places.reduce(function(sum,p){return sum+p;},0),complete:places.length>=4};
+    }).sort(function(a,b){
+      if(a.complete!==b.complete){return a.complete?-1:1;}
+      return a.score-b.score;
+    });
+  }
+
+  function renderCarnivalDay(){
+    if(!carnivalCreateFormEl){return;}
+    var carnival=activeCarnival();
+    carnivalCreateFormEl.hidden=!!carnival;
+    if(carnivalActivePanelEl){carnivalActivePanelEl.hidden=!carnival;}
+    if(!carnival){renderCarnivalEventPicker();return;}
+    carnivalTitleEl.textContent=carnival.name;
+    carnivalMetaEl.textContent=' · '+carnival.date+' · '+carnival.type.replace('-',' ')+(carnival.points_scheme?' · points '+carnival.points_scheme.join('-'):'');
+    var done=carnival.done_event_ids||[];
+    var nextSeen=false;
+    carnivalProgramListEl.innerHTML=carnival.event_ids.map(function(id){
+      var name=(carnival.event_names||{})[id]||id;
+      var isDone=done.indexOf(id)!==-1;
+      var cls='carnival-event';
+      if(isDone){cls+=' carnival-event--done';}
+      else if(!nextSeen){cls+=' carnival-event--current';nextSeen=true;}
+      return '<li class="'+cls+'"><span>'+escapeHtml(name)+'</span><button type="button" class="secondary" data-carnival-toggle="'+escapeAttr(id)+'">'+(isDone?'Undo':'Done')+'</button></li>';
+    }).join('');
+    Array.prototype.forEach.call(carnivalProgramListEl.querySelectorAll('[data-carnival-toggle]'),function(btn){
+      btn.addEventListener('click',function(){
+        var id=btn.getAttribute('data-carnival-toggle');
+        var current=activeCarnival();
+        if(!current){return;}
+        current.done_event_ids=current.done_event_ids||[];
+        var at=current.done_event_ids.indexOf(id);
+        if(at===-1){current.done_event_ids.push(id);}else{current.done_event_ids.splice(at,1);}
+        save(CARNIVAL_KEY,current);
+        renderCarnivalDay();
+      });
+    });
+    var points={};
+    carnivalDayResults(carnival).forEach(function(row){points[row.house]=(points[row.house]||0)+Number(row.points||0);});
+    var houses=Object.keys(points).map(function(house){return {house:house,points:points[house]};}).sort(function(a,b){return b.points-a.points;});
+    carnivalScoreboardEl.innerHTML=houses.length
+      ? '<table class="progress-history-table"><thead><tr><th>House</th><th>Points</th></tr></thead><tbody>'+houses.map(function(row,i){return '<tr'+(i===0?' class="carnival-scoreboard-leader"':'')+'><td>'+escapeHtml(row.house)+'</td><td>'+row.points+'</td></tr>';}).join('')+'</tbody></table>'
+      : '<p class="sports-mode-note">No results recorded on carnival day yet. Save results above and they tally here.</p>';
+    var isXc=carnival.type==='cross-country';
+    if(carnivalXcWrapEl){carnivalXcWrapEl.hidden=!isXc;}
+    if(isXc&&carnivalXcScoresEl){
+      var teams=crossCountryTeamScores(carnival);
+      carnivalXcScoresEl.innerHTML=teams.length
+        ? '<table class="progress-history-table"><thead><tr><th>House</th><th>Team score</th><th>Runners counted</th></tr></thead><tbody>'+teams.map(function(t){return '<tr><td>'+escapeHtml(t.house)+'</td><td>'+t.score+(t.complete?'':' (incomplete)')+'</td><td>'+t.counted+'/4</td></tr>';}).join('')+'</tbody></table>'
+        : '<p class="sports-mode-note">No placed finishers yet.</p>';
+    }
+  }
+
+  function startCarnival(e){
+    e.preventDefault();
+    var picked=Array.prototype.slice.call(carnivalEventPickerEl.querySelectorAll('input:checked'));
+    if(!picked.length){showInlineStatus(carnivalOutputEl,false,'Pick at least one event for the program.');return;}
+    var names={};
+    picked.forEach(function(input){names[input.value]=input.getAttribute('data-carnival-event-name');});
+    save(CARNIVAL_KEY,{
+      name:carnivalNameEl.value.trim()||'School Carnival',
+      date:carnivalDateEl.value,
+      type:carnivalTypeEl.value,
+      event_ids:picked.map(function(input){return input.value;}),
+      event_names:names,
+      done_event_ids:[],
+      points_scheme:parsePointsScheme(carnivalPointsEl.value),
+      created_at:new Date().toISOString()
+    });
+    showInlineStatus(carnivalOutputEl,true,'Carnival started.','Record results in Interschool Results above; the scoreboard tallies live.');
+    renderCarnivalDay();
+  }
+
+  function printCarnivalProgram(){
+    var carnival=activeCarnival();
+    if(!carnival){return;}
+    var printWin=window.open('','_blank');
+    if(!printWin){return;}
+    printWin.document.write('<html><head><title>'+escapeHtml(carnival.name)+'</title><style>body{font-family:sans-serif;padding:2rem;}h1{margin-bottom:0;}ol{font-size:1.1rem;line-height:1.9;}</style></head><body><h1>'+escapeHtml(carnival.name)+'</h1><p>'+escapeHtml(carnival.date)+' · '+escapeHtml(carnival.type.replace('-',' '))+'</p><ol>'+carnival.event_ids.map(function(id){return '<li>'+escapeHtml((carnival.event_names||{})[id]||id)+'</li>';}).join('')+'</ol></body></html>');
+    printWin.document.close();
+    schedulePrintWindow(printWin);
+  }
+
+  if(carnivalCreateFormEl){
+    renderCarnivalEventPicker();
+    if(carnivalTypeEl){carnivalTypeEl.addEventListener('change',renderCarnivalEventPicker);}
+    carnivalCreateFormEl.addEventListener('submit',startCarnival);
+    if(carnivalPrintBtn){carnivalPrintBtn.addEventListener('click',printCarnivalProgram);}
+    if(carnivalEndBtn){carnivalEndBtn.addEventListener('click',function(){
+      if(!confirm('End this carnival? Results stay saved; only the program closes.')){return;}
+      localStorage.removeItem(CARNIVAL_KEY);
+      renderCarnivalDay();
+    });}
+    renderCarnivalDay();
   }
 
   // === LEADERBOARD ===

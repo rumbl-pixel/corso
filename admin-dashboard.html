@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Corso - Admin Dashboard</title>
-    <link rel="stylesheet" href="styles.css?v=130" />
+    <link rel="stylesheet" href="styles.css?v=131" />
     <link rel="manifest" href="manifest.webmanifest" />
     <meta name="theme-color" content="#0c5aa8" />
     <link rel="apple-touch-icon" href="assets/app-icon-192.png" />
@@ -610,6 +610,61 @@
               <div id="house-points-list"></div>
             </div>
           </div>
+        </div>
+
+        <div class="card" id="carnival-day-card">
+          <h2>Carnival Day</h2>
+          <p class="sports-mode-note">Run an athletics or cross country carnival: set the program, record results as usual, and the faction scoreboard tallies live from results dated on carnival day.</p>
+          <form id="carnival-create-form" class="compact-form">
+            <div class="form-grid">
+              <label>Carnival name
+                <input type="text" id="carnival-name-input" placeholder="e.g. Faction Athletics Carnival" required />
+              </label>
+              <label>Date
+                <input type="date" id="carnival-date-input" required />
+              </label>
+              <label>Type
+                <select id="carnival-type-select">
+                  <option value="athletics">Athletics carnival</option>
+                  <option value="cross-country">Cross country carnival</option>
+                  <option value="swimming" disabled>Swimming carnival (coming soon)</option>
+                </select>
+              </label>
+              <label>Points for places (optional)
+                <input type="text" id="carnival-points-input" placeholder="Default: 10,8,6,4,2,1" autocomplete="off" />
+              </label>
+            </div>
+            <div id="carnival-event-picker" class="carnival-event-picker" aria-label="Events in program order"></div>
+            <button type="submit">Start carnival</button>
+          </form>
+          <div id="carnival-active-panel" hidden>
+            <div class="carnival-active-header">
+              <div>
+                <strong id="carnival-active-title"></strong>
+                <small id="carnival-active-meta"></small>
+              </div>
+              <div class="carnival-active-actions">
+                <button type="button" id="carnival-print-btn" class="secondary">Print program</button>
+                <button type="button" id="carnival-end-btn" class="secondary">End carnival</button>
+              </div>
+            </div>
+            <div class="form-grid" style="margin-top:0.8rem;">
+              <div>
+                <h3>Program</h3>
+                <ol id="carnival-program-list" class="carnival-program"></ol>
+              </div>
+              <div>
+                <h3>Faction Scoreboard</h3>
+                <div id="carnival-scoreboard" class="carnival-scoreboard"></div>
+              </div>
+              <div id="carnival-xc-wrap" hidden>
+                <h3>Cross Country Team Scores</h3>
+                <p class="sports-mode-note">Sum of the first four finishers' places per house. Lowest total wins.</p>
+                <div id="carnival-xc-scores"></div>
+              </div>
+            </div>
+          </div>
+          <div id="carnival-output" class="inline-save-status" hidden></div>
         </div>
       </div>
 
@@ -1638,7 +1693,7 @@
     <script src="goals.js?v=5"></script>
     <script src="admin-goals.js?v=5"></script>
     <script src="assets/qrcode-generator.js"></script>
-    <script src="admin-dashboard.js?v=91"></script>
+    <script src="admin-dashboard.js?v=92"></script>
     <script src="pwa.js"></script>
         <script src='https://storage.ko-fi.com/cdn/scripts/overlay-widget.js'></script>
     <script>
