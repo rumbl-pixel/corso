@@ -3143,6 +3143,111 @@ html[data-theme="dark"] .athletics-consent-option:has(input:checked) {
   animation: revealIn 220ms ease both;
 }
 
+.athletics-command-centre {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.athletics-helper-cards {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.athletics-helper-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.75rem;
+  background: rgba(255,255,255,0.62);
+}
+
+.athletics-helper-card span,
+.athletics-helper-card small {
+  display: block;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.athletics-helper-card strong {
+  display: block;
+  color: var(--obsidian-navy-3);
+  font-size: 1.15rem;
+  margin: 0.18rem 0;
+}
+
+.athletics-category-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.athletics-category-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 40px;
+  padding: 0.45rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(7,20,38,0.08);
+  color: var(--obsidian-navy-3);
+}
+
+.athletics-category-toggle small {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.athletics-category-toggle.is-active {
+  background: linear-gradient(180deg, rgba(255,248,221,0.98), rgba(242,216,145,0.88));
+  border-color: rgba(201,151,34,0.58);
+  color: #071426;
+}
+
+.athletics-event-chip--empty { opacity: 0.86; }
+.athletics-event-chip--partial { border-color: rgba(159,199,247,0.78); }
+.athletics-event-chip--ready { border-color: rgba(34,197,94,0.58); }
+
+.athletics-team-student-option--disabled {
+  opacity: 0.72;
+  cursor: not-allowed;
+}
+
+html[data-theme="dark"] .athletics-helper-card,
+html[data-theme="dark"] .athletics-category-toggle {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.16);
+}
+
+html[data-theme="dark"] .athletics-helper-card strong {
+  color: #f5f9ff;
+}
+
+html[data-theme="dark"] .athletics-category-toggle {
+  color: #d7e6fa;
+}
+
+html[data-theme="dark"] .athletics-category-toggle.is-active {
+  color: #071426;
+}
+
+@media (max-width: 900px) {
+  .athletics-helper-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .athletics-helper-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .athletics-category-toggle {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
 .athletics-panel-actions,
 .cross-country-header {
   display: flex;
