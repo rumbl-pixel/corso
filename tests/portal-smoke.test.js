@@ -192,6 +192,8 @@ assert(/resolveSchoolIdForSite/.test(adminJs), 'staff login should resolve the s
 assert(/site_code/.test(adminJs), 'staff login sessions should persist the selected site code');
 assert(/loginIdentifierToAuthEmail/.test(adminJs), 'staff login should convert assigned usernames to internal auth emails');
 assert(/authUsernameDomain/.test(adminJs), 'staff login should use the configured internal username domain');
+assert(/establishSession/.test(adminJs), 'login should route session writes through establishSession so school-scoped cached data is cleared on a school change');
+assert(/prevSchool\s*!==\s*nextSchool/.test(adminJs), 'establishSession should wipe rc_* cached data when a different school signs in on a shared device');
 assert(/session\.username \|\| session\.email/.test(read('admin-dashboard.js')), 'admin dashboard should display the assigned username when available');
 assert(/auth\/v1\/token\?grant_type=password/.test(adminJs), 'admin login should use Supabase password auth outside demo mode');
 assert(/platform_admins/.test(adminJs), 'admin login should check owner-only platform admin grants before school coach access');

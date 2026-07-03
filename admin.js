@@ -7,6 +7,32 @@
   var defaultUsernameDomain = 'corso.local';
   var activeSchoolId = cfg.schoolId || '';
 
+  // School-boundary data hygiene: all cached roster/scan/report data lives under
+  // rc_* localStorage keys that are not themselves school-scoped. On a shared
+  // device this means one school's cached data would otherwise linger when a
+  // different school signs in. Before establishing a new session we compare the
+  // incoming school_id against the previous one and wipe the cached rc_* data if
+  // it changed (or if there was no prior session). The session key itself and
+  // non-data preferences (theme) are preserved/replaced separately.
+  function establishSession(session) {
+    try {
+      var prevRaw = window.localStorage.getItem('runClubAdminSession');
+      var prev = prevRaw ? JSON.parse(prevRaw) : null;
+      var prevSchool = prev && prev.school_id ? String(prev.school_id) : '';
+      var nextSchool = session && session.school_id ? String(session.school_id) : '';
+      if (prevSchool !== nextSchool) {
+        var preserve = { runClubAdminSession: true, rc_theme_settings: true };
+        for (var i = window.localStorage.length - 1; i >= 0; i -= 1) {
+          var key = window.localStorage.key(i);
+          if (key && key.indexOf('rc_') === 0 && !preserve[key]) {
+            window.localStorage.removeItem(key);
+          }
+        }
+      }
+    } catch (e) { /* storage unavailable — proceed with session write */ }
+    window.localStorage.setItem('runClubAdminSession', JSON.stringify(session));
+  }
+
   function authConfigured() {
     return !!(cfg.supabaseUrl && cfg.supabaseAnonKey);
   }
@@ -161,10 +187,7 @@
         errorEl.textContent = 'Demo login is disabled for live mode.';
         return;
       }
-      window.localStorage.setItem(
-        'runClubAdminSession',
-        JSON.stringify({ email: demoBypass ? 'DEMO' : loginIdentifier, username: demoBypass ? 'DEMO' : loginIdentifier, mode: 'demo', access_scope: 'demo', role: 'demo', school_id: activeSchoolId || 'demo-local', site_code: siteCode || 'DEMO', access_token: 'demo-token' })
-      );
+      establishSession({ email: demoBypass ? 'DEMO' : loginIdentifier, username: demoBypass ? 'DEMO' : loginIdentifier, mode: 'demo', access_scope: 'demo', role: 'demo', school_id: activeSchoolId || 'demo-local', site_code: siteCode || 'DEMO', access_token: 'demo-token' });
       window.location.href = 'admin-dashboard.html';
       return;
     }
@@ -193,7 +216,7 @@
     signInWithSupabase(authEmail, password)
       .then(function (authData) { return liveRoleFor(authData, loginIdentifier, siteCode); })
       .then(function (session) {
-        window.localStorage.setItem('runClubAdminSession', JSON.stringify(session));
+        establishSession(session);
         window.location.href = 'admin-dashboard.html';
       })
       .catch(function (error) {
