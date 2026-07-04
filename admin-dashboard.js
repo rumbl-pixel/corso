@@ -4019,27 +4019,6 @@
     renderCarnivalDay();
   }
 
-  var carnivalModeToggleEl=document.getElementById('carnival-mode-toggle');
-  var carnivalModeShellEl=document.getElementById('carnival-mode-shell');
-  var carnivalModePanelEl=document.getElementById('carnival-mode-panel');
-  var carnivalModeStateEl=document.getElementById('carnival-mode-state');
-  var CARNIVAL_MODE_KEY='rc_carnival_mode_open';
-  function renderCarnivalModeState(){
-    var enabled=!!(carnivalModeToggleEl&&carnivalModeToggleEl.checked);
-    if(carnivalModeShellEl){carnivalModeShellEl.classList.toggle('athletics-mode-shell--active',enabled);}
-    if(carnivalModePanelEl){carnivalModePanelEl.hidden=!enabled;}
-    if(carnivalModeStateEl){carnivalModeStateEl.textContent=enabled?'On - Carnival tools open':'Off - Carnival tools hidden';}
-    if(enabled){renderCarnivalDay();}
-  }
-  if(carnivalModeToggleEl){
-    // Auto-open when a carnival is already running so a live scoreboard is never hidden behind the toggle.
-    carnivalModeToggleEl.checked=!!localStorage.getItem(CARNIVAL_KEY)||localStorage.getItem(CARNIVAL_MODE_KEY)==='1';
-    carnivalModeToggleEl.addEventListener('change',function(){
-      localStorage.setItem(CARNIVAL_MODE_KEY,carnivalModeToggleEl.checked?'1':'0');
-      renderCarnivalModeState();
-    });
-    renderCarnivalModeState();
-  }
 
   // === LEADERBOARD ===
   var lbYearEl=document.getElementById('lb-year-filter');
