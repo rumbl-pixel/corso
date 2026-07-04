@@ -3962,6 +3962,9 @@
     });
     var points={};
     carnivalDayResults(carnival).forEach(function(row){points[row.house]=(points[row.house]||0)+Number(row.points||0);});
+    // Bonus awards live on the carnival object only — never in the shared
+    // athletics results store (which age champions + interschool house points read).
+    (carnival.bonus_points||[]).forEach(function(b){points[b.house]=(points[b.house]||0)+Number(b.points||0);});
     var houses=Object.keys(points).map(function(house){return {house:house,points:points[house]};}).sort(function(a,b){return b.points-a.points;});
     carnivalScoreboardEl.innerHTML=houses.length
       ? '<table class="progress-history-table"><thead><tr><th>House</th><th>Points</th></tr></thead><tbody>'+houses.map(function(row,i){return '<tr'+(i===0?' class="carnival-scoreboard-leader"':'')+'><td>'+escapeHtml(row.house)+'</td><td>'+row.points+'</td></tr>';}).join('')+'</tbody></table>'
@@ -3975,6 +3978,7 @@
         : '<p class="sports-mode-note">No placed finishers yet.</p>';
     }
     populateCarnivalRaceEvents();
+    renderCarnivalBonus();
   }
 
   function startCarnival(e){
@@ -4171,6 +4175,59 @@
     renderCarnivalRaceRoster();
   }
 
+  // === CARNIVAL BONUS POINTS ===
+  // Coach-awarded faction points (spirit, sportsmanship, docking). Stored as
+  // carnival.bonus_points on the carnival object itself — deliberately NOT in
+  // the shared athletics results store, which keys rows by student.
+  var carnivalBonusHouseWrapEl=document.getElementById('carnival-bonus-house-wrap');
+  var carnivalBonusPointsInputEl=document.getElementById('carnival-bonus-points');
+  var carnivalBonusReasonEl=document.getElementById('carnival-bonus-reason');
+  var carnivalBonusAwardBtnEl=document.getElementById('carnival-bonus-award-btn');
+  var carnivalBonusOutputEl=document.getElementById('carnival-bonus-output');
+  var carnivalBonusLedgerEl=document.getElementById('carnival-bonus-ledger');
+
+  function renderCarnivalBonus(){
+    if(!carnivalBonusHouseWrapEl){return;}
+    var carnival=activeCarnival();
+    if(!carnival){return;}
+    var existing=document.getElementById('carnival-bonus-house');
+    var current=existing?existing.value:'';
+    var houses=programSettings().houseNames;
+    carnivalBonusHouseWrapEl.innerHTML=houses.length
+      ? '<select id="carnival-bonus-house"><option value="">Choose house</option>'+houses.map(function(h){return '<option value="'+escapeAttr(h)+'">'+escapeHtml(h)+'</option>';}).join('')+'</select>'
+      : '<input type="text" id="carnival-bonus-house" placeholder="e.g. Red" autocomplete="off" />';
+    if(current){document.getElementById('carnival-bonus-house').value=current;}
+    var ledger=(carnival.bonus_points||[]).slice().reverse();
+    carnivalBonusLedgerEl.innerHTML=ledger.length
+      ? '<table class="progress-history-table"><thead><tr><th>House</th><th>Points</th><th>Reason</th><th>Time</th></tr></thead><tbody>'+ledger.map(function(b){
+          return '<tr><td>'+escapeHtml(b.house)+'</td><td>'+Number(b.points||0)+'</td><td>'+escapeHtml(b.reason||'')+'</td><td>'+escapeHtml(String(b.created_at||'').replace('T',' ').slice(0,16))+'</td></tr>';
+        }).join('')+'</tbody></table>'
+      : '<p class="sports-mode-note">No bonus awards yet.</p>';
+  }
+
+  function awardCarnivalBonusPoints(){
+    var carnival=activeCarnival();
+    if(!carnival){return;}
+    var houseEl=document.getElementById('carnival-bonus-house');
+    var house=houseEl?String(houseEl.value).trim():'';
+    var points=Number(carnivalBonusPointsInputEl.value);
+    var reason=carnivalBonusReasonEl.value.trim();
+    if(!house){showInlineStatus(carnivalBonusOutputEl,false,'Pick a house first.');return;}
+    if(!isFinite(points)||points===0){showInlineStatus(carnivalBonusOutputEl,false,'Enter a non-zero points value (negatives dock points).');return;}
+    carnival.bonus_points=carnival.bonus_points||[];
+    carnival.bonus_points.push({id:'bonus-'+Date.now(),house:house,points:points,reason:reason,created_at:new Date().toISOString()});
+    save(CARNIVAL_KEY,carnival);
+    carnivalBonusPointsInputEl.value='';
+    carnivalBonusReasonEl.value='';
+    showInlineStatus(carnivalBonusOutputEl,true,(points>0?'+':'')+points+' point'+(Math.abs(points)===1?'':'s')+' to '+house+'.',reason||'Logged in the bonus ledger.');
+    renderCarnivalDay();
+  }
+
+  if(carnivalBonusAwardBtnEl){
+    carnivalBonusAwardBtnEl.addEventListener('click',awardCarnivalBonusPoints);
+    // Initial renderCarnivalDay() ran before these element vars existed; paint once now.
+    renderCarnivalBonus();
+  }
 
   // === LEADERBOARD ===
   var lbYearEl=document.getElementById('lb-year-filter');

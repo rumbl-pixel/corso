@@ -707,6 +707,24 @@
               <button type="button" id="carnival-race-save-btn" hidden>Save results</button>
               <div id="carnival-race-output" class="inline-save-status" hidden></div>
             </div>
+            <div id="carnival-bonus-section" class="compact-form" style="margin-top:0.8rem;">
+              <h3>Bonus Points</h3>
+              <p class="sports-mode-note">Award or dock faction points for spirit, sportsmanship, or anything else. Counted on this carnival's scoreboard only.</p>
+              <div class="form-grid">
+                <label>House / faction
+                  <span id="carnival-bonus-house-wrap"></span>
+                </label>
+                <label>Points
+                  <input type="number" id="carnival-bonus-points" step="1" placeholder="e.g. 10 or -5" />
+                </label>
+                <label>Reason
+                  <input type="text" id="carnival-bonus-reason" placeholder="e.g. Best sportsmanship" autocomplete="off" />
+                </label>
+              </div>
+              <button type="button" id="carnival-bonus-award-btn">Award</button>
+              <div id="carnival-bonus-output" class="inline-save-status" hidden></div>
+              <div id="carnival-bonus-ledger" style="margin-top:0.8rem;"></div>
+            </div>
           </div>
           <div id="carnival-output" class="inline-save-status" hidden></div>
         </div>
@@ -1740,7 +1758,7 @@
     <script src="goals.js?v=5"></script>
     <script src="admin-goals.js?v=5"></script>
     <script src="assets/qrcode-generator.js"></script>
-    <script src="admin-dashboard.js?v=97"></script>
+    <script src="admin-dashboard.js?v=98"></script>
     <script src="pwa.js"></script>
         <script src='https://storage.ko-fi.com/cdn/scripts/overlay-widget.js'></script>
     <script>
