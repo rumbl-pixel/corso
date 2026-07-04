@@ -118,7 +118,7 @@
   function scannerSettings(){ var settings=load(K.scannerSettings,{duplicateCooldownSeconds:3,deviceName:'Admin dashboard',deviceLocation:'School'}); var seconds=Number(settings.duplicateCooldownSeconds); if(!isFinite(seconds)||seconds<0){seconds=3;} return {duplicateCooldownSeconds:Math.min(120,seconds),deviceName:String(settings.deviceName||'Admin dashboard'),deviceLocation:String(settings.deviceLocation||'School')}; }
   function cleanList(value, fallback){ var list=Array.isArray(value)?value:String(value||'').split(','); list=list.map(function(item){return String(item).trim();}).filter(Boolean); return list.length?Array.from(new Set(list)):fallback; }
   function cleanThresholds(value){ var list=Array.isArray(value)?value:String(value||'').split(','); list=list.map(function(item){return Number(item);}).filter(function(item){return isFinite(item)&&item>0;}).map(function(item){return Math.round(item);}).sort(function(a,b){return a-b;}); return list.length?Array.from(new Set(list)):[5,10,25,50,100,200,500]; }
-  function programSettings(){ var settings=window.RunClubScan&&window.RunClubScan.programSettings?window.RunClubScan.programSettings():load(K.programSettings,{schoolName:'Gwynne Park Schools',lapDistanceKm:0.25,defaultSessionType:'Run Club',activeYears:['Year 1','Year 2','Year 3','Year 4','Year 5','Year 6'],classNames:['1A','2A','3A','4C','5B','6A'],awardThresholds:[5,10,25,50,100,200,500]}); var lapDistanceKm=Number(settings.lapDistanceKm); if(!isFinite(lapDistanceKm)||lapDistanceKm<=0){lapDistanceKm=0.25;} return {schoolName:String(settings.schoolName||'Gwynne Park Schools'),lapDistanceKm:lapDistanceKm,defaultSessionType:String(settings.defaultSessionType||'Run Club'),activeYears:cleanList(settings.activeYears,['Year 1','Year 2','Year 3','Year 4','Year 5','Year 6']),classNames:cleanList(settings.classNames,['1A','2A','3A','4C','5B','6A']),awardThresholds:cleanThresholds(settings.awardThresholds)}; }
+  function programSettings(){ var settings=window.RunClubScan&&window.RunClubScan.programSettings?window.RunClubScan.programSettings():load(K.programSettings,{schoolName:'Gwynne Park Schools',lapDistanceKm:0.25,defaultSessionType:'Run Club',activeYears:['Year 1','Year 2','Year 3','Year 4','Year 5','Year 6'],classNames:['1A','2A','3A','4C','5B','6A'],awardThresholds:[5,10,25,50,100,200,500]}); var lapDistanceKm=Number(settings.lapDistanceKm); if(!isFinite(lapDistanceKm)||lapDistanceKm<=0){lapDistanceKm=0.25;} return {schoolName:String(settings.schoolName||'Gwynne Park Schools'),lapDistanceKm:lapDistanceKm,defaultSessionType:String(settings.defaultSessionType||'Run Club'),activeYears:cleanList(settings.activeYears,['Year 1','Year 2','Year 3','Year 4','Year 5','Year 6']),classNames:cleanList(settings.classNames,['1A','2A','3A','4C','5B','6A']),awardThresholds:cleanThresholds(settings.awardThresholds),houseNames:cleanList(settings.houseNames,[])}; }
   function saveProgramSettings(partial){ save(K.programSettings,Object.assign({},programSettings(),partial)); }
   function themeSettings(){
     var saved=load(THEME_SETTINGS_KEY,{});
@@ -4599,6 +4599,7 @@
   var onboardingYearGroupsEl=document.getElementById('onboarding-year-groups');
   var onboardingClassesEl=document.getElementById('onboarding-classes');
   var onboardingAwardThresholdsEl=document.getElementById('onboarding-award-thresholds');
+  var onboardingHouseNamesEl=document.getElementById('onboarding-house-names');
   var onboardingResultEl=document.getElementById('onboarding-result');
   var onboardingSummaryEl=document.getElementById('onboarding-summary');
   var multiSchoolFilterEl=document.getElementById('multi-school-filter');
@@ -4631,6 +4632,7 @@
     onboardingYearGroupsEl.value=settings.activeYears.join(', ');
     onboardingClassesEl.value=settings.classNames.join(', ');
     onboardingAwardThresholdsEl.value=settings.awardThresholds.join(', ');
+    if(onboardingHouseNamesEl){onboardingHouseNamesEl.value=(settings.houseNames||[]).join(', ');}
     onboardingSummaryEl.innerHTML='<div class="setup-summary-grid">'+
       '<div><strong>'+escapeHtml(settings.schoolName)+'</strong><span>School</span></div>'+
       '<div><strong>'+Math.round(settings.lapDistanceKm*1000)+'m</strong><span>Lap distance</span></div>'+
@@ -4652,7 +4654,8 @@
       defaultSessionType:onboardingSessionTypeEl.value||'Run Club',
       activeYears:cleanList(onboardingYearGroupsEl.value,['Year 1','Year 2','Year 3','Year 4','Year 5','Year 6']),
       classNames:cleanList(onboardingClassesEl.value,['1A','2A','3A','4C','5B','6A']),
-      awardThresholds:cleanThresholds(onboardingAwardThresholdsEl.value)
+      awardThresholds:cleanThresholds(onboardingAwardThresholdsEl.value),
+      houseNames:onboardingHouseNamesEl?cleanList(onboardingHouseNamesEl.value,[]):[]
     };
     saveProgramSettings(settings);
     renderScannerSettings();
@@ -6169,6 +6172,7 @@
         '<div><strong>'+summary.added+'</strong><span>Added</span></div>'+
         '<div><strong>'+summary.duplicates+'</strong><span>Duplicates</span></div>'+
         '<div><strong>'+summary.invalid+'</strong><span>Invalid</span></div>'+
+        (summary.house_updates?'<div><strong>'+summary.house_updates+'</strong><span>House updates</span></div>':'')+
         '<div><strong>'+summary.total+'</strong><span>Total roster</span></div>'+
       '</div>'+
       (summary.skipped_details.length?'<details open><summary>Skipped rows</summary><ul>'+summary.skipped_details.map(function(item){
@@ -6267,17 +6271,19 @@
       var headers=parseCsvLine(lines[0]).map(function(h){return h.toLowerCase().replace(/\s+/g,'');});
       var fi=headers.indexOf('firstname'); var li=headers.indexOf('lastname');
       var yi=headers.indexOf('yeargroup'); var ci=headers.indexOf('classname');
+      var hi=headers.indexOf('house'); if(hi<0){hi=headers.indexOf('faction');} // optional house/faction column
       if(fi<0||li<0||yi<0||ci<0){showResult(importResultEl,{success:false,error:'Missing columns. Need: firstname,lastname,yeargroup,classname'});return;}
       var students=getStudents();
-      var existingKeys={};
-      students.forEach(function(s){existingKeys[rosterDuplicateKey(s.first,s.last,s.year,s.cls)]=true;});
+      var existingByKey={};
+      students.forEach(function(s){existingByKey[rosterDuplicateKey(s.first,s.last,s.year,s.cls)]=s;});
       var fileKeys={};
-      var added=0; var duplicates=0; var invalid=0; var skippedDetails=[];
+      var added=0; var duplicates=0; var invalid=0; var houseUpdates=0; var skippedDetails=[];
       var importedStudents=[];
       lines.slice(1).forEach(function(line,index){
         var rowNumber=index+2;
         var cols=parseCsvLine(line);
         var first=normalizeImportCell(cols[fi]); var last=normalizeImportCell(cols[li]); var year=normalizeImportCell(cols[yi]); var cls=normalizeImportCell(cols[ci]).toUpperCase();
+        var house=hi>=0?normalizeImportCell(cols[hi]):'';
         var name=first+' '+last;
         if(!first||!last||!year||!cls){
           invalid++;
@@ -6285,9 +6291,17 @@
           return;
         }
         var key=rosterDuplicateKey(first,last,year,cls);
-        if(existingKeys[key]){
+        if(existingByKey[key]){
+          var existing=existingByKey[key];
+          var reason='Already exists in roster';
+          if(house&&house!==(existing.house||'')){
+            existing.house=house;
+            houseUpdates++;
+            if(importedStudents.indexOf(existing)<0){importedStudents.push(existing);}
+            reason='Already exists in roster (house updated to '+house+')';
+          }
           duplicates++;
-          skippedDetails.push({row:rowNumber,name:name,reason:'Already exists in roster'});
+          skippedDetails.push({row:rowNumber,name:name,reason:reason});
           return;
         }
         if(fileKeys[key]){
@@ -6296,15 +6310,16 @@
           return;
         }
         var id=generateBarcodeId(first,last,students);
-        var importedStudent=Object.assign({id:id,barcode:id,first:first,last:last,name:name,year:year,cls:cls,school:programSettings().schoolName,laps:0,minutes:0,events:[]},privacyDefaults());
+        var importedStudent=Object.assign({id:id,barcode:id,first:first,last:last,name:name,year:year,cls:cls,house:house,school:programSettings().schoolName,laps:0,minutes:0,events:[]},privacyDefaults());
         assignStudentCredentials(importedStudent,students);
         students.push(importedStudent);
         importedStudents.push(importedStudent);
-        existingKeys[key]=true;
+        existingByKey[key]=importedStudent;
         fileKeys[key]=true;
         added++;
       });
       var summary={success:true,added:added,duplicates:duplicates,invalid:invalid,total:students.length,skipped_details:skippedDetails};
+      if(hi>=0){summary.house_updates=houseUpdates;}
       importStudentsWithBackend(students,importedStudents).then(function(result){
         if(!result.ok){showResult(importResultEl,{success:false,error:result.error||result.reason||'Local roster import blocked.'});return;}
         refreshStudentViews();
