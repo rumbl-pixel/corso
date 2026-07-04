@@ -350,10 +350,8 @@
             <p class="sports-mode-note">When off, student goals stay focused on Laps, Lap Time, and Distance. When on, the command centre opens Athletics and Cross Country tools without adding anything to Run Club lap totals.</p>
             <div id="athletics-mode-panel" class="athletics-mode-panel" hidden>
               <div id="athletics-command-centre" class="athletics-command-centre">
-                <div id="athletics-consent-summary" class="athletics-consent-summary"></div>
                 <div id="athletics-helper-cards" class="athletics-helper-cards" aria-label="Interschool athletics planning summary"></div>
                 <div id="athletics-category-controls" class="athletics-category-controls" aria-label="Interschool athletics event categories"></div>
-                <div id="interschool-athletics-events" class="athletics-event-list"></div>
               </div>
               <div class="sports-workflow-strip" aria-label="Sports workflow">
                 <span><strong>1</strong> Confirm consent</span>
@@ -557,7 +555,22 @@
         </div>
 
         <div class="card" id="athletics-results-card">
-          <h2>Interschool Results</h2>
+          <div class="sports-command-header">
+            <div>
+              <h2>Interschool Results</h2>
+              <p class="sports-command-subtitle">Record per-student results, times, and placings for interschool events.</p>
+            </div>
+            <label class="athletics-mode-toggle">
+              <input type="checkbox" id="athletics-results-mode-toggle" />
+              <span class="athletics-mode-slider" aria-hidden="true"></span>
+              <span class="athletics-mode-label">
+                <strong>Results Entry Mode</strong>
+                <small id="athletics-results-mode-state">Off - Results tools hidden</small>
+              </span>
+            </label>
+          </div>
+          <div class="athletics-mode-shell" id="athletics-results-mode-shell">
+            <div id="athletics-results-mode-panel" class="athletics-mode-panel" hidden>
           <form id="athletics-result-form" class="compact-form">
             <div class="form-grid">
               <label>Student
@@ -608,6 +621,8 @@
             <div>
               <h3>House Points</h3>
               <div id="house-points-list"></div>
+            </div>
+          </div>
             </div>
           </div>
         </div>
@@ -1710,7 +1725,7 @@
     <script src="goals.js?v=5"></script>
     <script src="admin-goals.js?v=5"></script>
     <script src="assets/qrcode-generator.js"></script>
-    <script src="admin-dashboard.js?v=93"></script>
+    <script src="admin-dashboard.js?v=94"></script>
     <script src="pwa.js"></script>
         <script src='https://storage.ko-fi.com/cdn/scripts/overlay-widget.js'></script>
     <script>

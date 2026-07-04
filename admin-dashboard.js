@@ -3812,6 +3812,27 @@
     renderHousePoints();
   }
 
+  var athleticsResultsModeToggleEl=document.getElementById('athletics-results-mode-toggle');
+  var athleticsResultsModeShellEl=document.getElementById('athletics-results-mode-shell');
+  var athleticsResultsModePanelEl=document.getElementById('athletics-results-mode-panel');
+  var athleticsResultsModeStateEl=document.getElementById('athletics-results-mode-state');
+  var ATHLETICS_RESULTS_MODE_KEY='rc_athletics_results_mode_open';
+  function renderAthleticsResultsModeState(){
+    var enabled=!!(athleticsResultsModeToggleEl&&athleticsResultsModeToggleEl.checked);
+    if(athleticsResultsModeShellEl){athleticsResultsModeShellEl.classList.toggle('athletics-mode-shell--active',enabled);}
+    if(athleticsResultsModePanelEl){athleticsResultsModePanelEl.hidden=!enabled;}
+    if(athleticsResultsModeStateEl){athleticsResultsModeStateEl.textContent=enabled?'On - Results tools open':'Off - Results tools hidden';}
+    if(enabled){renderPBTracking();renderAgeChampionScoring();renderHousePoints();}
+  }
+  if(athleticsResultsModeToggleEl){
+    athleticsResultsModeToggleEl.checked=localStorage.getItem(ATHLETICS_RESULTS_MODE_KEY)==='1';
+    athleticsResultsModeToggleEl.addEventListener('change',function(){
+      localStorage.setItem(ATHLETICS_RESULTS_MODE_KEY,athleticsResultsModeToggleEl.checked?'1':'0');
+      renderAthleticsResultsModeState();
+    });
+    renderAthleticsResultsModeState();
+  }
+
   // === CARNIVAL DAY ===
   // Local-first carnival leg (CarnivalHQ-style): one active carnival, program
   // running order, live faction scoreboard scoped to results dated on carnival
