@@ -687,6 +687,26 @@
                 <div id="carnival-xc-scores"></div>
               </div>
             </div>
+            <div id="carnival-race-section" class="compact-form" style="margin-top:0.8rem;">
+              <h3>Record Race Results</h3>
+              <p class="sports-mode-note">Pick an event from this carnival's program, choose a division, assign places, then save the whole race in one go.</p>
+              <div class="form-grid">
+                <label>Event
+                  <select id="carnival-race-event-select"></select>
+                </label>
+                <label id="carnival-race-division-label">Division
+                  <select id="carnival-race-division-select">
+                    <option value="">Choose division</option>
+                    <option value="Junior">Junior</option>
+                    <option value="Intermediate">Intermediate</option>
+                    <option value="Senior">Senior</option>
+                  </select>
+                </label>
+              </div>
+              <div id="carnival-race-roster"></div>
+              <button type="button" id="carnival-race-save-btn" hidden>Save results</button>
+              <div id="carnival-race-output" class="inline-save-status" hidden></div>
+            </div>
           </div>
           <div id="carnival-output" class="inline-save-status" hidden></div>
         </div>
@@ -1720,7 +1740,7 @@
     <script src="goals.js?v=5"></script>
     <script src="admin-goals.js?v=5"></script>
     <script src="assets/qrcode-generator.js"></script>
-    <script src="admin-dashboard.js?v=96"></script>
+    <script src="admin-dashboard.js?v=97"></script>
     <script src="pwa.js"></script>
         <script src='https://storage.ko-fi.com/cdn/scripts/overlay-widget.js'></script>
     <script>
