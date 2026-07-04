@@ -169,6 +169,13 @@
               <label>House (optional)
                 <input type="text" id="new-student-house" placeholder="e.g. Gold" autocomplete="off" />
               </label>
+              <label>Gender (optional, for carnival champions)
+                <select id="new-student-gender">
+                  <option value="">Not set</option>
+                  <option value="boy">Boy</option>
+                  <option value="girl">Girl</option>
+                </select>
+              </label>
               <label>Team (optional)
                 <input type="text" id="new-student-team" placeholder="e.g. Blue Band" autocomplete="off" />
               </label>
@@ -250,6 +257,13 @@
               </label>
               <label>House (optional)
                 <input type="text" id="edit-student-house" autocomplete="off" />
+              </label>
+              <label>Gender (optional, for carnival champions)
+                <select id="edit-student-gender">
+                  <option value="">Not set</option>
+                  <option value="boy">Boy</option>
+                  <option value="girl">Girl</option>
+                </select>
               </label>
               <label>Team (optional)
                 <input type="text" id="edit-student-team" autocomplete="off" />
@@ -724,6 +738,11 @@
               <button type="button" id="carnival-bonus-award-btn">Award</button>
               <div id="carnival-bonus-output" class="inline-save-status" hidden></div>
               <div id="carnival-bonus-ledger" style="margin-top:0.8rem;"></div>
+            </div>
+            <div id="carnival-champions-section" class="compact-form" style="margin-top:0.8rem;">
+              <h3 style="margin:0;">Champion Boy / Champion Girl</h3>
+              <p class="sports-mode-note">Live individual points from this carnival's races, per division. Students without a gender set on their profile still score faction points but are not ranked here.</p>
+              <div id="carnival-champions"></div>
             </div>
           </div>
           <div id="carnival-output" class="inline-save-status" hidden></div>
@@ -1758,7 +1777,7 @@
     <script src="goals.js?v=5"></script>
     <script src="admin-goals.js?v=5"></script>
     <script src="assets/qrcode-generator.js"></script>
-    <script src="admin-dashboard.js?v=98"></script>
+    <script src="admin-dashboard.js?v=99"></script>
     <script src="pwa.js"></script>
         <script src='https://storage.ko-fi.com/cdn/scripts/overlay-widget.js'></script>
     <script>

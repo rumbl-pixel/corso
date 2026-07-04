@@ -1053,6 +1053,7 @@
   var editStudentYearEl=document.getElementById('edit-student-year');
   var editStudentClassEl=document.getElementById('edit-student-class');
   var editStudentHouseEl=document.getElementById('edit-student-house');
+  var editStudentGenderEl=document.getElementById('edit-student-gender');
   var editStudentTeamEl=document.getElementById('edit-student-team');
   var editStudentPseudonymEl=document.getElementById('edit-student-pseudonym');
   var editStudentHidePublicNameEl=document.getElementById('edit-student-hide-public-name');
@@ -2630,6 +2631,7 @@
     editStudentYearEl.value=student.year||'Year 1';
     editStudentClassEl.value=student.cls||'';
     editStudentHouseEl.value=student.house||'';
+    editStudentGenderEl.value=student.gender||'';
     editStudentTeamEl.value=student.team||'';
     editStudentPseudonymEl.value=student.pseudonym||student.preferred_name||'';
     editStudentHidePublicNameEl.checked=!!student.hide_public_name;
@@ -2677,6 +2679,7 @@
     var year=editStudentYearEl.value;
     var cls=editStudentClassEl.value.trim().toUpperCase();
     var house=editStudentHouseEl.value.trim();
+    var gender=editStudentGenderEl.value;
     var team=editStudentTeamEl.value.trim();
     var pseudonym=editStudentPseudonymEl.value.trim();
     var hidePublicName=editStudentHidePublicNameEl.checked;
@@ -2694,7 +2697,7 @@
     var updated=null;
     students=students.map(function(s){
       if(s.id!==studentId){return s;}
-      updated=Object.assign({},s,{first:first,last:last,name:first+' '+last,year:year,cls:cls,house:house,team:team,pseudonym:pseudonym,preferred_name:pseudonym,hide_public_name:hidePublicName,share_certificates_publicly:shareCertificatesPublicly});
+      updated=Object.assign({},s,{first:first,last:last,name:first+' '+last,year:year,cls:cls,house:house,gender:gender,team:team,pseudonym:pseudonym,preferred_name:pseudonym,hide_public_name:hidePublicName,share_certificates_publicly:shareCertificatesPublicly});
       return updated;
     });
     saveStudentsWithBackend(students,updated).then(function(result){
@@ -2722,11 +2725,12 @@
     var year=document.getElementById('new-student-year').value;
     var cls=document.getElementById('new-student-class').value.trim().toUpperCase();
     var house=document.getElementById('new-student-house').value.trim();
+    var gender=document.getElementById('new-student-gender').value;
     var team=document.getElementById('new-student-team').value.trim();
     if(!first||!last||!year||!cls){showResult(addStudentResultEl,{success:false,error:'Enter first name, last name, year and class.'});return;}
     var students=getStudents();
     var id=generateBarcodeId(first,last,students);
-    var student={id:id,barcode:id,first:first,last:last,name:first+' '+last,year:year,cls:cls,house:house,team:team,pseudonym:'',preferred_name:'',consent_status:'pending',hide_public_name:false,share_certificates_publicly:false,laps:0,minutes:0,events:[]};
+    var student={id:id,barcode:id,first:first,last:last,name:first+' '+last,year:year,cls:cls,house:house,gender:gender,team:team,pseudonym:'',preferred_name:'',consent_status:'pending',hide_public_name:false,share_certificates_publicly:false,laps:0,minutes:0,events:[]};
     assignStudentCredentials(student,students);
     students.push(student);
     saveStudentsWithBackend(students,student).then(function(result){
@@ -3930,6 +3934,51 @@
     });
   }
 
+  var carnivalChampionsEl=document.getElementById('carnival-champions');
+
+  function renderCarnivalChampions(){
+    // Carnival-day-scoped, gender-split champions. Entirely separate from the
+    // all-time renderAgeChampionScoring() leaderboard on Interschool Results.
+    if(!carnivalChampionsEl){return;}
+    var carnival=activeCarnival();
+    var placeholder='<p class="sports-mode-note">No results recorded yet.</p>';
+    if(!carnival){carnivalChampionsEl.innerHTML=placeholder;return;}
+    var studentsById={};
+    getStudents().forEach(function(s){studentsById[s.id]=s;});
+    var totals={};
+    carnivalDayResults(carnival).forEach(function(row){
+      var student=studentsById[row.student_id];
+      // ponytail: students without a gender set are simply excluded here; they
+      // still count fully in the faction scoreboard and house points.
+      if(!student||!student.gender){return;}
+      var entry=totals[row.student_id]||(totals[row.student_id]={student:student,points:0});
+      entry.points+=Number(row.points||0);
+    });
+    var groups={};
+    Object.keys(totals).forEach(function(id){
+      var entry=totals[id];
+      if(entry.points<=0){return;}
+      var key=divisionForStudentFilter(entry.student)+'|'+entry.student.gender;
+      (groups[key]=groups[key]||[]).push(entry);
+    });
+    var rankLabels=['Champion','Runner-up','2nd Runner-up'];
+    var html='';
+    ['Junior','Intermediate','Senior'].forEach(function(division){
+      var rows=[];
+      ['boy','girl'].forEach(function(gender){
+        var label=gender==='boy'?'Boy':'Girl';
+        (groups[division+'|'+gender]||[]).sort(function(a,b){return b.points-a.points;}).slice(0,3).forEach(function(entry,i){
+          rows.push('<tr><td>'+rankLabels[i]+' '+label+'</td><td>'+escapeHtml(entry.student.name)+'</td><td>'+entry.points+'</td></tr>');
+        });
+      });
+      if(rows.length){
+        html+='<h4 style="margin:0.6rem 0 0.25rem;">'+division+'</h4>'+
+          '<table class="progress-history-table"><thead><tr><th>Title</th><th>Student</th><th>Points</th></tr></thead><tbody>'+rows.join('')+'</tbody></table>';
+      }
+    });
+    carnivalChampionsEl.innerHTML=html||placeholder;
+  }
+
   function renderCarnivalDay(){
     if(!carnivalCreateFormEl){return;}
     var carnival=activeCarnival();
@@ -3979,6 +4028,7 @@
     }
     populateCarnivalRaceEvents();
     renderCarnivalBonus();
+    renderCarnivalChampions();
   }
 
   function startCarnival(e){
@@ -4163,6 +4213,7 @@
       renderHousePoints();
       renderPBTracking();
       renderAgeChampionScoring();
+      renderCarnivalChampions();
     });
   }
 
@@ -6469,6 +6520,13 @@
     ],['Preferred Name','Surname','Year Level','Home Group','School']);
   }
 
+  function normalizeGenderValue(raw){
+    var value=String(raw||'').trim().toLowerCase();
+    if(value==='boy'||value==='b'||value==='m'||value==='male'){return 'boy';}
+    if(value==='girl'||value==='g'||value==='f'||value==='female'){return 'girl';}
+    return '';
+  }
+
   document.getElementById('import-form').addEventListener('submit',function(e){
     e.preventDefault();
     var file=document.getElementById('csv-file').files[0];
@@ -6481,6 +6539,7 @@
       var fi=headers.indexOf('firstname'); var li=headers.indexOf('lastname');
       var yi=headers.indexOf('yeargroup'); var ci=headers.indexOf('classname');
       var hi=headers.indexOf('house'); if(hi<0){hi=headers.indexOf('faction');} // optional house/faction column
+      var gi=headers.indexOf('gender'); // optional gender column (Boy/Girl/M/F)
       if(fi<0||li<0||yi<0||ci<0){showResult(importResultEl,{success:false,error:'Missing columns. Need: firstname,lastname,yeargroup,classname'});return;}
       var students=getStudents();
       var existingByKey={};
@@ -6493,6 +6552,7 @@
         var cols=parseCsvLine(line);
         var first=normalizeImportCell(cols[fi]); var last=normalizeImportCell(cols[li]); var year=normalizeImportCell(cols[yi]); var cls=normalizeImportCell(cols[ci]).toUpperCase();
         var house=hi>=0?normalizeImportCell(cols[hi]):'';
+        var gender=gi>=0?normalizeGenderValue(normalizeImportCell(cols[gi])):'';
         var name=first+' '+last;
         if(!first||!last||!year||!cls){
           invalid++;
@@ -6509,6 +6569,10 @@
             if(importedStudents.indexOf(existing)<0){importedStudents.push(existing);}
             reason='Already exists in roster (house updated to '+house+')';
           }
+          if(gender&&gender!==(existing.gender||'')){
+            existing.gender=gender;
+            if(importedStudents.indexOf(existing)<0){importedStudents.push(existing);}
+          }
           duplicates++;
           skippedDetails.push({row:rowNumber,name:name,reason:reason});
           return;
@@ -6519,7 +6583,7 @@
           return;
         }
         var id=generateBarcodeId(first,last,students);
-        var importedStudent=Object.assign({id:id,barcode:id,first:first,last:last,name:name,year:year,cls:cls,house:house,school:programSettings().schoolName,laps:0,minutes:0,events:[]},privacyDefaults());
+        var importedStudent=Object.assign({id:id,barcode:id,first:first,last:last,name:name,year:year,cls:cls,house:house,gender:gender,school:programSettings().schoolName,laps:0,minutes:0,events:[]},privacyDefaults());
         assignStudentCredentials(importedStudent,students);
         students.push(importedStudent);
         importedStudents.push(importedStudent);

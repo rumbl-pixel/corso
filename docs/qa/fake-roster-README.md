@@ -37,6 +37,7 @@ Run against an **empty roster** instead: Added 29, Duplicates 1, Invalid 1, Hous
 
 - Required header, case-insensitive, spaces ignored: `firstname,lastname,yeargroup,classname`
 - Optional 5th column: `house` (or `faction` — either header name works, case-insensitive). Free text, trimmed. New students get it as their house; rows matching an existing student update ONLY that student's house (blank house values never overwrite). Omit the column entirely and the import behaves exactly as before.
+- Optional 6th column: `gender` (case-insensitive). Accepts `Boy`/`Girl`/`M`/`F`/`male`/`female`/`B`/`G`, normalized to `boy`/`girl` on the student record — used only for the Carnival Day Champion Boy / Champion Girl leaderboard. Anything else (or blank, like Scarlett Bianchi in this fixture) stores no gender: the student imports fine and scores faction points, they just aren't ranked as a carnival champion. Rows matching an existing student backfill gender the same way house is backfilled (blank never overwrites). Omit the column entirely and the import behaves exactly as before. The fixture deliberately mixes `Boy`/`Girl`, `M`/`F`, and `male`/`female` spellings to prove normalization.
 - `yeargroup` like `Year 5`; `classname` like `5B` (uppercased on import)
 - Barcode/student ID is auto-generated; do not include it
 - Duplicate key = firstname + lastname + yeargroup + classname

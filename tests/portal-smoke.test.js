@@ -102,7 +102,7 @@ assert(/assets\/corso-logo\.png/.test(read('index.html')), 'home page should use
 const serviceWorker = read('service-worker.js');
 assert(/CACHE_NAME/.test(serviceWorker), 'service worker should define a cache name');
 assert(/CORE_ASSETS/.test(serviceWorker), 'service worker should cache the core app shell');
-assert(/gwynne-park-run-club-v178/.test(serviceWorker), 'service worker cache should be bumped after today\'s deploy so returning browsers pick up the new build instead of serving stale cache-first assets');
+assert(/gwynne-park-run-club-v179/.test(serviceWorker), 'service worker cache should be bumped after today\'s deploy so returning browsers pick up the new build instead of serving stale cache-first assets');
 assert(/\.\/about\.html/.test(serviceWorker), 'service worker should cache the About page');
 assert(/manifest\.webmanifest/.test(serviceWorker), 'service worker should cache the manifest');
 assert(/app-icon-192\.png/.test(serviceWorker) && /app-icon-512\.png/.test(serviceWorker), 'service worker should cache app icons');
@@ -398,6 +398,8 @@ assert(/carnival-bonus-reason/.test(adminDashboardHtml), 'bonus points form shou
 assert(/carnival-bonus-award-btn/.test(adminDashboardHtml), 'bonus points form should have an Award button');
 assert(/carnival-bonus-ledger/.test(adminDashboardHtml), 'bonus points should render a running audit ledger');
 assert(/carnival-bonus-output/.test(adminDashboardHtml), 'bonus points form should show inline save status');
+assert(/carnival-champions-section/.test(adminDashboardHtml), 'carnival day should include a Champion Boy / Champion Girl section');
+assert(/id="carnival-champions"/.test(adminDashboardHtml), 'carnival champions should render into a dedicated container');
 assert(/athletics-results-mode-toggle/.test(adminDashboardHtml), 'interschool results should have an on/off mode toggle to collapse its tools');
 assert(/cross-country-visible-toggle/.test(adminDashboardHtml), 'admin Cross Country courses should have a show/hide pill toggle');
 assert(/cross-country-course-panel/.test(adminDashboardHtml), 'admin Cross Country courses should hide seasonal course controls behind the toggle');
@@ -426,6 +428,7 @@ assert(/add-student-form/.test(adminDashboardHtml), 'admin students area should 
 assert(/generate-student-barcode-btn/.test(adminDashboardHtml), 'admin students area should include a generate barcode button');
 assert(/new-student-first/.test(adminDashboardHtml) && /new-student-last/.test(adminDashboardHtml), 'admin add-student form should collect student names');
 assert(/new-student-house/.test(adminDashboardHtml), 'admin add-student form should optionally collect house');
+assert(/new-student-gender/.test(adminDashboardHtml), 'admin add-student form should optionally collect gender for carnival champions');
 assert(/new-student-team/.test(adminDashboardHtml), 'admin add-student form should optionally collect team');
 assert(/student-editor-modal/.test(adminDashboardHtml), 'admin students area should include an edit-student modal');
 assert(/edit-student-form/.test(adminDashboardHtml), 'admin students area should include an edit-student form');
@@ -436,6 +439,7 @@ assert(/edit-student-medical-emergency-note/.test(adminDashboardHtml), 'admin st
 assert(/edit-student-medical-health-plan/.test(adminDashboardHtml), 'admin student editor should record supplied school health plan status');
 assert(/edit-student-medical-reviewed/.test(adminDashboardHtml), 'admin student editor should record last medical review date');
 assert(/edit-student-house/.test(adminDashboardHtml), 'admin student editor should optionally edit house');
+assert(/edit-student-gender/.test(adminDashboardHtml), 'admin student editor should optionally edit gender');
 assert(/edit-student-team/.test(adminDashboardHtml), 'admin student editor should optionally edit team');
 assert(/edit-student-pseudonym/.test(adminDashboardHtml), 'admin student editor should support privacy pseudonyms');
 assert(!/edit-student-consent-status/.test(adminDashboardHtml), 'admin student editor should not duplicate the athletics consent checklist');
@@ -599,7 +603,7 @@ assert(/training-status-list/.test(adminDashboardHtml), 'admin training tab shou
 assert(/role="tablist"/.test(adminDashboardHtml), 'admin tabs should expose a tablist role');
 assert(/aria-selected="true"/.test(adminDashboardHtml), 'admin active tab should expose selected state');
 assert(/aria-controls="tab-activity"/.test(adminDashboardHtml), 'admin tabs should reference tab panels');
-assert(/admin-dashboard\.js\?v=98/.test(adminDashboardHtml), 'admin dashboard should request the current live beta dashboard script');
+assert(/admin-dashboard\.js\?v=99/.test(adminDashboardHtml), 'admin dashboard should request the current live beta dashboard script');
 assert(/backend\.js\?v=23/.test(adminDashboardHtml), 'admin dashboard should load the current backend adapter before app scripts');
 
 const adminDashboardJs = read('admin-dashboard.js');
@@ -692,6 +696,9 @@ assert(/backendDataAccess\.deleteStudent/.test(adminDashboardJs), 'admin roster 
 assert(/Local roster save blocked/.test(adminDashboardJs), 'admin dashboard should block local-only roster saves in live data mode');
 assert(/importStudentsWithBackend/.test(adminDashboardJs), 'admin dashboard should guard roster imports before writing student data');
 assert(/headers\.indexOf\('house'\)/.test(adminDashboardJs) && /headers\.indexOf\('faction'\)/.test(adminDashboardJs), 'roster CSV import should accept an optional house or faction column');
+assert(/headers\.indexOf\('gender'\)/.test(adminDashboardJs), 'roster CSV import should accept an optional gender column');
+assert(/normalizeGenderValue/.test(adminDashboardJs), 'roster CSV import should normalize gender values (Boy/Girl/M/F) to boy/girl');
+assert(/renderCarnivalChampions/.test(adminDashboardJs), 'carnival day should live-render gender-split division champions from carnival-day results');
 assert(/house updated to/.test(adminDashboardJs), 'roster CSV import should backfill house on existing students instead of only skipping duplicates');
 assert(/onboarding-house-names/.test(adminDashboardHtml), 'school settings should include a House / faction names setting');
 assert(/House \/ faction names/.test(adminDashboardHtml), 'school settings should label the House / faction names input');
@@ -1270,14 +1277,14 @@ assert(/advertising trackers/.test(privacyPolicyHtml), 'privacy policy should ru
 assert(/School and Department approval/.test(privacyPolicyHtml), 'privacy policy should explain school and Department approval expectations');
 assert(/Medical and safety notes/.test(privacyPolicyHtml), 'privacy policy should explain medical and safety note boundaries');
 assert(/Security and breach response/.test(privacyPolicyHtml), 'privacy policy should explain breach response expectations');
-assert(/admin-dashboard\.js\?v=98/.test(adminDashboardHtml), 'admin dashboard should request the current live beta dashboard script');
+assert(/admin-dashboard\.js\?v=99/.test(adminDashboardHtml), 'admin dashboard should request the current live beta dashboard script');
 assert(/goals\.js\?v=5/.test(adminDashboardHtml), 'admin dashboard should request a fresh goals script after interschool goals changes');
 assert(/admin-goals\.js\?v=5/.test(adminDashboardHtml), 'admin dashboard should request a fresh admin goals script after interschool goals changes');
 assert(/student\.js\?v=21/.test(studentProfileHtml), 'student profile should request the current student portal script');
 assert(/goals\.js\?v=5/.test(studentProfileHtml), 'student profile should request a fresh goals script');
 assert(/student\.js\?v=21/.test(studentHtml), 'student login should request the current student portal script');
 assert(/goals\.js\?v=5/.test(studentHtml), 'student login should request a fresh goals script');
-assert(/gwynne-park-run-club-v178/.test(serviceWorker), 'service worker cache should be bumped for the About page refresh');
+assert(/gwynne-park-run-club-v179/.test(serviceWorker), 'service worker cache should be bumped for the About page refresh');
 assert(/backend\.js/.test(serviceWorker), 'service worker should cache the backend adapter');
 assert(/interschool-team\.html/.test(serviceWorker) && /interschool-team\.js/.test(serviceWorker), 'service worker should cache the dedicated interschool team page');
 assertFile('tests/backend-live-style.test.js');
