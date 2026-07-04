@@ -613,8 +613,23 @@
         </div>
 
         <div class="card" id="carnival-day-card">
-          <h2>Carnival Day</h2>
-          <p class="sports-mode-note">Run an athletics or cross country carnival: set the program, record results as usual, and the faction scoreboard tallies live from results dated on carnival day.</p>
+          <div class="sports-command-header">
+            <div>
+              <h2>Carnival Day</h2>
+              <p class="sports-command-subtitle">Run an athletics or cross country carnival: set the program, record results as usual, and the faction scoreboard tallies live from results dated on carnival day.</p>
+            </div>
+            <label class="athletics-mode-toggle">
+              <input type="checkbox" id="carnival-mode-toggle" />
+              <span class="athletics-mode-slider" aria-hidden="true"></span>
+              <span class="athletics-mode-label">
+                <strong>Carnival Day Mode</strong>
+                <small id="carnival-mode-state">Off - Carnival tools hidden</small>
+              </span>
+            </label>
+          </div>
+          <div class="athletics-mode-shell" id="carnival-mode-shell">
+            <p class="sports-mode-note">When on, set the program and record results as usual; the faction scoreboard tallies live from results dated on carnival day.</p>
+            <div id="carnival-mode-panel" class="athletics-mode-panel" hidden>
           <form id="carnival-create-form" class="compact-form">
             <div class="form-grid">
               <label>Carnival name
@@ -665,6 +680,8 @@
             </div>
           </div>
           <div id="carnival-output" class="inline-save-status" hidden></div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1693,7 +1710,7 @@
     <script src="goals.js?v=5"></script>
     <script src="admin-goals.js?v=5"></script>
     <script src="assets/qrcode-generator.js"></script>
-    <script src="admin-dashboard.js?v=92"></script>
+    <script src="admin-dashboard.js?v=93"></script>
     <script src="pwa.js"></script>
         <script src='https://storage.ko-fi.com/cdn/scripts/overlay-widget.js'></script>
     <script>
