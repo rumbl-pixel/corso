@@ -671,6 +671,18 @@
                   <option value="swimming" disabled>Swimming carnival (coming soon)</option>
                 </select>
               </label>
+              <label>Points scoring
+                <select id="carnival-points-mode">
+                  <option value="field-size">Field size (1st = number of racers)</option>
+                  <option value="fixed">Fixed table</option>
+                </select>
+              </label>
+              <label>Division scoring
+                <select id="carnival-points-tier">
+                  <option value="independent">Independent (each division scores 1..N)</option>
+                  <option value="tiered">Tiered (faster division scores higher)</option>
+                </select>
+              </label>
               <label>Points for places (optional)
                 <input type="text" id="carnival-points-input" placeholder="Default: 10,8,6,4,2,1" autocomplete="off" />
               </label>
@@ -1808,7 +1820,7 @@
     <script src="goals.js?v=5"></script>
     <script src="admin-goals.js?v=5"></script>
     <script src="assets/qrcode-generator.js"></script>
-    <script src="admin-dashboard.js?v=105"></script>
+    <script src="admin-dashboard.js?v=106"></script>
     <script src="pwa.js"></script>
         <script src='https://storage.ko-fi.com/cdn/scripts/overlay-widget.js'></script>
     <script>

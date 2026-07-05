@@ -75,6 +75,18 @@
     {id:'baton-relay',name:'Baton Relay',category:'relay',measure:'time',points:true}
   ];
 
+  var CARNIVAL_EVENT_OPTIONS = [
+    {id:'c-50m',name:'50m',category:'sprint',measure:'time'},
+    {id:'c-100m',name:'100m',category:'sprint',measure:'time'},
+    {id:'c-200m',name:'200m',category:'distance',measure:'time'},
+    {id:'c-800m',name:'800m',category:'distance',measure:'time'},
+    {id:'c-long-jump',name:'Long Jump',category:'jump',measure:'distance'},
+    {id:'c-high-jump',name:'High Jump',category:'jump',measure:'distance'},
+    {id:'c-vortex',name:'Vortex / Shot',category:'throw',measure:'distance'},
+    {id:'c-ball-games',name:'Ball Games',category:'ball-game',measure:'points'},
+    {id:'c-relay',name:'Faction Relay',category:'relay',measure:'time'}
+  ];
+
   var WARMUP_MOBILITY_DRILLS = [
     {id:'easy-jog',title:'Easy jog or skip',minutes:2,cue:'Raise temperature with relaxed movement'},
     {id:'leg-swings',title:'Leg swings',minutes:1,cue:'Front/back and side swings for hip mobility'},
@@ -3860,6 +3872,8 @@
   var carnivalDateEl=document.getElementById('carnival-date-input');
   var carnivalTypeEl=document.getElementById('carnival-type-select');
   var carnivalPointsEl=document.getElementById('carnival-points-input');
+  var carnivalPointsModeEl=document.getElementById('carnival-points-mode');
+  var carnivalPointsTierEl=document.getElementById('carnival-points-tier');
   var carnivalEventPickerEl=document.getElementById('carnival-event-picker');
   var carnivalActivePanelEl=document.getElementById('carnival-active-panel');
   var carnivalTitleEl=document.getElementById('carnival-active-title');
@@ -3897,6 +3911,15 @@
     return housePointsForPlace(place);
   }
 
+  function carnivalPointsForField(place, fieldSize, opts){
+    opts=opts||{}; var p=Number(place);
+    if(opts.mode==='fixed'){ var t=opts.scheme||[10,8,6,4,2,1]; return p>=1&&p<=t.length?t[p-1]:0; }
+    var offset=opts.offset||0;
+    var total=opts.tier==='tiered'?(opts.total||fieldSize):fieldSize;
+    var pts=total - offset - (p-1);
+    return pts>0?pts:0;
+  }
+
   function carnivalEventPool(type){
     if(type==='swimming'){return SWIMMING_EVENT_OPTIONS;}
     if(type==='cross-country'){
@@ -3907,7 +3930,7 @@
           {id:'xc-senior',name:'Senior Cross Country',category:'cross-country',measure:'time',division:'Senior'}
         ]);
     }
-    return ATHLETICS_EVENT_OPTIONS;
+    return CARNIVAL_EVENT_OPTIONS;
   }
 
   function renderCarnivalEventPicker(){
@@ -3916,6 +3939,14 @@
     carnivalEventPickerEl.innerHTML='<p class="sports-mode-note">Tick events in the order they should run:</p>'+pool.map(function(event){
       return '<label class="carnival-event-option"><input type="checkbox" value="'+escapeAttr(event.id)+'" data-carnival-event-name="'+escapeAttr(event.name)+'" /> '+escapeHtml(event.name)+(event.division?' <small>('+escapeHtml(event.division)+')</small>':'')+'</label>';
     }).join('');
+  }
+
+  function toggleCarnivalPointsControls(){
+    var mode=carnivalPointsModeEl?carnivalPointsModeEl.value:'field-size';
+    var pointsInputLabel=carnivalPointsEl?carnivalPointsEl.closest('label'):null;
+    if(pointsInputLabel){pointsInputLabel.hidden=mode!=='fixed';}
+    var tierLabel=carnivalPointsTierEl?carnivalPointsTierEl.closest('label'):null;
+    if(tierLabel){tierLabel.hidden=mode!=='field-size';}
   }
 
   function carnivalDayResults(carnival){
@@ -4054,7 +4085,10 @@
     if(carnivalActivePanelEl){carnivalActivePanelEl.hidden=!carnival;}
     if(!carnival){renderCarnivalEventPicker();return;}
     carnivalTitleEl.textContent=carnival.name;
-    carnivalMetaEl.textContent=' · '+carnival.date+' · '+carnival.type.replace('-',' ')+(carnival.points_scheme?' · points '+carnival.points_scheme.join('-'):'');
+    var scoringLabel=carnival.points_mode==='fixed'
+      ? ' · points '+(carnival.points_scheme?carnival.points_scheme.join('-'):'10-8-6-4-2-1')
+      : ' · scoring: field-size · '+(carnival.points_tier==='tiered'?'tiered':'independent');
+    carnivalMetaEl.textContent=' · '+carnival.date+' · '+carnival.type.replace('-',' ')+scoringLabel;
     var done=carnival.done_event_ids||[];
     var nextSeen=false;
     carnivalProgramListEl.innerHTML=carnival.event_ids.map(function(id){
@@ -4115,6 +4149,8 @@
       event_names:names,
       done_event_ids:[],
       points_scheme:parsePointsScheme(carnivalPointsEl.value),
+      points_mode:carnivalPointsModeEl&&carnivalPointsModeEl.value==='fixed'?'fixed':'field-size',
+      points_tier:carnivalPointsTierEl&&carnivalPointsTierEl.value==='tiered'?'tiered':'independent',
       created_at:new Date().toISOString()
     });
     showInlineStatus(carnivalOutputEl,true,'Carnival started.','Record results in the Record Race Results section below; the faction scoreboard tallies live.');
@@ -4133,7 +4169,9 @@
 
   if(carnivalCreateFormEl){
     renderCarnivalEventPicker();
+    toggleCarnivalPointsControls();
     if(carnivalTypeEl){carnivalTypeEl.addEventListener('change',renderCarnivalEventPicker);}
+    if(carnivalPointsModeEl){carnivalPointsModeEl.addEventListener('change',toggleCarnivalPointsControls);}
     carnivalCreateFormEl.addEventListener('submit',startCarnival);
     if(carnivalPrintBtn){carnivalPrintBtn.addEventListener('click',printCarnivalProgram);}
     if(carnivalEndBtn){carnivalEndBtn.addEventListener('click',function(){
