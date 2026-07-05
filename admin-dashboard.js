@@ -3870,6 +3870,7 @@
   var carnivalPrintBtn=document.getElementById('carnival-print-btn');
   var carnivalEndBtn=document.getElementById('carnival-end-btn');
   var carnivalOutputEl=document.getElementById('carnival-output');
+  var carnivalMiniCoachNotesEl=document.getElementById('carnival-minicoach-notes');
 
   function activeCarnival(){
     var carnival=load(CARNIVAL_KEY,null);
@@ -3979,6 +3980,69 @@
     carnivalChampionsEl.innerHTML=html||placeholder;
   }
 
+  function renderCarnivalMiniCoach(){
+    // ponytail: rule-based guided validation only — a real conversational AI
+    // carnival assistant is deferred to post-beta. Mirrors the Resources Mini
+    // Coach advisory pattern (push readable strings, render as <li>).
+    var carnival=activeCarnival();
+    if(!carnival||!carnivalMiniCoachNotesEl){return;}
+    var notes=[];
+    var eventIds=carnival.event_ids||[];
+    var names=carnival.event_names||{};
+    var results=carnivalDayResults(carnival);
+    var resultEventIds={};
+    results.forEach(function(row){resultEventIds[row.event_id]=true;});
+    var students=getStudents();
+
+    if(!eventIds.length){
+      notes.push('No events added to the program yet. Pick at least one event so results can be recorded.');
+    }
+
+    // Division coverage: only flag a division the program actually locks events to.
+    var pool=carnivalEventPool(carnival.type);
+    var divisionById={};
+    pool.forEach(function(event){if(event.division){divisionById[event.id]=event.division;}});
+    ['Junior','Intermediate','Senior'].forEach(function(division){
+      var programHasDivision=eventIds.some(function(id){return divisionById[id]===division;});
+      if(!programHasDivision){return;}
+      var rosterHas=students.some(function(s){return divisionForStudentFilter(s)===division;});
+      if(!rosterHas){
+        notes.push('No '+division+' students on the roster, but the program has '+division+' events. Import or assign students, or remove those events.');
+      }
+    });
+
+    var rotation=carnival.rotation;
+    if(rotation&&(rotation.stations||[]).length&&(rotation.year_groups||[]).length){
+      var rounds=rotation.rounds||[];
+      if(!rounds.length){
+        notes.push('Rotation stations are set but no rotation has been generated. Tap Auto-rotate to build the schedule.');
+      }else{
+        (rotation.year_groups||[]).forEach(function(year){
+          var alwaysBreak=rounds.every(function(round){
+            return (stationName(rotation,round.assignments[year])||'').toLowerCase()==='break';
+          });
+          if(alwaysBreak){
+            notes.push(year+' is on Break in every rotation round — check that’s intended.');
+          }
+        });
+      }
+    }
+
+    // Events with no results recorded yet (cap the list so it doesn't flood).
+    var missing=eventIds.filter(function(id){return !resultEventIds[id];});
+    missing.slice(0,5).forEach(function(id){
+      notes.push('No results recorded yet for '+(names[id]||id)+'.');
+    });
+    if(missing.length>5){
+      notes.push('…and '+(missing.length-5)+' more events without results.');
+    }
+
+    if(!notes.length){
+      notes.push('Carnival setup looks complete. Keep recording results as races finish.');
+    }
+    carnivalMiniCoachNotesEl.innerHTML=notes.map(function(note){return '<li>'+escapeHtml(note)+'</li>';}).join('');
+  }
+
   function renderCarnivalDay(){
     if(!carnivalCreateFormEl){return;}
     var carnival=activeCarnival();
@@ -4030,6 +4094,7 @@
     renderCarnivalBonus();
     renderCarnivalChampions();
     renderCarnivalRotation();
+    renderCarnivalMiniCoach();
   }
 
   function startCarnival(e){
@@ -4366,6 +4431,7 @@
         if(!round){return;}
         round.assignments[sel.getAttribute('data-rotation-year')]=sel.value;
         save(CARNIVAL_KEY,current);
+        renderCarnivalMiniCoach();
       });
     });
   }
@@ -4386,6 +4452,7 @@
     save(CARNIVAL_KEY,carnival);
     showInlineStatus(carnivalRotationOutputEl,true,'Stations and year groups saved.','Click Auto-rotate to build the schedule.');
     renderCarnivalRotation();
+    renderCarnivalMiniCoach();
   }
 
   function autoRotateCarnival(){
@@ -4396,6 +4463,7 @@
     save(CARNIVAL_KEY,carnival);
     showInlineStatus(carnivalRotationOutputEl,true,'Rotation generated.','Edit any cell below to customize a station.');
     renderCarnivalRotation();
+    renderCarnivalMiniCoach();
   }
 
   function printCarnivalRotation(){
