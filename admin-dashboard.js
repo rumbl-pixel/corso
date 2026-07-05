@@ -555,7 +555,7 @@
   var coachHubTabs = document.querySelectorAll('[data-coach-section]');
   var adminHubTabs = document.querySelectorAll('.admin-hub-tab');
   var tabPanels = document.querySelectorAll('.tab-panel');
-  var coachHubSections = ['sports','training','resources','future-intelligence'];
+  var coachHubSections = ['sports','training','resources','future-intelligence','carnival'];
   var activeCoachHubSection = 'sports';
   var adminHubSections = ['reports','school-settings','compliance','import','help'];
   var activeAdminHubSection = 'reports';
