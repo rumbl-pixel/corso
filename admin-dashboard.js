@@ -2630,7 +2630,7 @@
     editStudentLastEl.value=student.last||'';
     editStudentYearEl.value=student.year||'Year 1';
     editStudentClassEl.value=student.cls||'';
-    editStudentHouseEl.value=student.house||'';
+    populateFactionSelect(editStudentHouseEl,student.house||'');
     editStudentGenderEl.value=student.gender||'';
     editStudentTeamEl.value=student.team||'';
     editStudentPseudonymEl.value=student.pseudonym||student.preferred_name||'';
@@ -2736,6 +2736,7 @@
     saveStudentsWithBackend(students,student).then(function(result){
       if(!result.ok){showResult(addStudentResultEl,{success:false,error:result.error||result.reason||'Local roster save blocked.'});return;}
       addStudentFormEl.reset();
+      populateFactionSelect(document.getElementById('new-student-house'),'');
       refreshStudentViews();
       addStudentResultEl.hidden=true;
       renderBarcodeConfirmation(student);
@@ -5072,7 +5073,6 @@
   var onboardingYearGroupsEl=document.getElementById('onboarding-year-groups');
   var onboardingClassesEl=document.getElementById('onboarding-classes');
   var onboardingAwardThresholdsEl=document.getElementById('onboarding-award-thresholds');
-  var onboardingHouseNamesEl=document.getElementById('onboarding-house-names');
   var onboardingResultEl=document.getElementById('onboarding-result');
   var onboardingSummaryEl=document.getElementById('onboarding-summary');
   var multiSchoolFilterEl=document.getElementById('multi-school-filter');
@@ -5105,7 +5105,6 @@
     onboardingYearGroupsEl.value=settings.activeYears.join(', ');
     onboardingClassesEl.value=settings.classNames.join(', ');
     onboardingAwardThresholdsEl.value=settings.awardThresholds.join(', ');
-    if(onboardingHouseNamesEl){onboardingHouseNamesEl.value=(settings.houseNames||[]).join(', ');}
     onboardingSummaryEl.innerHTML='<div class="setup-summary-grid">'+
       '<div><strong>'+escapeHtml(settings.schoolName)+'</strong><span>School</span></div>'+
       '<div><strong>'+Math.round(settings.lapDistanceKm*1000)+'m</strong><span>Lap distance</span></div>'+
@@ -5127,8 +5126,7 @@
       defaultSessionType:onboardingSessionTypeEl.value||'Run Club',
       activeYears:cleanList(onboardingYearGroupsEl.value,['Year 1','Year 2','Year 3','Year 4','Year 5','Year 6']),
       classNames:cleanList(onboardingClassesEl.value,['1A','2A','3A','4C','5B','6A']),
-      awardThresholds:cleanThresholds(onboardingAwardThresholdsEl.value),
-      houseNames:onboardingHouseNamesEl?cleanList(onboardingHouseNamesEl.value,[]):[]
+      awardThresholds:cleanThresholds(onboardingAwardThresholdsEl.value)
     };
     saveProgramSettings(settings);
     renderScannerSettings();
@@ -5137,6 +5135,68 @@
     renderAwards();
     showResult(onboardingResultEl,{success:true,message:'Onboarding setup saved.',settings:settings});
   });
+
+  function factionNames(){ return (programSettings().houseNames||[]).filter(Boolean); }
+  function renderFactionSettings(){
+    var listEl=document.getElementById('faction-settings-list');
+    if(!listEl){return;}
+    var names=factionNames();
+    if(!names.length){names=[''];}
+    listEl.innerHTML=names.map(function(n,i){
+      return '<div class="form-grid" style="margin-bottom:0.4rem;"><input type="text" class="faction-name-input" data-faction-index="'+i+'" value="'+escapeAttr(n)+'" placeholder="Faction name" autocomplete="off" /><button type="button" class="secondary faction-remove-btn" data-faction-index="'+i+'">Remove</button></div>';
+    }).join('');
+    Array.prototype.forEach.call(listEl.querySelectorAll('.faction-remove-btn'),function(btn){
+      btn.addEventListener('click',function(){ saveFactionsFromInputs(Number(btn.getAttribute('data-faction-index'))); });
+    });
+    renderFactionUnmatched();
+  }
+  function saveFactionsFromInputs(removeIndex){
+    var inputs=Array.prototype.slice.call(document.querySelectorAll('#faction-settings-list .faction-name-input'));
+    var names=inputs.map(function(inp,i){return i===removeIndex?null:inp.value.trim();}).filter(Boolean);
+    // dedupe, keep order
+    var seen={}; names=names.filter(function(n){var k=n.toLowerCase();if(seen[k]){return false;}seen[k]=true;return true;});
+    saveProgramSettings({houseNames:names});
+    renderFactionSettings();
+    refreshFactionSelects();
+    showInlineStatus(document.getElementById('faction-settings-output'),true,'Factions saved.',names.join(', ')||'None set');
+  }
+  function renderFactionUnmatched(){
+    var noteEl=document.getElementById('faction-unmatched-note'); if(!noteEl){return;}
+    var set={}; factionNames().forEach(function(n){set[n.toLowerCase()]=true;});
+    var bad=getStudents().filter(function(s){return s.house && !set[String(s.house).toLowerCase()];})
+      .map(function(s){return s.name+' ('+s.house+')';});
+    noteEl.hidden=!bad.length;
+    if(bad.length){noteEl.textContent='Students with a faction not in this list: '+bad.slice(0,10).join(', ')+(bad.length>10?' …and '+(bad.length-10)+' more':'')+'. Edit them from the Students tab.';}
+  }
+  function populateFactionSelect(selectEl,currentValue){
+    if(!selectEl){return;}
+    var names=factionNames(); var cur=currentValue||'';
+    var opts='<option value="">— faction —</option>'+names.map(function(n){return '<option value="'+escapeAttr(n)+'"'+(n===cur?' selected':'')+'>'+escapeHtml(n)+'</option>';}).join('');
+    if(cur && names.indexOf(cur)===-1){opts+='<option value="'+escapeAttr(cur)+'" selected>'+escapeHtml(cur)+' (unmatched)</option>';}
+    selectEl.innerHTML=opts;
+  }
+  function refreshFactionSelects(){
+    var edit=document.getElementById('edit-student-house'); if(edit&&edit.tagName==='SELECT'){populateFactionSelect(edit,edit.value);}
+    var add=document.getElementById('new-student-house'); if(add&&add.tagName==='SELECT'){populateFactionSelect(add,add.value);}
+  }
+  var factionAddBtn=document.getElementById('faction-add-btn');
+  if(factionAddBtn){
+    factionAddBtn.addEventListener('click',function(){
+      var names=factionNames(); names.push('');
+      saveProgramSettings({houseNames:names});
+      renderFactionSettings();
+    });
+  }
+  var factionSeedBtn=document.getElementById('faction-seed-btn');
+  if(factionSeedBtn){
+    factionSeedBtn.addEventListener('click',function(){
+      saveProgramSettings({houseNames:['Red','Blue','Green','Yellow']});
+      renderFactionSettings();
+      refreshFactionSelects();
+    });
+  }
+  renderFactionSettings();
+  populateFactionSelect(document.getElementById('new-student-house'),'');
 
   function schoolNameForStudent(student){
     return String(student.school||student.school_name||programSettings().schoolName||'Gwynne Park Schools').trim()||'Gwynne Park Schools';

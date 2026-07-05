@@ -166,7 +166,7 @@
                 <input type="text" id="new-student-class" required placeholder="e.g. 5B" autocomplete="off" />
               </label>
               <label>House (optional)
-                <input type="text" id="new-student-house" placeholder="e.g. Gold" autocomplete="off" />
+                <select id="new-student-house"></select>
               </label>
               <label>Gender (optional, for carnival champions)
                 <select id="new-student-gender">
@@ -255,7 +255,7 @@
                 <input type="text" id="edit-student-class" required autocomplete="off" />
               </label>
               <label>House (optional)
-                <input type="text" id="edit-student-house" autocomplete="off" />
+                <select id="edit-student-house"></select>
               </label>
               <label>Gender (optional, for carnival champions)
                 <select id="edit-student-gender">
@@ -1173,14 +1173,20 @@
               <label>Award thresholds (laps)
                 <input type="text" id="onboarding-award-thresholds" placeholder="5, 10, 25, 50, 100" />
               </label>
-              <label>House / faction names
-                <input type="text" id="onboarding-house-names" placeholder="Red, Blue, Green, Yellow" />
-              </label>
             </div>
             <button id="save-onboarding-btn" type="submit">Save onboarding setup</button>
           </form>
           <pre id="onboarding-result" hidden></pre>
           <div id="onboarding-summary" class="setup-summary"></div>
+          <div class="faction-settings" style="margin-top:1rem;">
+            <h3 style="margin:0;">Factions / Houses</h3>
+            <p class="sports-mode-note">These names appear wherever a student is assigned a faction, and on the carnival scoreboard. Assignment is permanent per student.</p>
+            <div id="faction-settings-list"></div>
+            <button type="button" id="faction-add-btn" class="secondary">Add faction</button>
+            <button type="button" id="faction-seed-btn" class="secondary">Use Red / Blue / Green / Yellow</button>
+            <div id="faction-settings-output" class="inline-save-status" hidden></div>
+            <div id="faction-unmatched-note" class="sports-mode-note" hidden></div>
+          </div>
         </div>
 
         <div class="card">
@@ -1802,7 +1808,7 @@
     <script src="goals.js?v=5"></script>
     <script src="admin-goals.js?v=5"></script>
     <script src="assets/qrcode-generator.js"></script>
-    <script src="admin-dashboard.js?v=104"></script>
+    <script src="admin-dashboard.js?v=105"></script>
     <script src="pwa.js"></script>
         <script src='https://storage.ko-fi.com/cdn/scripts/overlay-widget.js'></script>
     <script>
