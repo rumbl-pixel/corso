@@ -701,6 +701,23 @@
                 <div id="carnival-xc-scores"></div>
               </div>
             </div>
+            <div id="carnival-rotation-section" class="compact-form" style="margin-top:0.8rem;">
+              <h3>Year Group Rotation</h3>
+              <p class="sports-mode-note">Move whole year groups through activity stations across rotation rounds so every year group visits every station.</p>
+              <div id="carnival-rotation-setup" class="form-grid">
+                <label>Stations (one per line)
+                  <textarea id="carnival-rotation-stations-input" rows="4" placeholder="Tunnel Ball&#10;Sprints&#10;Throwing&#10;Leader Ball&#10;Pass Ball&#10;Break"></textarea>
+                </label>
+                <label>Year groups (comma separated)
+                  <input type="text" id="carnival-rotation-years-input" placeholder="Year 1, Year 2, Year 3, Year 4, Year 5, Year 6" autocomplete="off" />
+                </label>
+              </div>
+              <button type="button" id="carnival-rotation-save-setup-btn" class="secondary">Save stations/year groups</button>
+              <button type="button" id="carnival-rotation-auto-btn">Auto-rotate</button>
+              <button type="button" id="carnival-rotation-print-btn" class="secondary">Print rotation</button>
+              <div id="carnival-rotation-output" class="inline-save-status" hidden></div>
+              <div id="carnival-rotation-grid" style="margin-top:0.8rem;"></div>
+            </div>
             <div id="carnival-race-section" class="compact-form" style="margin-top:0.8rem;">
               <h3>Record Race Results</h3>
               <p class="sports-mode-note">Pick an event from this carnival's program, choose a division, assign places, then save the whole race in one go.</p>
@@ -1777,7 +1794,7 @@
     <script src="goals.js?v=5"></script>
     <script src="admin-goals.js?v=5"></script>
     <script src="assets/qrcode-generator.js"></script>
-    <script src="admin-dashboard.js?v=99"></script>
+    <script src="admin-dashboard.js?v=100"></script>
     <script src="pwa.js"></script>
         <script src='https://storage.ko-fi.com/cdn/scripts/overlay-widget.js'></script>
     <script>

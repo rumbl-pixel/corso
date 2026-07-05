@@ -4029,6 +4029,7 @@
     populateCarnivalRaceEvents();
     renderCarnivalBonus();
     renderCarnivalChampions();
+    renderCarnivalRotation();
   }
 
   function startCarnival(e){
@@ -4278,6 +4279,147 @@
     carnivalBonusAwardBtnEl.addEventListener('click',awardCarnivalBonusPoints);
     // Initial renderCarnivalDay() ran before these element vars existed; paint once now.
     renderCarnivalBonus();
+  }
+
+  // === CARNIVAL YEAR GROUP ROTATION ===
+  // carnival.rotation lives on the carnival object itself, same pattern as
+  // bonus_points: {stations:[{id,name}], year_groups:[...], rounds:[{id,label,assignments:{year:stationId}}]}.
+  var DEFAULT_ROTATION_STATIONS=['Tunnel Ball','Sprints','Throwing','Leader Ball','Pass Ball','Break'];
+  var DEFAULT_ROTATION_YEARS=['Year 1','Year 2','Year 3','Year 4','Year 5','Year 6'];
+  var carnivalRotationStationsInputEl=document.getElementById('carnival-rotation-stations-input');
+  var carnivalRotationYearsInputEl=document.getElementById('carnival-rotation-years-input');
+  var carnivalRotationSaveSetupBtnEl=document.getElementById('carnival-rotation-save-setup-btn');
+  var carnivalRotationAutoBtnEl=document.getElementById('carnival-rotation-auto-btn');
+  var carnivalRotationPrintBtnEl=document.getElementById('carnival-rotation-print-btn');
+  var carnivalRotationOutputEl=document.getElementById('carnival-rotation-output');
+  var carnivalRotationGridEl=document.getElementById('carnival-rotation-grid');
+
+  function ensureCarnivalRotationSeed(carnival){
+    if(!carnival.rotation){
+      carnival.rotation={
+        stations:DEFAULT_ROTATION_STATIONS.map(function(name,i){return {id:'station-'+i,name:name};}),
+        year_groups:DEFAULT_ROTATION_YEARS.slice(),
+        rounds:[]
+      };
+    }
+    return carnival.rotation;
+  }
+
+  function stationName(rotation,id){
+    var found=(rotation.stations||[]).filter(function(s){return s.id===id;})[0];
+    return found?found.name:'';
+  }
+
+  function generateCarnivalRotationRounds(rotation){
+    // Simple deterministic round-robin: round N assigns year-group[i] to
+    // station[(i+N) % stationCount]. One round per station so every year
+    // group visits every station exactly once. More year groups than
+    // stations just doubles some stations up that round — expected.
+    var stations=rotation.stations||[];
+    var years=rotation.year_groups||[];
+    if(!stations.length||!years.length){return [];}
+    var rounds=[];
+    for(var n=0;n<stations.length;n++){
+      var assignments={};
+      years.forEach(function(year,i){
+        assignments[year]=stations[(i+n)%stations.length].id;
+      });
+      rounds.push({id:'round-'+n,label:'Round '+(n+1),assignments:assignments});
+    }
+    return rounds;
+  }
+
+  function renderCarnivalRotation(){
+    if(!carnivalRotationGridEl){return;}
+    var carnival=activeCarnival();
+    if(!carnival){return;}
+    var rotation=ensureCarnivalRotationSeed(carnival);
+    if(carnivalRotationStationsInputEl&&document.activeElement!==carnivalRotationStationsInputEl){
+      carnivalRotationStationsInputEl.value=rotation.stations.map(function(s){return s.name;}).join('\n');
+    }
+    if(carnivalRotationYearsInputEl&&document.activeElement!==carnivalRotationYearsInputEl){
+      carnivalRotationYearsInputEl.value=rotation.year_groups.join(', ');
+    }
+    if(!rotation.rounds.length){
+      carnivalRotationGridEl.innerHTML='<p class="sports-mode-note">No rotation yet. Check stations/year groups above, then click Auto-rotate.</p>';
+      return;
+    }
+    var stationOptions=rotation.stations.map(function(s){return '<option value="'+escapeAttr(s.id)+'">'+escapeHtml(s.name)+'</option>';}).join('');
+    var html='<table class="progress-history-table"><thead><tr><th>Year group</th>'+
+      rotation.rounds.map(function(r){return '<th>'+escapeHtml(r.label)+'</th>';}).join('')+
+      '</tr></thead><tbody>';
+    rotation.year_groups.forEach(function(year){
+      html+='<tr><td>'+escapeHtml(year)+'</td>'+rotation.rounds.map(function(r){
+        var stationId=r.assignments[year]||'';
+        return '<td><select data-rotation-round="'+escapeAttr(r.id)+'" data-rotation-year="'+escapeAttr(year)+'">'+
+          stationOptions.replace('value="'+escapeAttr(stationId)+'"','value="'+escapeAttr(stationId)+'" selected')+
+          '</select></td>';
+      }).join('')+'</tr>';
+    });
+    html+='</tbody></table>';
+    carnivalRotationGridEl.innerHTML=html;
+    Array.prototype.forEach.call(carnivalRotationGridEl.querySelectorAll('select[data-rotation-round]'),function(sel){
+      sel.addEventListener('change',function(){
+        var current=activeCarnival();
+        if(!current||!current.rotation){return;}
+        var round=current.rotation.rounds.filter(function(r){return r.id===sel.getAttribute('data-rotation-round');})[0];
+        if(!round){return;}
+        round.assignments[sel.getAttribute('data-rotation-year')]=sel.value;
+        save(CARNIVAL_KEY,current);
+      });
+    });
+  }
+
+  function saveCarnivalRotationSetup(){
+    var carnival=activeCarnival();
+    if(!carnival){return;}
+    var rotation=ensureCarnivalRotationSeed(carnival);
+    var stationNames=String(carnivalRotationStationsInputEl.value||'').split('\n').map(function(s){return s.trim();}).filter(Boolean);
+    var years=String(carnivalRotationYearsInputEl.value||'').split(',').map(function(s){return s.trim();}).filter(Boolean);
+    if(!stationNames.length||!years.length){showInlineStatus(carnivalRotationOutputEl,false,'Add at least one station and one year group.');return;}
+    // Keep existing station ids where the name persists (by position) so
+    // saved rounds don't silently point at stale ids; simplest is to just
+    // rebuild ids fresh and clear rounds, prompting a re-generate.
+    rotation.stations=stationNames.map(function(name,i){return {id:'station-'+i,name:name};});
+    rotation.year_groups=years;
+    rotation.rounds=[];
+    save(CARNIVAL_KEY,carnival);
+    showInlineStatus(carnivalRotationOutputEl,true,'Stations and year groups saved.','Click Auto-rotate to build the schedule.');
+    renderCarnivalRotation();
+  }
+
+  function autoRotateCarnival(){
+    var carnival=activeCarnival();
+    if(!carnival){return;}
+    var rotation=ensureCarnivalRotationSeed(carnival);
+    rotation.rounds=generateCarnivalRotationRounds(rotation);
+    save(CARNIVAL_KEY,carnival);
+    showInlineStatus(carnivalRotationOutputEl,true,'Rotation generated.','Edit any cell below to customize a station.');
+    renderCarnivalRotation();
+  }
+
+  function printCarnivalRotation(){
+    var carnival=activeCarnival();
+    if(!carnival||!carnival.rotation||!carnival.rotation.rounds.length){return;}
+    var rotation=carnival.rotation;
+    var printWin=window.open('','_blank');
+    if(!printWin){return;}
+    var rows=rotation.year_groups.map(function(year){
+      return '<tr><td>'+escapeHtml(year)+'</td>'+rotation.rounds.map(function(r){
+        return '<td>'+escapeHtml(stationName(rotation,r.assignments[year])||'')+'</td>';
+      }).join('')+'</tr>';
+    }).join('');
+    var head=rotation.rounds.map(function(r){return '<th>'+escapeHtml(r.label)+'</th>';}).join('');
+    printWin.document.write('<html><head><title>'+escapeHtml(carnival.name)+' Rotation</title><style>body{font-family:sans-serif;padding:2rem;}h1{margin-bottom:0;}table{border-collapse:collapse;width:100%;margin-top:1rem;}th,td{border:1px solid #ccc;padding:0.5rem;text-align:left;}</style></head><body><h1>'+escapeHtml(carnival.name)+' &mdash; Rotation</h1><p>'+escapeHtml(carnival.date)+'</p><table><thead><tr><th>Year group</th>'+head+'</tr></thead><tbody>'+rows+'</tbody></table></body></html>');
+    printWin.document.close();
+    schedulePrintWindow(printWin);
+  }
+
+  if(carnivalRotationSaveSetupBtnEl){
+    carnivalRotationSaveSetupBtnEl.addEventListener('click',saveCarnivalRotationSetup);
+    carnivalRotationAutoBtnEl.addEventListener('click',autoRotateCarnival);
+    carnivalRotationPrintBtnEl.addEventListener('click',printCarnivalRotation);
+    renderCarnivalRotation();
   }
 
   // === LEADERBOARD ===
