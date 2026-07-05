@@ -3878,7 +3878,10 @@
   }
 
   function parsePointsScheme(raw){
-    var list=String(raw||'').split(',').map(function(part){return Number(part.trim());}).filter(function(n){return isFinite(n)&&n>=0;});
+    // Filter blank parts BEFORE Number(): an empty input or trailing comma would
+    // otherwise become Number('')===0 and survive as a bogus [0] scheme, which
+    // then scores every place 0 instead of falling back to the school default.
+    var list=String(raw||'').split(',').map(function(part){return part.trim();}).filter(Boolean).map(Number).filter(function(n){return isFinite(n)&&n>=0;});
     return list.length?list:null;
   }
 
