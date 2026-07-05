@@ -4084,7 +4084,7 @@
     var houses=Object.keys(points).map(function(house){return {house:house,points:points[house]};}).sort(function(a,b){return b.points-a.points;});
     carnivalScoreboardEl.innerHTML=houses.length
       ? '<table class="progress-history-table"><thead><tr><th>House</th><th>Points</th></tr></thead><tbody>'+houses.map(function(row,i){return '<tr'+(i===0?' class="carnival-scoreboard-leader"':'')+'><td>'+escapeHtml(row.house)+'</td><td>'+row.points+'</td></tr>';}).join('')+'</tbody></table>'
-      : '<p class="sports-mode-note">No results recorded on carnival day yet. Save results above and they tally here.</p>';
+      : '<p class="sports-mode-note">No results recorded on carnival day yet. Save results below and they tally here.</p>';
     var isXc=carnival.type==='cross-country';
     if(carnivalXcWrapEl){carnivalXcWrapEl.hidden=!isXc;}
     if(isXc&&carnivalXcScoresEl){
@@ -4116,7 +4116,7 @@
       points_scheme:parsePointsScheme(carnivalPointsEl.value),
       created_at:new Date().toISOString()
     });
-    showInlineStatus(carnivalOutputEl,true,'Carnival started.','Record results in Interschool Results above; the scoreboard tallies live.');
+    showInlineStatus(carnivalOutputEl,true,'Carnival started.','Record results in the Record Race Results section below; the faction scoreboard tallies live.');
     renderCarnivalDay();
   }
 
