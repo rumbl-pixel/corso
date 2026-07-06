@@ -102,7 +102,7 @@ assert(/assets\/corso-logo\.png/.test(read('index.html')), 'home page should use
 const serviceWorker = read('service-worker.js');
 assert(/CACHE_NAME/.test(serviceWorker), 'service worker should define a cache name');
 assert(/CORE_ASSETS/.test(serviceWorker), 'service worker should cache the core app shell');
-assert(/gwynne-park-run-club-v186/.test(serviceWorker), 'service worker cache should be bumped after today\'s deploy so returning browsers pick up the new build instead of serving stale cache-first assets');
+assert(/gwynne-park-run-club-v187/.test(serviceWorker), 'service worker cache should be bumped after today\'s deploy so returning browsers pick up the new build instead of serving stale cache-first assets');
 assert(/\.\/about\.html/.test(serviceWorker), 'service worker should cache the About page');
 assert(/manifest\.webmanifest/.test(serviceWorker), 'service worker should cache the manifest');
 assert(/app-icon-192\.png/.test(serviceWorker) && /app-icon-512\.png/.test(serviceWorker), 'service worker should cache app icons');
@@ -385,6 +385,8 @@ assert(/carnival-type-select/.test(adminDashboardHtml), 'carnival create should 
 assert(/carnival-program-list/.test(adminDashboardHtml), 'carnival day should render the event running order');
 assert(/carnival-scoreboard/.test(adminDashboardHtml), 'carnival day should render a live faction scoreboard');
 assert(/carnival-print-btn/.test(adminDashboardHtml), 'carnival day should offer a printable program');
+assert(/carnival-division-setup-section/.test(adminDashboardHtml), 'carnival day should include a division setup section');
+assert(/carnival-division-autosplit-btn/.test(adminDashboardHtml), 'carnival division setup should offer auto-split by time');
 assert(/carnival-race-section/.test(adminDashboardHtml), 'carnival day should include a Record Race Results section');
 assert(/carnival-race-event-select/.test(adminDashboardHtml), 'carnival race recorder should pick events from the active carnival program');
 assert(/carnival-race-division-select/.test(adminDashboardHtml), 'carnival race recorder should pick a Junior/Intermediate/Senior division');
@@ -612,7 +614,7 @@ assert(/training-status-list/.test(adminDashboardHtml), 'admin training tab shou
 assert(/role="tablist"/.test(adminDashboardHtml), 'admin tabs should expose a tablist role');
 assert(/aria-selected="true"/.test(adminDashboardHtml), 'admin active tab should expose selected state');
 assert(/aria-controls="tab-activity"/.test(adminDashboardHtml), 'admin tabs should reference tab panels');
-assert(/admin-dashboard\.js\?v=106/.test(adminDashboardHtml), 'admin dashboard should request the current live beta dashboard script');
+assert(/admin-dashboard\.js\?v=107/.test(adminDashboardHtml), 'admin dashboard should request the current live beta dashboard script');
 assert(/backend\.js\?v=23/.test(adminDashboardHtml), 'admin dashboard should load the current backend adapter before app scripts');
 
 const adminDashboardJs = read('admin-dashboard.js');
@@ -774,6 +776,7 @@ assert(/carnivalPointsForPlace/.test(adminDashboardJs), 'carnival scoring should
 assert(/\.filter\(Boolean\)\.map\(Number\)/.test(adminDashboardJs), 'parsePointsScheme must drop blank parts before Number() so an empty points input falls back to the school default instead of a bogus [0] scheme that scores every place 0');
 assert(/crossCountryTeamScores/.test(adminDashboardJs), 'cross country carnivals should compute first-four team scores per house');
 assert(/saveCarnivalRaceResults/.test(adminDashboardJs), 'carnival race recorder should batch-save a whole race of placings');
+assert(/autoSplitDivisions/.test(adminDashboardJs), 'carnival should auto-split students into speed divisions by time');
 assert(/renderCarnivalRaceRoster/.test(adminDashboardJs), 'carnival race recorder should render the division roster with place selectors');
 assert(/populateCarnivalRaceEvents/.test(adminDashboardJs), 'carnival race recorder should populate events from the active carnival program only');
 assert(/awardCarnivalBonusPoints/.test(adminDashboardJs), 'carnival day should support coach-awarded bonus points');
@@ -1299,14 +1302,14 @@ assert(/advertising trackers/.test(privacyPolicyHtml), 'privacy policy should ru
 assert(/School and Department approval/.test(privacyPolicyHtml), 'privacy policy should explain school and Department approval expectations');
 assert(/Medical and safety notes/.test(privacyPolicyHtml), 'privacy policy should explain medical and safety note boundaries');
 assert(/Security and breach response/.test(privacyPolicyHtml), 'privacy policy should explain breach response expectations');
-assert(/admin-dashboard\.js\?v=106/.test(adminDashboardHtml), 'admin dashboard should request the current live beta dashboard script');
+assert(/admin-dashboard\.js\?v=107/.test(adminDashboardHtml), 'admin dashboard should request the current live beta dashboard script');
 assert(/goals\.js\?v=5/.test(adminDashboardHtml), 'admin dashboard should request a fresh goals script after interschool goals changes');
 assert(/admin-goals\.js\?v=5/.test(adminDashboardHtml), 'admin dashboard should request a fresh admin goals script after interschool goals changes');
 assert(/student\.js\?v=21/.test(studentProfileHtml), 'student profile should request the current student portal script');
 assert(/goals\.js\?v=5/.test(studentProfileHtml), 'student profile should request a fresh goals script');
 assert(/student\.js\?v=21/.test(studentHtml), 'student login should request the current student portal script');
 assert(/goals\.js\?v=5/.test(studentHtml), 'student login should request a fresh goals script');
-assert(/gwynne-park-run-club-v186/.test(serviceWorker), 'service worker cache should be bumped for the About page refresh');
+assert(/gwynne-park-run-club-v187/.test(serviceWorker), 'service worker cache should be bumped for the About page refresh');
 assert(/backend\.js/.test(serviceWorker), 'service worker should cache the backend adapter');
 assert(/interschool-team\.html/.test(serviceWorker) && /interschool-team\.js/.test(serviceWorker), 'service worker should cache the dedicated interschool team page');
 assertFile('tests/backend-live-style.test.js');

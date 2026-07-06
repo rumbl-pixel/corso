@@ -738,6 +738,22 @@
               <div id="carnival-rotation-output" class="inline-save-status" hidden></div>
               <div id="carnival-rotation-grid" style="margin-top:0.8rem;"></div>
             </div>
+            <div id="carnival-division-setup-section" class="compact-form" style="margin-top:0.8rem;">
+              <h3>Set Up Divisions</h3>
+              <p class="sports-mode-note">Enter times for an event and year group, auto-split into speed divisions (max 10 per band), then adjust bands by hand if needed.</p>
+              <div class="form-grid">
+                <label>Event
+                  <select id="carnival-division-event-select"></select>
+                </label>
+                <label>Year group
+                  <select id="carnival-division-year-select"></select>
+                </label>
+              </div>
+              <div id="carnival-division-roster"></div>
+              <button type="button" id="carnival-division-autosplit-btn" class="secondary" hidden>Auto-split by time</button>
+              <button type="button" id="carnival-division-save-btn" hidden>Save divisions</button>
+              <div id="carnival-division-output" class="inline-save-status" hidden></div>
+            </div>
             <div id="carnival-race-section" class="compact-form" style="margin-top:0.8rem;">
               <h3>Record Race Results</h3>
               <p class="sports-mode-note">Pick an event from this carnival's program, choose a division, assign places, then save the whole race in one go.</p>
@@ -1820,7 +1836,7 @@
     <script src="goals.js?v=5"></script>
     <script src="admin-goals.js?v=5"></script>
     <script src="assets/qrcode-generator.js"></script>
-    <script src="admin-dashboard.js?v=106"></script>
+    <script src="admin-dashboard.js?v=107"></script>
     <script src="pwa.js"></script>
         <script src='https://storage.ko-fi.com/cdn/scripts/overlay-widget.js'></script>
     <script>

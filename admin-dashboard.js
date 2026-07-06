@@ -4129,6 +4129,7 @@
         : '<p class="sports-mode-note">No placed finishers yet.</p>';
     }
     populateCarnivalRaceEvents();
+    renderCarnivalDivisionSetup();
     renderCarnivalBonus();
     renderCarnivalChampions();
     renderCarnivalRotation();
@@ -4180,6 +4181,191 @@
       renderCarnivalDay();
     });}
     renderCarnivalDay();
+  }
+
+  // === CARNIVAL DIVISION SETUP ===
+  // carnival.divisions[eventId][yearGroup] = {times:{studentId:seconds}, bands:[{label,student_ids}]}.
+  // Phase A: times + auto-split + manual band adjust. Record flow (Task 4) reads these bands.
+  function carnivalYearGroups(){
+    return Array.from(new Set(getStudents().map(function(student){return student.year;}).filter(Boolean))).sort();
+  }
+
+  function autoSplitDivisions(students, times){
+    // students: [{id}], times: {id: seconds|null|undefined}
+    var sorted=students.slice().sort(function(a,b){
+      var ta=times[a.id], tb=times[b.id];
+      var ua=(ta==null||isNaN(ta)), ub=(tb==null||isNaN(tb));
+      if(ua&&ub){return 0;}          // both untimed: stable
+      if(ua){return 1;}              // untimed sink
+      if(ub){return -1;}
+      return ta-tb;                  // faster first
+    });
+    var bands=[]; var labels='ABCDEFGHIJ';
+    for(var i=0;i<sorted.length;i+=10){
+      bands.push({label:labels[bands.length]||('D'+(bands.length+1)), student_ids:sorted.slice(i,i+10).map(function(s){return s.id;})});
+    }
+    return bands;
+  }
+
+  function carnivalDivisionFor(carnival,eventId,yearGroup){
+    var byEvent=(carnival.divisions||{})[eventId]||{};
+    return byEvent[yearGroup]||null;
+  }
+
+  function saveCarnivalDivision(eventId,yearGroup,bands,times){
+    var carnival=activeCarnival();
+    if(!carnival){return;}
+    carnival.divisions=carnival.divisions||{};
+    carnival.divisions[eventId]=carnival.divisions[eventId]||{};
+    carnival.divisions[eventId][yearGroup]={times:times||{},bands:bands||[]};
+    save(CARNIVAL_KEY,carnival);
+    return carnival;
+  }
+
+  var carnivalDivisionEventSelectEl=document.getElementById('carnival-division-event-select');
+  var carnivalDivisionYearSelectEl=document.getElementById('carnival-division-year-select');
+  var carnivalDivisionRosterEl=document.getElementById('carnival-division-roster');
+  var carnivalDivisionAutosplitBtnEl=document.getElementById('carnival-division-autosplit-btn');
+  var carnivalDivisionSaveBtnEl=document.getElementById('carnival-division-save-btn');
+  var carnivalDivisionOutputEl=document.getElementById('carnival-division-output');
+
+  function populateCarnivalDivisionEvents(){
+    if(!carnivalDivisionEventSelectEl){return;}
+    var carnival=activeCarnival();
+    if(!carnival){return;}
+    var selected=carnivalDivisionEventSelectEl.value;
+    carnivalDivisionEventSelectEl.innerHTML='<option value="">Choose event</option>'+(carnival.event_ids||[]).map(function(id){
+      return '<option value="'+escapeAttr(id)+'">'+escapeHtml((carnival.event_names||{})[id]||id)+'</option>';
+    }).join('');
+    if(selected&&carnival.event_ids.indexOf(selected)!==-1){carnivalDivisionEventSelectEl.value=selected;}
+  }
+
+  function populateCarnivalDivisionYears(){
+    if(!carnivalDivisionYearSelectEl){return;}
+    var selected=carnivalDivisionYearSelectEl.value;
+    var years=carnivalYearGroups();
+    carnivalDivisionYearSelectEl.innerHTML='<option value="">Choose year group</option>'+years.map(function(y){
+      return '<option value="'+escapeAttr(y)+'">'+escapeHtml(y)+'</option>';
+    }).join('');
+    if(selected&&years.indexOf(selected)!==-1){carnivalDivisionYearSelectEl.value=selected;}
+  }
+
+  function carnivalDivisionBandOptions(bands,count){
+    // At least A-C, or one more than the current band count (a spare band to move into).
+    var n=Math.max(3,(bands||[]).length+1,count?Math.ceil(count/10):0);
+    var labels='ABCDEFGHIJ';
+    var opts='';
+    for(var i=0;i<n && i<labels.length;i++){
+      opts+='<option value="'+labels[i]+'">'+labels[i]+'</option>';
+    }
+    return opts;
+  }
+
+  function renderCarnivalDivisionSetup(){
+    if(!carnivalDivisionRosterEl){return;}
+    var carnival=activeCarnival();
+    if(!carnival){return;}
+    populateCarnivalDivisionEvents();
+    populateCarnivalDivisionYears();
+    var eventId=carnivalDivisionEventSelectEl?carnivalDivisionEventSelectEl.value:'';
+    var yearGroup=carnivalDivisionYearSelectEl?carnivalDivisionYearSelectEl.value:'';
+    if(carnivalDivisionOutputEl){carnivalDivisionOutputEl.hidden=true;}
+    if(!eventId||!yearGroup){
+      carnivalDivisionRosterEl.innerHTML='<p class="sports-mode-note">Choose an event and year group to set up divisions.</p>';
+      if(carnivalDivisionAutosplitBtnEl){carnivalDivisionAutosplitBtnEl.hidden=true;}
+      if(carnivalDivisionSaveBtnEl){carnivalDivisionSaveBtnEl.hidden=true;}
+      return;
+    }
+    var students=getStudents().filter(function(s){return s.year===yearGroup;})
+      .sort(function(a,b){return String(a.name).localeCompare(String(b.name));});
+    if(!students.length){
+      carnivalDivisionRosterEl.innerHTML='<p class="sports-mode-note">No students in '+escapeHtml(yearGroup)+'.</p>';
+      if(carnivalDivisionAutosplitBtnEl){carnivalDivisionAutosplitBtnEl.hidden=true;}
+      if(carnivalDivisionSaveBtnEl){carnivalDivisionSaveBtnEl.hidden=true;}
+      return;
+    }
+    var existing=carnivalDivisionFor(carnival,eventId,yearGroup);
+    var times=(existing&&existing.times)||{};
+    var bands=(existing&&existing.bands)||[];
+    var bandByStudent={};
+    bands.forEach(function(band){(band.student_ids||[]).forEach(function(id){bandByStudent[id]=band.label;});});
+    carnivalDivisionRosterEl.innerHTML='<table class="progress-history-table"><thead><tr><th>Student</th><th>Time</th><th>Band</th></tr></thead><tbody>'+
+      students.map(function(student){
+        var timeVal=times[student.id]!=null?times[student.id]:'';
+        var band=bandByStudent[student.id]||'A';
+        return '<tr><td>'+escapeHtml(student.name)+'</td>'+
+          '<td><input type="text" class="carnival-division-time" data-student-id="'+escapeAttr(student.id)+'" value="'+escapeAttr(timeVal)+'" placeholder="m:ss" autocomplete="off" /></td>'+
+          '<td><select class="carnival-division-band" data-student-id="'+escapeAttr(student.id)+'">'+carnivalDivisionBandOptions(bands,students.length)+'</select></td></tr>';
+      }).join('')+'</tbody></table>';
+    Array.prototype.forEach.call(carnivalDivisionRosterEl.querySelectorAll('.carnival-division-band'),function(select){
+      select.value=bandByStudent[select.getAttribute('data-student-id')]||'A';
+    });
+    if(carnivalDivisionAutosplitBtnEl){carnivalDivisionAutosplitBtnEl.hidden=false;}
+    if(carnivalDivisionSaveBtnEl){carnivalDivisionSaveBtnEl.hidden=false;}
+    Array.prototype.forEach.call(carnivalDivisionRosterEl.querySelectorAll('.carnival-division-band'),function(select){
+      select.addEventListener('change',function(){
+        var destLabel=select.value;
+        var rosterSelects=Array.prototype.slice.call(carnivalDivisionRosterEl.querySelectorAll('.carnival-division-band'));
+        var destCount=rosterSelects.filter(function(s){return s!==select&&s.value===destLabel;}).length;
+        if(destCount>=10){
+          showInlineStatus(carnivalDivisionOutputEl,false,'Band '+destLabel+' already has 10 students. Move someone out first.');
+          select.value=select.getAttribute('data-previous-band')||'A';
+          return;
+        }
+        select.setAttribute('data-previous-band',destLabel);
+      });
+      select.setAttribute('data-previous-band',select.value);
+    });
+  }
+
+  function autoSplitCarnivalDivision(){
+    if(!carnivalDivisionRosterEl){return;}
+    var timeInputs=Array.prototype.slice.call(carnivalDivisionRosterEl.querySelectorAll('.carnival-division-time'));
+    if(!timeInputs.length){return;}
+    var students=timeInputs.map(function(input){return {id:input.getAttribute('data-student-id')};});
+    var times={};
+    timeInputs.forEach(function(input){times[input.getAttribute('data-student-id')]=resultNumber(input.value);});
+    var bands=autoSplitDivisions(students,times);
+    var bandByStudent={};
+    bands.forEach(function(band){(band.student_ids||[]).forEach(function(id){bandByStudent[id]=band.label;});});
+    Array.prototype.forEach.call(carnivalDivisionRosterEl.querySelectorAll('.carnival-division-band'),function(select){
+      var id=select.getAttribute('data-student-id');
+      // Refresh option list in case auto-split needs more bands than currently offered.
+      select.innerHTML=carnivalDivisionBandOptions(bands,students.length);
+      select.value=bandByStudent[id]||'A';
+      select.setAttribute('data-previous-band',select.value);
+    });
+    showInlineStatus(carnivalDivisionOutputEl,true,'Auto-split by time applied.','Review bands, adjust manually if needed, then Save divisions.');
+  }
+
+  function saveCarnivalDivisionFromForm(){
+    var carnival=activeCarnival();
+    if(!carnival){return;}
+    var eventId=carnivalDivisionEventSelectEl?carnivalDivisionEventSelectEl.value:'';
+    var yearGroup=carnivalDivisionYearSelectEl?carnivalDivisionYearSelectEl.value:'';
+    if(!eventId||!yearGroup){showInlineStatus(carnivalDivisionOutputEl,false,'Choose an event and year group first.');return;}
+    var times={};
+    Array.prototype.forEach.call(carnivalDivisionRosterEl.querySelectorAll('.carnival-division-time'),function(input){
+      var seconds=resultNumber(input.value);
+      if(seconds!=null){times[input.getAttribute('data-student-id')]=seconds;}
+    });
+    var byLabel={};
+    Array.prototype.forEach.call(carnivalDivisionRosterEl.querySelectorAll('.carnival-division-band'),function(select){
+      var label=select.value;
+      (byLabel[label]=byLabel[label]||[]).push(select.getAttribute('data-student-id'));
+    });
+    var bands=Object.keys(byLabel).sort().map(function(label){return {label:label,student_ids:byLabel[label]};});
+    saveCarnivalDivision(eventId,yearGroup,bands,times);
+    showInlineStatus(carnivalDivisionOutputEl,true,'Divisions saved.',bands.length+' band'+(bands.length===1?'':'s')+' for '+yearGroup+'.');
+    renderCarnivalDivisionSetup();
+  }
+
+  if(carnivalDivisionEventSelectEl){
+    carnivalDivisionEventSelectEl.addEventListener('change',renderCarnivalDivisionSetup);
+    carnivalDivisionYearSelectEl.addEventListener('change',renderCarnivalDivisionSetup);
+    if(carnivalDivisionAutosplitBtnEl){carnivalDivisionAutosplitBtnEl.addEventListener('click',autoSplitCarnivalDivision);}
+    if(carnivalDivisionSaveBtnEl){carnivalDivisionSaveBtnEl.addEventListener('click',saveCarnivalDivisionFromForm);}
+    renderCarnivalDivisionSetup();
   }
 
   // === CARNIVAL RACE RECORDER ===
