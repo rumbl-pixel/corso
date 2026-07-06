@@ -3994,12 +3994,12 @@
     Object.keys(totals).forEach(function(id){
       var entry=totals[id];
       if(entry.points<=0){return;}
-      var key=divisionForStudentFilter(entry.student)+'|'+entry.student.gender;
+      var key=entry.student.year+'|'+entry.student.gender;
       (groups[key]=groups[key]||[]).push(entry);
     });
     var rankLabels=['Champion','Runner-up','2nd Runner-up'];
     var html='';
-    ['Junior','Intermediate','Senior'].forEach(function(division){
+    carnivalYearGroups().forEach(function(division){
       var rows=[];
       ['boy','girl'].forEach(function(gender){
         var label=gender==='boy'?'Boy':'Girl';
@@ -4033,18 +4033,24 @@
       notes.push('No events added to the program yet. Pick at least one event so results can be recorded.');
     }
 
-    // Division coverage: only flag a division the program actually locks events to.
-    var pool=carnivalEventPool(carnival.type);
-    var divisionById={};
-    pool.forEach(function(event){if(event.division){divisionById[event.id]=event.division;}});
-    ['Junior','Intermediate','Senior'].forEach(function(division){
-      var programHasDivision=eventIds.some(function(id){return divisionById[id]===division;});
-      if(!programHasDivision){return;}
-      var rosterHas=students.some(function(s){return divisionForStudentFilter(s)===division;});
-      if(!rosterHas){
-        notes.push('No '+division+' students on the roster, but the program has '+division+' events. Import or assign students, or remove those events.');
+    // Division setup coverage: nudge to set up divisions per program event, and
+    // flag event+year groups whose divisions are ready but have no results yet.
+    var bandsNoResults=[];
+    eventIds.forEach(function(eventId){
+      var evName=names[eventId]||eventId;
+      var eventDivs=(carnival.divisions||{})[eventId]||{};
+      var setYears=Object.keys(eventDivs).filter(function(y){return (eventDivs[y].bands||[]).length;});
+      if(!setYears.length){
+        notes.push('Set up divisions for '+evName+' before recording its races.');
+        return;
       }
+      setYears.forEach(function(year){
+        var hasResult=results.some(function(row){return row.event_id===eventId&&row.year===year;});
+        if(!hasResult){bandsNoResults.push(evName+' — '+year+': divisions ready, no results recorded yet.');}
+      });
     });
+    bandsNoResults.slice(0,4).forEach(function(note){notes.push(note);});
+    if(bandsNoResults.length>4){notes.push('…and '+(bandsNoResults.length-4)+' more year groups without results.');}
 
     var rotation=carnival.rotation;
     if(rotation&&(rotation.stations||[]).length&&(rotation.year_groups||[]).length){
