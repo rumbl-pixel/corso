@@ -4370,6 +4370,7 @@
 
   // === CARNIVAL RACE RECORDER ===
   var carnivalRaceEventSelectEl=document.getElementById('carnival-race-event-select');
+  var carnivalRaceYearSelectEl=document.getElementById('carnival-race-year-select');
   var carnivalRaceDivisionSelectEl=document.getElementById('carnival-race-division-select');
   var carnivalRaceRosterEl=document.getElementById('carnival-race-roster');
   var carnivalRaceSaveBtnEl=document.getElementById('carnival-race-save-btn');
@@ -4387,25 +4388,42 @@
     var carnival=activeCarnival();
     if(!carnival){return;}
     var selected=carnivalRaceEventSelectEl.value;
-    carnivalRaceEventSelectEl.innerHTML='<option value="">Choose event</option>'+carnival.event_ids.map(function(id){
+    carnivalRaceEventSelectEl.innerHTML='<option value="">Choose event</option>'+(carnival.event_ids||[]).map(function(id){
       return '<option value="'+escapeAttr(id)+'">'+escapeHtml((carnival.event_names||{})[id]||id)+'</option>';
     }).join('');
-    if(selected&&carnival.event_ids.indexOf(selected)!==-1){
-      carnivalRaceEventSelectEl.value=selected;
-    }else{
-      syncCarnivalRaceDivision();
-      renderCarnivalRaceRoster();
-    }
+    if(selected&&(carnival.event_ids||[]).indexOf(selected)!==-1){carnivalRaceEventSelectEl.value=selected;}
+    populateCarnivalRaceYears();
   }
 
-  function syncCarnivalRaceDivision(){
+  function populateCarnivalRaceYears(){
+    if(!carnivalRaceYearSelectEl){return;}
+    var carnival=activeCarnival();
+    var eventId=carnivalRaceEventSelectEl?carnivalRaceEventSelectEl.value:'';
+    var prev=carnivalRaceYearSelectEl.value;
+    // Only year groups that actually have divisions set up for this event.
+    var years=(carnival&&eventId)?carnivalYearGroups().filter(function(y){
+      var d=carnivalDivisionFor(carnival,eventId,y);return d&&d.bands&&d.bands.length;
+    }):[];
+    carnivalRaceYearSelectEl.innerHTML='<option value="">Choose year group</option>'+years.map(function(y){
+      return '<option value="'+escapeAttr(y)+'">'+escapeHtml(y)+'</option>';
+    }).join('');
+    if(prev&&years.indexOf(prev)!==-1){carnivalRaceYearSelectEl.value=prev;}
+    populateCarnivalRaceDivisions();
+  }
+
+  function populateCarnivalRaceDivisions(){
     if(!carnivalRaceDivisionSelectEl){return;}
     var carnival=activeCarnival();
     var eventId=carnivalRaceEventSelectEl?carnivalRaceEventSelectEl.value:'';
-    var event=carnival&&eventId?carnivalRaceEventById(carnival,eventId):null;
-    var locked=!!(event&&event.division);
-    if(locked){carnivalRaceDivisionSelectEl.value=event.division;}
-    carnivalRaceDivisionSelectEl.disabled=locked;
+    var year=carnivalRaceYearSelectEl?carnivalRaceYearSelectEl.value:'';
+    var prev=carnivalRaceDivisionSelectEl.value;
+    var div=(carnival&&eventId&&year)?carnivalDivisionFor(carnival,eventId,year):null;
+    var bands=(div&&div.bands)||[];
+    carnivalRaceDivisionSelectEl.innerHTML='<option value="">Choose division</option>'+bands.map(function(b){
+      return '<option value="'+escapeAttr(b.label)+'">Division '+escapeHtml(b.label)+' ('+b.student_ids.length+')</option>';
+    }).join('');
+    if(prev&&bands.some(function(b){return b.label===prev;})){carnivalRaceDivisionSelectEl.value=prev;}
+    renderCarnivalRaceRoster();
   }
 
   function carnivalRacePlaceOptions(){
@@ -4415,22 +4433,32 @@
     return html;
   }
 
+  function carnivalRaceBand(carnival,eventId,year,bandLabel){
+    var div=(carnival&&eventId&&year)?carnivalDivisionFor(carnival,eventId,year):null;
+    var bands=(div&&div.bands)||[];
+    return bands.filter(function(b){return b.label===bandLabel;})[0]||null;
+  }
+
   function renderCarnivalRaceRoster(){
     if(!carnivalRaceRosterEl){return;}
     var carnival=activeCarnival();
     var eventId=carnivalRaceEventSelectEl.value;
-    var division=carnivalRaceDivisionSelectEl.value;
-    if(!carnival||!eventId||!division){
-      carnivalRaceRosterEl.innerHTML='<p class="sports-mode-note">Choose an event and division to list runners.</p>';
-      if(carnivalRaceSaveBtnEl){carnivalRaceSaveBtnEl.hidden=true;}
-      return;
+    var year=carnivalRaceYearSelectEl?carnivalRaceYearSelectEl.value:'';
+    var bandLabel=carnivalRaceDivisionSelectEl.value;
+    if(carnivalRaceSaveBtnEl){carnivalRaceSaveBtnEl.hidden=true;}
+    if(!carnival||!eventId){
+      carnivalRaceRosterEl.innerHTML='<p class="sports-mode-note">Choose an event, year group, and division to list racers.</p>';return;
     }
-    var students=getStudents().filter(function(student){return studentMatchesAthleticsDivision(student,division);})
-      .sort(function(a,b){return String(a.name).localeCompare(String(b.name));});
+    var div=year?carnivalDivisionFor(carnival,eventId,year):null;
+    if(!year||!div||!div.bands||!div.bands.length){
+      carnivalRaceRosterEl.innerHTML='<p class="sports-mode-note">No divisions set up for this event and year group yet. Use "Set Up Divisions" above first.</p>';return;
+    }
+    if(!bandLabel){carnivalRaceRosterEl.innerHTML='<p class="sports-mode-note">Choose a division to list its racers.</p>';return;}
+    var band=carnivalRaceBand(carnival,eventId,year,bandLabel);
+    var byId={}; getStudents().forEach(function(s){byId[s.id]=s;});
+    var students=((band&&band.student_ids)||[]).map(function(id){return byId[id];}).filter(Boolean);
     if(!students.length){
-      carnivalRaceRosterEl.innerHTML='<p class="sports-mode-note">No '+escapeHtml(division)+' students on the roster.</p>';
-      if(carnivalRaceSaveBtnEl){carnivalRaceSaveBtnEl.hidden=true;}
-      return;
+      carnivalRaceRosterEl.innerHTML='<p class="sports-mode-note">No students in Division '+escapeHtml(bandLabel)+'.</p>';return;
     }
     carnivalRaceRosterEl.innerHTML='<table class="progress-history-table"><thead><tr><th>Student</th><th>House</th><th>Place</th></tr></thead><tbody>'+
       students.map(function(student){
@@ -4444,11 +4472,21 @@
     var carnival=activeCarnival();
     if(!carnival){return;}
     var eventId=carnivalRaceEventSelectEl.value;
-    var division=carnivalRaceDivisionSelectEl.value;
-    if(!eventId||!division){showInlineStatus(carnivalRaceOutputEl,false,'Choose an event and division first.');return;}
+    var year=carnivalRaceYearSelectEl?carnivalRaceYearSelectEl.value:'';
+    var bandLabel=carnivalRaceDivisionSelectEl.value;
+    if(!eventId||!year||!bandLabel){showInlineStatus(carnivalRaceOutputEl,false,'Choose an event, year group, and division first.');return;}
     var event=carnivalRaceEventById(carnival,eventId);
     var placed=Array.prototype.slice.call(carnivalRaceRosterEl.querySelectorAll('.carnival-race-place')).filter(function(select){return select.value;});
     if(!placed.length){showInlineStatus(carnivalRaceOutputEl,false,'Assign at least one place before saving.');return;}
+    // Field-size / tiered points from the division setup (order-independent).
+    var divBands=(carnivalDivisionFor(carnival,eventId,year)||{}).bands||[];
+    var bandIndex=divBands.map(function(b){return b.label;}).indexOf(bandLabel);
+    var mode=carnival.points_mode||'field-size';
+    var tier=carnival.points_tier||'independent';
+    var placedCount=placed.length;
+    var totalAll=divBands.reduce(function(sum,b){return sum+b.student_ids.length;},0);
+    var offsetVal=divBands.slice(0,bandIndex<0?0:bandIndex).reduce(function(sum,b){return sum+b.student_ids.length;},0);
+    var pointsOpts={mode:mode,tier:tier,total:totalAll,offset:(tier==='tiered'?offsetVal:0),scheme:carnival.points_scheme};
     var students=getStudents();
     var stamp=Date.now();
     var rows=athleticsResults();
@@ -4471,7 +4509,7 @@
         result_number:null,
         attempts:[],
         place:select.value,
-        points:carnivalPointsForPlace(select.value),
+        points:carnivalPointsForField(select.value,placedCount,pointsOpts),
         date:carnival.date,
         created_at:new Date().toISOString(),
         created_by:session.email,
@@ -4502,7 +4540,7 @@
       }
       Array.prototype.forEach.call(carnivalRaceRosterEl.querySelectorAll('.carnival-race-place'),function(select){select.value='';});
       var failed=results.filter(function(result){return !result.ok;}).length;
-      showInlineStatus(carnivalRaceOutputEl,true,newRows.length+' result'+(newRows.length===1?'':'s')+' saved.',event.name+' · '+division+(failed?' · '+failed+' failed':''));
+      showInlineStatus(carnivalRaceOutputEl,true,newRows.length+' result'+(newRows.length===1?'':'s')+' saved.',event.name+' · '+year+' · Division '+bandLabel+(failed?' · '+failed+' failed':''));
       renderCarnivalDay();
       renderHousePoints();
       renderPBTracking();
@@ -4512,12 +4550,11 @@
   }
 
   if(carnivalRaceEventSelectEl){
-    carnivalRaceEventSelectEl.addEventListener('change',function(){syncCarnivalRaceDivision();renderCarnivalRaceRoster();});
+    carnivalRaceEventSelectEl.addEventListener('change',populateCarnivalRaceYears);
+    if(carnivalRaceYearSelectEl){carnivalRaceYearSelectEl.addEventListener('change',populateCarnivalRaceDivisions);}
     carnivalRaceDivisionSelectEl.addEventListener('change',renderCarnivalRaceRoster);
     carnivalRaceSaveBtnEl.addEventListener('click',saveCarnivalRaceResults);
     populateCarnivalRaceEvents();
-    syncCarnivalRaceDivision();
-    renderCarnivalRaceRoster();
   }
 
   // === CARNIVAL BONUS POINTS ===
