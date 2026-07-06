@@ -4878,8 +4878,32 @@ html[data-theme="dark"] .vendor-posture-status--blocked {
 
 .resource-session-list {
   display: grid;
-  gap: 0.55rem;
+  gap: 1rem;
   align-content: start;
+}
+
+/* Adapts across light/dark and the corso reskin — replaces inline color:#555
+   intros that stayed near-black on the dark Programming panel. */
+.resource-intro {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+/* Two coach-facing planning areas: Run Club vs Sport. */
+.resource-session-group {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.resource-session-group-title {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid var(--line);
 }
 
 .resource-session-tab {

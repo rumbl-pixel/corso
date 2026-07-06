@@ -2539,14 +2539,29 @@
     }).join('');
   }
 
+  // Split the session-plan library into two coach-facing areas. Run Club =
+  // the lap/endurance club + its scanner ops; Sport = athletics/carnival/PE.
+  // Change a plan's home by moving its id in/out of this list.
+  var RUN_CLUB_PLAN_IDS=['run-club-session','barcode-device-setup','middle-distance-builder','cross-country-prep','cross-country-skills'];
+  function resourcePlanCategory(plan){return RUN_CLUB_PLAN_IDS.indexOf(plan.id)!==-1?'run-club':'sport';}
+
   function renderResourceSessionPlanner(){
     if(!resourceSessionListEl||!resourceSessionDetailEl){return;}
     var plans=resourceSessionPlans();
     var active=plans.find(function(plan){return plan.id===activeResourceSessionId;})||plans[0];
     activeResourceSessionId=active.id;
-    resourceSessionListEl.innerHTML=plans.map(function(plan){
+    function planTabHtml(plan){
       return '<button type="button" class="'+(plan.id===active.id?'resource-session-tab active':'resource-session-tab')+'" data-resource-session="'+escapeAttr(plan.id)+'">'+
         '<strong>'+escapeHtml(plan.title)+'</strong><span>'+resourceIncludedMinutes(plan)+'/'+Number(plan.duration||0)+' min</span></button>';
+    }
+    var planGroups=[
+      {label:'Run Club Session Planning',plans:plans.filter(function(p){return resourcePlanCategory(p)==='run-club';})},
+      {label:'Sport Session Planning',plans:plans.filter(function(p){return resourcePlanCategory(p)==='sport';})}
+    ];
+    resourceSessionListEl.innerHTML=planGroups.map(function(group){
+      if(!group.plans.length){return '';}
+      return '<div class="resource-session-group"><h4 class="resource-session-group-title">'+escapeHtml(group.label)+'</h4>'+
+        group.plans.map(planTabHtml).join('')+'</div>';
     }).join('');
     resourceSessionDetailEl.innerHTML=
       '<article class="resource-session-panel">'+
