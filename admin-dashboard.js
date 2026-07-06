@@ -4189,6 +4189,54 @@
     renderCarnivalDay();
   }
 
+  // === CARNIVAL MOCK / TRIAL DATA ===
+  // One-click demo carnival so the whole flow can be trialled. All seeded
+  // students use 'mock-s' ids so clearing removes exactly them.
+  var carnivalMockLoadBtnEl=document.getElementById('carnival-mock-load-btn');
+  var carnivalMockClearBtnEl=document.getElementById('carnival-mock-clear-btn');
+  var carnivalMockOutputEl=document.getElementById('carnival-mock-output');
+  var MOCK_FACTIONS=['Red','Blue','Green','Yellow'];
+  var MOCK_FIRST=['Oliver','Mia','Ethan','Ava','Lucas','Isla','Jack','Ruby','Leo','Grace','Max','Ella','Cooper','Zara','Riley','Lily','Thomas','Isabella','Angus','Amelia','Henry','Scarlett','Noah','Chloe','Hudson','Sophie','Ivy','Archer','Poppy','Jasper'];
+  function loadMockCarnival(){
+    if(!confirm('Load a demo carnival? This replaces the current roster and any active carnival with sample data you can trial and then clear.')){return;}
+    if(!factionNames().length){saveProgramSettings({houseNames:MOCK_FACTIONS.slice()});}
+    var factions=factionNames().length?factionNames():MOCK_FACTIONS;
+    var years=['Year 1','Year 2','Year 3','Year 4','Year 5','Year 6'];
+    var students=[];
+    for(var i=0;i<MOCK_FIRST.length;i++){
+      var year=years[i%years.length];
+      students.push({id:'mock-s'+(i+1),barcode:'mock-s'+(i+1),first:MOCK_FIRST[i],last:year.replace('Year ','Y'),name:MOCK_FIRST[i]+' '+year.replace('Year ','Y'),year:year,cls:year.replace('Year ','')+'A',house:factions[i%factions.length],team:'',gender:(i%2===0?'boy':'girl'),pseudonym:'',preferred_name:'',consent_status:'approved',hide_public_name:false,share_certificates_publicly:false,laps:0,minutes:0,events:[]});
+    }
+    saveStudents(students);
+    var today=new Date().toISOString().slice(0,10);
+    var carnival={name:'Mock Sports Day',date:today,type:'athletics',event_ids:['c-50m','c-100m','c-long-jump'],event_names:{'c-50m':'50m','c-100m':'100m','c-long-jump':'Long Jump'},done_event_ids:[],points_mode:'field-size',points_tier:'independent',points_scheme:null,divisions:{},bonus_points:[],created_at:new Date().toISOString()};
+    // Pre-split divisions for 50m across a couple of year groups (timed, to show auto-split).
+    ['Year 3','Year 4'].forEach(function(year){
+      var inYear=students.filter(function(s){return s.year===year;});
+      var times={}; inYear.forEach(function(s,idx){times[s.id]=10+idx*0.4;});
+      carnival.divisions['c-50m']=carnival.divisions['c-50m']||{};
+      carnival.divisions['c-50m'][year]={times:times,bands:autoSplitDivisions(inYear,times)};
+    });
+    save(CARNIVAL_KEY,carnival);
+    refreshStudentViews();
+    renderCarnivalDay();
+    if(typeof renderFactionSettings==='function'){renderFactionSettings();}
+    showInlineStatus(carnivalMockOutputEl,true,'Mock carnival loaded.',students.length+' students · '+factions.length+' factions · 50m divisions pre-split for Year 3 & 4');
+  }
+  function clearMockCarnival(){
+    if(!confirm('Clear the mock carnival and all mock students?')){return;}
+    localStorage.removeItem(CARNIVAL_KEY);
+    var kept=getStudents().filter(function(s){return String(s.id).indexOf('mock-s')!==0;});
+    saveStudents(kept);
+    var results=athleticsResults().filter(function(r){return String(r.student_id||'').indexOf('mock-s')!==0;});
+    saveAthleticsResults(results);
+    refreshStudentViews();
+    renderCarnivalDay();
+    showInlineStatus(carnivalMockOutputEl,true,'Mock data cleared.',kept.length+' students remain');
+  }
+  if(carnivalMockLoadBtnEl){carnivalMockLoadBtnEl.addEventListener('click',loadMockCarnival);}
+  if(carnivalMockClearBtnEl){carnivalMockClearBtnEl.addEventListener('click',clearMockCarnival);}
+
   // === CARNIVAL DIVISION SETUP ===
   // carnival.divisions[eventId][yearGroup] = {times:{studentId:seconds}, bands:[{label,student_ids}]}.
   // Phase A: times + auto-split + manual band adjust. Record flow (Task 4) reads these bands.
