@@ -1340,6 +1340,12 @@
     });
   }
 
+  function maskGuardianCode(code){
+    var c=String(code||'');
+    if(c.length<=4){return c;}
+    return c.slice(0,3)+'••••'+c.slice(-4);
+  }
+
   function guardianLinkStatus(row){
     if(row.status==='revoked'){return 'Revoked';}
     if(row.expires_at&&new Date(row.expires_at)<new Date()){return 'Expired';}
@@ -1359,7 +1365,7 @@
       rows.map(function(row){
         var status=guardianLinkStatus(row);
         var statusAction=status==='Revoked'?'Restore':'Revoke';
-        return '<tr><td>'+escapeHtml(row.student_name)+'</td><td>'+escapeHtml(row.year)+'</td><td>'+escapeHtml(row.class_name)+'</td><td><code>'+escapeHtml(row.code)+'</code></td><td>'+escapeHtml(status)+'</td><td>'+(row.expires_at?new Date(row.expires_at).toLocaleDateString():'')+'</td><td><button type="button" class="link-btn reissue-guardian-link" data-student="'+escapeAttr(row.student_id)+'">Reissue</button> <button type="button" class="link-btn toggle-guardian-link" data-status="'+(status==='Revoked'?'active':'revoked')+'" data-student="'+escapeAttr(row.student_id)+'">'+statusAction+'</button></td></tr>';
+        return '<tr><td>'+escapeHtml(row.student_name)+'</td><td>'+escapeHtml(row.year)+'</td><td>'+escapeHtml(row.class_name)+'</td><td><code class="guardian-code-cell" data-code="'+escapeAttr(row.code)+'">'+escapeHtml(maskGuardianCode(row.code))+'</code> <button type="button" class="link-btn reveal-guardian-code">Show</button></td><td>'+escapeHtml(status)+'</td><td>'+(row.expires_at?new Date(row.expires_at).toLocaleDateString():'')+'</td><td><button type="button" class="link-btn reissue-guardian-link" data-student="'+escapeAttr(row.student_id)+'">Reissue</button> <button type="button" class="link-btn toggle-guardian-link" data-status="'+(status==='Revoked'?'active':'revoked')+'" data-student="'+escapeAttr(row.student_id)+'">'+statusAction+'</button></td></tr>';
       }).join('')+'</tbody></table>';
     document.querySelectorAll('.reissue-guardian-link').forEach(function(btn){
       btn.addEventListener('click',function(){
@@ -1369,6 +1375,17 @@
     });
     document.querySelectorAll('.toggle-guardian-link').forEach(function(btn){
       btn.addEventListener('click',function(){ setGuardianLinkStatus(btn.dataset.student,btn.dataset.status); });
+    });
+    // COR-18: codes are masked by default so a shoulder-surfer can't harvest the
+    // whole roster's guardian codes from this list; reveal is per-row on demand.
+    document.querySelectorAll('.reveal-guardian-code').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        var codeEl=btn.previousElementSibling;
+        if(!codeEl||!codeEl.dataset.code){return;}
+        var hidden=btn.textContent==='Show';
+        codeEl.textContent=hidden?codeEl.dataset.code:maskGuardianCode(codeEl.dataset.code);
+        btn.textContent=hidden?'Hide':'Show';
+      });
     });
   }
 

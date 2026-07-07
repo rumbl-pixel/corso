@@ -14,6 +14,14 @@
   // incoming school_id against the previous one and wipe the cached rc_* data if
   // it changed (or if there was no prior session). The session key itself and
   // non-data preferences (theme) are preserved/replaced separately.
+  // COR-16 token storage: the session (incl. the short-lived Supabase access
+  // token) lives in localStorage because the dashboard, kiosk, scanner, and
+  // student pages all read it and may open in separate tabs — sessionStorage is
+  // per-tab and would break that flow. There is no server on GitHub Pages, so
+  // httpOnly cookies are not an option. Residual risk (XSS can read the token)
+  // is accepted; mitigations: no refresh token is persisted (access token
+  // expires on its own), the session key is excluded from demo snapshot
+  // exports, and nothing logs it. See docs/security-token-storage.md.
   function establishSession(session) {
     try {
       var prevRaw = window.localStorage.getItem('runClubAdminSession');
@@ -122,7 +130,6 @@
         role: 'platform_admin',
         platform_role: rows[0].role || 'platform_admin',
         access_token: authData.access_token,
-        refresh_token: authData.refresh_token || '',
         expires_at: authData.expires_at || null
       };
     });
@@ -159,7 +166,6 @@
         site_code: siteCode || '',
         role: schoolStaffRole,
         access_token: authData.access_token,
-        refresh_token: authData.refresh_token || '',
         expires_at: authData.expires_at || null
       };
     });
