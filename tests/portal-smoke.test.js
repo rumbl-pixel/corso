@@ -102,7 +102,7 @@ assert(/assets\/corso-logo\.png/.test(read('index.html')), 'home page should use
 const serviceWorker = read('service-worker.js');
 assert(/CACHE_NAME/.test(serviceWorker), 'service worker should define a cache name');
 assert(/CORE_ASSETS/.test(serviceWorker), 'service worker should cache the core app shell');
-assert(/gwynne-park-run-club-v193/.test(serviceWorker), 'service worker cache should be bumped after today\'s deploy so returning browsers pick up the new build instead of serving stale cache-first assets');
+assert(/gwynne-park-run-club-v194/.test(serviceWorker), 'service worker cache should be bumped after today\'s deploy so returning browsers pick up the new build instead of serving stale cache-first assets');
 assert(/\.\/about\.html/.test(serviceWorker), 'service worker should cache the About page');
 assert(/manifest\.webmanifest/.test(serviceWorker), 'service worker should cache the manifest');
 assert(/app-icon-192\.png/.test(serviceWorker) && /app-icon-512\.png/.test(serviceWorker), 'service worker should cache app icons');
@@ -284,7 +284,8 @@ assert(!/rc_selfreports/.test(studentJs), 'student reflections should not reuse 
 assert(/student\.js\?v=21/.test(studentProfileHtml) && /student\.js\?v=21/.test(studentHtml), 'student pages should request the current coach-notifications student script');
 
 const homeHtml = read('index.html');
-assert(/styles\.css\?v=134/.test(homeHtml), 'home page should request the current contrast-safe stylesheet');
+assert(/styles\.css\?v=135/.test(homeHtml), 'home page should request the current contrast-safe stylesheet');
+assert(/id="home-school-summary"/.test(homeHtml) && /scanning\.js/.test(homeHtml), 'home page should show a public school-wide summary with no login required');
 assert(/theme\.js\?v=17/.test(homeHtml), 'home page should request the current dynamic account chip script');
 assert(!/href="kiosk\.html"|Scanner kiosk/.test(homeHtml), 'public home page should not link directly to the admin-only kiosk');
 assert(/Track setup/.test(homeHtml), 'home page should describe track setup more specifically than vague activity tracking');
@@ -562,6 +563,7 @@ assert(!/class="tab-btn"[^>]*data-tab="help"/.test(adminDashboardHtml), 'admin t
 assert(/coach-hub-tile[\s\S]*data-coach-section="sports"[\s\S]*data-coach-section="training"[\s\S]*data-coach-section="resources"[\s\S]*data-coach-section="future-intelligence"/.test(adminDashboardHtml), 'Coach Hub should contain selectable Sports, Training, Programming, and Insights tiles');
 assert(!/coach-hub-tab/.test(adminDashboardHtml), 'Coach Hub should not duplicate the large tiles with a second pill tab row');
 assert(/admin-hub-tab[\s\S]*data-admin-section="reports"[\s\S]*data-admin-section="school-settings"[\s\S]*data-admin-section="compliance"[\s\S]*data-admin-section="import"[\s\S]*data-admin-section="help"/.test(adminDashboardHtml), 'School Admin should contain Reports, Settings, Compliance, Import, and Help sub-sections');
+assert(!/admin-hub-tabs/.test(adminDashboardHtml), 'School Admin should not duplicate the large tiles with a second pill tab row');
 assert(/id="tab-compliance"[\s\S]*Vendor Compliance Posture[\s\S]*school-admin-signup-card[\s\S]*compliance-auto-checks-card[\s\S]*compliance-checklist-card[\s\S]*compliance-data-map-card[\s\S]*parent-notice-card[\s\S]*breach-log-card/.test(adminDashboardHtml), 'Compliance tab should present a vendor posture with signup, auto checks, sign-off, data map, parent notice, and breach log cards');
 assert(/School Admin Signup &amp; Use Attestation/.test(adminDashboardHtml), 'Compliance tab should include a school admin signup and use attestation sheet');
 assert(/school-admin-signup-form/.test(adminDashboardHtml), 'Compliance tab should include a school admin signup form');
@@ -1203,8 +1205,8 @@ assert(/\.student-editor-modal\.athletics-team-modal[\s\S]*width:\s*min\(100%,\s
 assert(/athletics-consent-status-select/.test(styles), 'styles should support inline consent status dropdowns in the modal checklist');
 assert(/athletics-consent-status-select--pending/.test(styles) && /athletics-consent-status-select--granted/.test(styles) && /athletics-consent-status-select--declined/.test(styles), 'styles should colour pending, approved, and declined consent pills');
 assert(/athletics-consent-saved-list/.test(styles), 'styles should support the saved consent list inside team overview');
-assert(/styles\.css\?v=134/.test(leaderboardHtml), 'leaderboard page should request the current stylesheet version');
-assert(/styles\.css\?v=134/.test(interschoolTeamHtml), 'interschool team page should request the current stylesheet');
+assert(/styles\.css\?v=135/.test(leaderboardHtml), 'leaderboard page should request the current stylesheet version');
+assert(/styles\.css\?v=135/.test(interschoolTeamHtml), 'interschool team page should request the current stylesheet');
 assert(/theme\.js\?v=16/.test(studentProfileHtml), 'student profile should load the shared light/dark theme switch');
 assert(/data-theme="dark"/.test(styles), 'site styles should define dark theme overrides');
 assert(/html\[data-theme="dark"\] \.privacy-badge--public[\s\S]*color:\s*#fff3c4/.test(styles), 'dark mode should keep public-name privacy badges readable');
@@ -1313,7 +1315,7 @@ assert(/student\.js\?v=21/.test(studentProfileHtml), 'student profile should req
 assert(/goals\.js\?v=5/.test(studentProfileHtml), 'student profile should request a fresh goals script');
 assert(/student\.js\?v=21/.test(studentHtml), 'student login should request the current student portal script');
 assert(/goals\.js\?v=5/.test(studentHtml), 'student login should request a fresh goals script');
-assert(/gwynne-park-run-club-v193/.test(serviceWorker), 'service worker cache should be bumped for the About page refresh');
+assert(/gwynne-park-run-club-v194/.test(serviceWorker), 'service worker cache should be bumped for the About page refresh');
 assert(/backend\.js/.test(serviceWorker), 'service worker should cache the backend adapter');
 assert(/interschool-team\.html/.test(serviceWorker) && /interschool-team\.js/.test(serviceWorker), 'service worker should cache the dedicated interschool team page');
 assertFile('tests/backend-live-style.test.js');

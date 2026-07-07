@@ -1713,17 +1713,13 @@ html[data-theme="dark"] .tab-btn:not(.active) {
   margin: 1rem 0;
 }
 
-.coach-hub-summary-grid article,
 .coach-hub-tile,
-.admin-hub-summary-grid article {
+.admin-hub-tab {
   border: 1px solid rgba(18,54,93,0.16);
   border-radius: 8px;
   background: linear-gradient(135deg, rgba(255,255,255,0.74), rgba(255,248,221,0.34));
   color: var(--obsidian-navy);
   padding: 0.85rem;
-}
-
-.coach-hub-tile {
   display: grid;
   gap: 0.25rem;
   width: 100%;
@@ -1735,14 +1731,17 @@ html[data-theme="dark"] .tab-btn:not(.active) {
 }
 
 .coach-hub-tile:hover,
-.coach-hub-tile:focus-visible {
+.coach-hub-tile:focus-visible,
+.admin-hub-tab:hover,
+.admin-hub-tab:focus-visible {
   background: rgba(128, 194, 242, 0.13);
   border-color: var(--corso-red-dark);
   color: var(--corso-ink);
   transform: none;
 }
 
-.coach-hub-tile.active {
+.coach-hub-tile.active,
+.admin-hub-tab.active {
   background: #172435;
   border-color: #172435;
   border-left: 5px solid var(--corso-red-dark);
@@ -1758,7 +1757,9 @@ html[data-theme="dark"] .tab-btn:not(.active) {
 }
 
 .coach-hub-tile.active strong,
-.coach-hub-tile.active span {
+.coach-hub-tile.active span,
+.admin-hub-tab.active strong,
+.admin-hub-tab.active span {
   color: #fff7df;
 }
 
@@ -1770,48 +1771,8 @@ html[data-theme="dark"] .tab-btn:not(.active) {
   line-height: 1.4;
 }
 
-.coach-hub-tabs,
-.admin-hub-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.55rem;
-  padding-top: 0.25rem;
-}
-
-.coach-hub-tab,
-.admin-hub-tab {
-  min-height: 40px;
-  padding: 0.46rem 0.95rem;
-  border-radius: 999px;
-  font-size: 0.9rem;
-  font-weight: 800;
-  border: 1px solid rgba(18,54,93,0.18);
-  background:
-    linear-gradient(180deg, rgba(255,255,255,0.92), rgba(255,255,255,0.72)),
-    rgba(255,255,255,0.72);
-  color: var(--obsidian-navy);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.72), 0 8px 18px rgba(7,20,38,0.08);
-}
-
-.coach-hub-tab:hover,
-.admin-hub-tab:hover {
-  background: linear-gradient(180deg, rgba(255,255,255,0.96), var(--uniform-gold-hover));
-  color: var(--obsidian-navy);
-  transform: translateY(-1px);
-}
-
-.coach-hub-tab.active,
-.admin-hub-tab.active {
-  background:
-    linear-gradient(180deg, rgba(18,54,93,0.96), rgba(7,20,38,0.98)),
-    var(--obsidian-navy);
-  border-color: var(--gold-glass-line);
-  color: #f5f9ff;
-}
-
-html[data-theme="dark"] .coach-hub-summary-grid article,
 html[data-theme="dark"] .coach-hub-tile,
-html[data-theme="dark"] .admin-hub-summary-grid article {
+html[data-theme="dark"] .admin-hub-tab {
   background: linear-gradient(135deg, rgba(255,255,255,0.075), rgba(242,216,145,0.08));
   border-color: rgba(255,255,255,0.16);
   color: #fff7df;
@@ -1828,12 +1789,15 @@ html[data-theme="dark"] .admin-hub-summary-grid span {
 }
 
 html[data-theme="dark"] .coach-hub-tile:hover,
-html[data-theme="dark"] .coach-hub-tile:focus-visible {
+html[data-theme="dark"] .coach-hub-tile:focus-visible,
+html[data-theme="dark"] .admin-hub-tab:hover,
+html[data-theme="dark"] .admin-hub-tab:focus-visible {
   background: rgba(255, 247, 223, 0.10);
   border-color: #fff7df;
 }
 
-html[data-theme="dark"] .coach-hub-tile.active {
+html[data-theme="dark"] .coach-hub-tile.active,
+html[data-theme="dark"] .admin-hub-tab.active {
   background: #fff7df;
   border-color: #fff7df;
   border-left-color: var(--corso-red-dark);
@@ -1841,28 +1805,10 @@ html[data-theme="dark"] .coach-hub-tile.active {
 }
 
 html[data-theme="dark"] .coach-hub-tile.active strong,
-html[data-theme="dark"] .coach-hub-tile.active span {
+html[data-theme="dark"] .coach-hub-tile.active span,
+html[data-theme="dark"] .admin-hub-tab.active strong,
+html[data-theme="dark"] .admin-hub-tab.active span {
   color: #191716;
-}
-
-html[data-theme="dark"] .coach-hub-tab,
-html[data-theme="dark"] .admin-hub-tab {
-  background: rgba(255,255,255,0.08);
-  border-color: rgba(255,255,255,0.16);
-  color: #d9e9ff;
-}
-
-html[data-theme="dark"] .coach-hub-tab:hover,
-html[data-theme="dark"] .admin-hub-tab:hover {
-  background: rgba(242,216,145,0.18);
-  color: #fff4c7;
-}
-
-html[data-theme="dark"] .coach-hub-tab.active,
-html[data-theme="dark"] .admin-hub-tab.active {
-  background: linear-gradient(180deg, rgba(242,216,145,0.98), rgba(201,151,34,0.94));
-  border-color: rgba(255,255,255,0.22);
-  color: #071426;
 }
 
 @media (max-width: 520px) {
@@ -1883,9 +1829,8 @@ html[data-theme="dark"] .admin-hub-tab.active {
     margin: 0.75rem 0;
   }
 
-  .coach-hub-summary-grid article,
   .coach-hub-tile,
-  .admin-hub-summary-grid article {
+  .admin-hub-tab {
     padding: 0.62rem;
     min-height: 7.4rem;
   }
@@ -1899,21 +1844,6 @@ html[data-theme="dark"] .admin-hub-tab.active {
   .admin-hub-summary-grid span {
     font-size: 0.74rem;
     line-height: 1.32;
-  }
-
-  .coach-hub-tabs,
-  .admin-hub-tabs {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.45rem;
-  }
-
-  .coach-hub-tab,
-  .admin-hub-tab {
-    width: 100%;
-    min-height: 36px;
-    padding: 0.42rem 0.55rem;
-    font-size: 0.82rem;
   }
 }
 

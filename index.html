@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Corso – School Running Platform</title>
-    <link rel="stylesheet" href="styles.css?v=134" />
+    <link rel="stylesheet" href="styles.css?v=135" />
     <link rel="manifest" href="manifest.webmanifest" />
     <meta name="theme-color" content="#0c5aa8" />
     <link rel="apple-touch-icon" href="assets/app-icon-192.png" />
@@ -147,6 +147,12 @@
         <a href="admin-dashboard.html?tab=training">View tips &amp; training ›</a>
       </section>
 
+      <section class="command-panel" aria-label="School-wide summary">
+        <h2>&#127758; School-wide summary</h2>
+        <p class="muted-copy">Anyone can see the whole school's progress here, no login required.</p>
+        <div id="home-school-summary"></div>
+      </section>
+
       <section class="below-command-grid">
         <div class="command-panel beta-definition-card">
           <h2>What This Is</h2>
@@ -216,6 +222,26 @@
         <a class="feature-suggestion-btn" href="mailto:support@gwynneparkrunclub.com.au?subject=Corso%20Feature%20Suggestion">Feature Suggestion</a>
       </div>
     </footer>
+    <script src="scanning.js"></script>
+    <script>
+      (function () {
+        var el = document.getElementById('home-school-summary');
+        if (!el || !window.RunClubScan) { return; }
+        var students = window.RunClubScan.getStudents();
+        var totalLaps = students.reduce(function (a, s) { return a + s.laps; }, 0);
+        var totalKmAll = students.reduce(function (a, s) { return a + window.RunClubScan.totalKm(s); }, 0);
+        var marathonEq = (totalKmAll / 42.195).toFixed(2);
+        var participants = students.filter(function (s) { return s.laps > 0; }).length;
+        el.innerHTML =
+          '<div style="display:flex;gap:1rem;flex-wrap:wrap;">' +
+          '<div class="stat-box"><div class="stat-value">' + totalLaps + '</div><div class="stat-label">Total laps</div></div>' +
+          '<div class="stat-box"><div class="stat-value">' + totalKmAll.toFixed(1) + '</div><div class="stat-label">Total km</div></div>' +
+          '<div class="stat-box"><div class="stat-value">' + marathonEq + '</div><div class="stat-label">Marathon equivalents</div></div>' +
+          '<div class="stat-box"><div class="stat-value">' + participants + '</div><div class="stat-label">Active runners</div></div>' +
+          '<div class="stat-box"><div class="stat-value">' + students.length + '</div><div class="stat-label">Total enrolled</div></div>' +
+          '</div>';
+      })();
+    </script>
     <script src="pwa.js"></script>
         <script src='https://storage.ko-fi.com/cdn/scripts/overlay-widget.js'></script>
     <script>

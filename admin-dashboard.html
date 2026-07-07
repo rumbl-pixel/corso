@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Corso - Admin Dashboard</title>
-    <link rel="stylesheet" href="styles.css?v=134" />
+    <link rel="stylesheet" href="styles.css?v=135" />
     <link rel="manifest" href="manifest.webmanifest" />
     <meta name="theme-color" content="#0c5aa8" />
     <link rel="apple-touch-icon" href="assets/app-icon-192.png" />
@@ -1141,34 +1141,27 @@
             </div>
             <span class="bookmark-pill">Setup workspace</span>
           </div>
-          <div class="admin-hub-summary-grid" aria-label="School Admin sections">
-            <article>
-              <strong>Reports</strong>
+          <div class="admin-hub-summary-grid" role="tablist" aria-label="School Admin tools">
+            <button class="admin-hub-tab active" type="button" data-admin-section="reports" role="tab" aria-selected="true" aria-controls="tab-reports">
+              <strong>&#128202; Reports</strong>
               <span>Exports, summaries, audits, history, and printable packs.</span>
-            </article>
-            <article>
-              <strong>Settings</strong>
+            </button>
+            <button class="admin-hub-tab" type="button" data-admin-section="school-settings" role="tab" aria-selected="false" aria-controls="tab-school-settings">
+              <strong>&#9881; Settings</strong>
               <span>School run club name and setup defaults.</span>
-            </article>
-            <article>
-              <strong>Compliance</strong>
+            </button>
+            <button class="admin-hub-tab" type="button" data-admin-section="compliance" role="tab" aria-selected="false" aria-controls="tab-compliance">
+              <strong>&#128737; Compliance</strong>
               <span>Approval evidence, data map, parent notice, and breach log.</span>
-            </article>
-            <article>
-              <strong>Import</strong>
+            </button>
+            <button class="admin-hub-tab" type="button" data-admin-section="import" role="tab" aria-selected="false" aria-controls="tab-import">
+              <strong>&#128229; Import</strong>
               <span>Roster CSV, templates, and future Compass staging.</span>
-            </article>
-            <article>
+            </button>
+            <button class="admin-hub-tab" type="button" data-admin-section="help" role="tab" aria-selected="false" aria-controls="tab-help">
               <strong>Help</strong>
               <span>Privacy gates, launch readiness, and admin guidance.</span>
-            </article>
-          </div>
-          <div class="admin-hub-tabs" role="tablist" aria-label="School Admin tools">
-            <button class="admin-hub-tab active" type="button" data-admin-section="reports" role="tab" aria-selected="true" aria-controls="tab-reports">&#128202; Reports</button>
-            <button class="admin-hub-tab" type="button" data-admin-section="school-settings" role="tab" aria-selected="false" aria-controls="tab-school-settings">&#9881; Settings</button>
-            <button class="admin-hub-tab" type="button" data-admin-section="compliance" role="tab" aria-selected="false" aria-controls="tab-compliance">&#128737; Compliance</button>
-            <button class="admin-hub-tab" type="button" data-admin-section="import" role="tab" aria-selected="false" aria-controls="tab-import">&#128229; Import</button>
-            <button class="admin-hub-tab" type="button" data-admin-section="help" role="tab" aria-selected="false" aria-controls="tab-help">Help</button>
+            </button>
           </div>
         </div>
       </div>
