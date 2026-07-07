@@ -102,7 +102,7 @@ assert(/assets\/corso-logo\.png/.test(read('index.html')), 'home page should use
 const serviceWorker = read('service-worker.js');
 assert(/CACHE_NAME/.test(serviceWorker), 'service worker should define a cache name');
 assert(/CORE_ASSETS/.test(serviceWorker), 'service worker should cache the core app shell');
-assert(/gwynne-park-run-club-v195/.test(serviceWorker), 'service worker cache should be bumped after today\'s deploy so returning browsers pick up the new build instead of serving stale cache-first assets');
+assert(/gwynne-park-run-club-v196/.test(serviceWorker), 'service worker cache should be bumped after today\'s deploy so returning browsers pick up the new build instead of serving stale cache-first assets');
 assert(/\.\/about\.html/.test(serviceWorker), 'service worker should cache the About page');
 assert(/manifest\.webmanifest/.test(serviceWorker), 'service worker should cache the manifest');
 assert(/app-icon-192\.png/.test(serviceWorker) && /app-icon-512\.png/.test(serviceWorker), 'service worker should cache app icons');
@@ -168,6 +168,8 @@ assert(/recordAthleticsResult/.test(backendJs), 'backend adapter should expose l
 assert(/saveCrossCountryCourse/.test(backendJs), 'backend adapter should expose live cross country course writes');
 assert(/saveCoachNote/.test(backendJs), 'backend adapter should expose live coach note writes');
 assert(/createStudentNotification/.test(backendJs), 'backend adapter should expose live student notification writes');
+assert(/schoolPublicTotals/.test(backendJs), 'backend adapter should expose an anon-safe school totals aggregate (Option A public leaderboard)');
+assert(/hasStaffSession/.test(backendJs), 'backend adapter should expose a staff-session check for gating individual leaderboard rows');
 assert(/liveStyleSupabaseCheck/.test(backendJs), 'backend adapter should expose a live-style Supabase check');
 assert(/backendReadiness/.test(backendJs), 'backend adapter should expose a go-live backend readiness summary');
 assert(/requiresLiveBackend/.test(backendJs), 'backend adapter should expose a live backend guard for real student data');
@@ -285,7 +287,7 @@ assert(!/rc_selfreports/.test(studentJs), 'student reflections should not reuse 
 assert(/student\.js\?v=21/.test(studentProfileHtml) && /student\.js\?v=21/.test(studentHtml), 'student pages should request the current coach-notifications student script');
 
 const homeHtml = read('index.html');
-assert(/styles\.css\?v=135/.test(homeHtml), 'home page should request the current contrast-safe stylesheet');
+assert(/styles\.css\?v=136/.test(homeHtml), 'home page should request the current contrast-safe stylesheet');
 assert(/id="home-school-summary"/.test(homeHtml) && /scanning\.js/.test(homeHtml), 'home page should show a public school-wide summary with no login required');
 assert(/theme\.js\?v=17/.test(homeHtml), 'home page should request the current dynamic account chip script');
 assert(!/href="kiosk\.html"|Scanner kiosk/.test(homeHtml), 'public home page should not link directly to the admin-only kiosk');
@@ -621,7 +623,7 @@ assert(/role="tablist"/.test(adminDashboardHtml), 'admin tabs should expose a ta
 assert(/aria-selected="true"/.test(adminDashboardHtml), 'admin active tab should expose selected state');
 assert(/aria-controls="tab-activity"/.test(adminDashboardHtml), 'admin tabs should reference tab panels');
 assert(/admin-dashboard\.js\?v=112/.test(adminDashboardHtml), 'admin dashboard should request the current live beta dashboard script');
-assert(/backend\.js\?v=23/.test(adminDashboardHtml), 'admin dashboard should load the current backend adapter before app scripts');
+assert(/backend\.js\?v=24/.test(adminDashboardHtml), 'admin dashboard should load the current backend adapter before app scripts');
 
 const adminDashboardJs = read('admin-dashboard.js');
 assert(/view=admin/.test(adminDashboardJs), 'admin student profile links should keep the profile in admin view mode');
@@ -1036,7 +1038,7 @@ const parentHtml = read('parent.html');
 assert(/id="parent-form"/.test(parentHtml), 'parent portal should expose a login form');
 assert(/DEMO/.test(parentHtml), 'parent portal should show a DEMO hint');
 assert(/parent\.js/.test(parentHtml), 'parent portal should load parent.js');
-assert(/backend\.js\?v=23/.test(parentHtml), 'parent portal should load the current backend adapter before parent access checks');
+assert(/backend\.js\?v=24/.test(parentHtml), 'parent portal should load the current backend adapter before parent access checks');
 assert(!/Log Home Activity|Home Activity|parent-activity-form/.test(parentHtml), 'parent portal should not include home activity logging');
 assert(/print-parent-certificate-btn/.test(parentHtml), 'parent portal should let parents print child award certificates');
 assert(/guardian-link-code/.test(parentHtml), 'parent portal should explain guardian link codes');
@@ -1082,7 +1084,7 @@ assert(/Class Competitions/.test(leaderboardHtml) && /class-leaderboard/.test(le
 assert(/Year-Level Competitions/.test(leaderboardHtml) && /year-level-leaderboard/.test(leaderboardHtml), 'leaderboard page should include year-level competitions');
 assert(/Club-Wide Challenges/.test(leaderboardHtml) && /club-challenge-progress/.test(leaderboardHtml), 'leaderboard page should include club-wide challenge progress');
 assert(/Team Leaderboards/.test(leaderboardHtml) && /team-leaderboard/.test(leaderboardHtml), 'leaderboard page should include team leaderboards');
-assert(/leaderboard\.js\?v=2/.test(leaderboardHtml), 'leaderboard page should load the current privacy-aware leaderboard script');
+assert(/leaderboard\.js\?v=3/.test(leaderboardHtml), 'leaderboard page should load the current privacy-aware leaderboard script');
 assert(/backend\.js/.test(leaderboardHtml), 'leaderboard page should load the backend adapter for fake backend testing');
 
 const leaderboardJs = read('leaderboard.js');
@@ -1106,6 +1108,9 @@ assert(/publicStudentName/.test(leaderboardJs), 'leaderboard should use privacy-
 assert(/privacyMetadataFor/.test(leaderboardJs), 'leaderboard should merge local privacy metadata into backend rows');
 assert(/hide_public_name/.test(leaderboardJs), 'leaderboard should respect hidden public names');
 assert(/consent_status/.test(leaderboardJs), 'leaderboard should respect consent status fields');
+assert(/isAnonPublicView/.test(leaderboardJs), 'leaderboard should detect an anonymous public viewer (Option A)');
+assert(/renderPublicSummary/.test(leaderboardJs), 'leaderboard should render aggregate-only totals for anonymous viewers, not individual rows');
+assert(/schoolPublicTotals/.test(leaderboardJs), 'leaderboard anon path should read the anon-safe aggregate, never individual leaderboard rows');
 
 const styles = read('styles.css');
 assert(/\.coach-workflow-actions/.test(styles), 'Coach Tools workflow actions should have a dedicated layout style');
@@ -1207,8 +1212,8 @@ assert(/\.student-editor-modal\.athletics-team-modal[\s\S]*width:\s*min\(100%,\s
 assert(/athletics-consent-status-select/.test(styles), 'styles should support inline consent status dropdowns in the modal checklist');
 assert(/athletics-consent-status-select--pending/.test(styles) && /athletics-consent-status-select--granted/.test(styles) && /athletics-consent-status-select--declined/.test(styles), 'styles should colour pending, approved, and declined consent pills');
 assert(/athletics-consent-saved-list/.test(styles), 'styles should support the saved consent list inside team overview');
-assert(/styles\.css\?v=135/.test(leaderboardHtml), 'leaderboard page should request the current stylesheet version');
-assert(/styles\.css\?v=135/.test(interschoolTeamHtml), 'interschool team page should request the current stylesheet');
+assert(/styles\.css\?v=136/.test(leaderboardHtml), 'leaderboard page should request the current stylesheet version');
+assert(/styles\.css\?v=136/.test(interschoolTeamHtml), 'interschool team page should request the current stylesheet');
 assert(/theme\.js\?v=16/.test(studentProfileHtml), 'student profile should load the shared light/dark theme switch');
 assert(/data-theme="dark"/.test(styles), 'site styles should define dark theme overrides');
 assert(/html\[data-theme="dark"\] \.privacy-badge--public[\s\S]*color:\s*#fff3c4/.test(styles), 'dark mode should keep public-name privacy badges readable');
@@ -1317,7 +1322,7 @@ assert(/student\.js\?v=21/.test(studentProfileHtml), 'student profile should req
 assert(/goals\.js\?v=5/.test(studentProfileHtml), 'student profile should request a fresh goals script');
 assert(/student\.js\?v=21/.test(studentHtml), 'student login should request the current student portal script');
 assert(/goals\.js\?v=5/.test(studentHtml), 'student login should request a fresh goals script');
-assert(/gwynne-park-run-club-v195/.test(serviceWorker), 'service worker cache should be bumped for the About page refresh');
+assert(/gwynne-park-run-club-v196/.test(serviceWorker), 'service worker cache should be bumped for the About page refresh');
 assert(/backend\.js/.test(serviceWorker), 'service worker should cache the backend adapter');
 assert(/interschool-team\.html/.test(serviceWorker) && /interschool-team\.js/.test(serviceWorker), 'service worker should cache the dedicated interschool team page');
 assertFile('tests/backend-live-style.test.js');

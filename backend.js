@@ -600,6 +600,21 @@
     studentProgressSummary: function () {
       if (!isConfigured()) { return Promise.resolve([]); }
       return request('GET', TABLES.studentProgressSummary, null, 'school_id=eq.' + encodeURIComponent(config().schoolId));
+    },
+    // Anon-safe public aggregate (Option A): school totals only, no student rows.
+    schoolPublicTotals: function () {
+      if (!isConfigured()) { return Promise.resolve(null); }
+      return callRpc('public_school_totals', { p_school_id: config().schoolId }).then(function (result) {
+        if (!result || !result.ok) { return null; }
+        var row = Array.isArray(result.data) ? result.data[0] : result.data;
+        if (!row) { return { enrolled: 0, active: 0, total_laps: 0, total_km: 0 }; }
+        return {
+          enrolled: Number(row.enrolled || 0),
+          active: Number(row.active || 0),
+          total_laps: Number(row.total_laps || 0),
+          total_km: Number(row.total_km || 0)
+        };
+      });
     }
   };
 
@@ -663,6 +678,7 @@
     TABLES: TABLES,
     config: config,
     isConfigured: isConfigured,
+    hasStaffSession: function () { return !!staffAccessToken(); },
     backendReadiness: backendReadiness,
     requiresLiveBackend: requiresLiveBackend,
     backendDataAccess: backendDataAccess,

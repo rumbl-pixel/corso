@@ -334,6 +334,41 @@
     return Scan.getStudents().map(normalizeLeaderboardRow);
   }
 
+  // Option A: a live backend never exposes individual student rows to an
+  // anonymous (not-signed-in) viewer. Staff signed in on this browser get the
+  // full ranked boards; everyone else gets school aggregates only.
+  function isAnonPublicView() {
+    return !!(Backend && Backend.isConfigured && Backend.isConfigured() &&
+      !(Backend.hasStaffSession && Backend.hasStaffSession()));
+  }
+
+  function publicStatCard(label, value) {
+    return '<div class="stat-box"><div class="stat-value">' + escapeHtml(String(value)) +
+      '</div><div class="stat-label">' + escapeHtml(label) + '</div></div>';
+  }
+
+  function renderPublicSummary(totals) {
+    totals = totals || { enrolled: 0, active: 0, total_laps: 0, total_km: 0 };
+    var km = Number(totals.total_km || 0);
+    var totalEl = document.getElementById('total-leaderboard');
+    if (totalEl) {
+      totalEl.innerHTML = '<div class="public-summary-grid">' +
+        publicStatCard('Total laps', String(Number(totals.total_laps || 0))) +
+        publicStatCard('Total km', km.toFixed(1)) +
+        publicStatCard('Marathon equivalents', (km / 42.195).toFixed(2)) +
+        publicStatCard('Active runners', String(Number(totals.active || 0))) +
+        publicStatCard('Total enrolled', String(Number(totals.enrolled || 0))) +
+        '</div>';
+    }
+    var lockedNote = '<p class="public-summary-note">Sign in as staff to view this breakdown.</p>';
+    ['house-leaderboard', 'team-leaderboard', 'class-leaderboard', 'year-level-leaderboard',
+     'club-challenge-progress', 'division-senior', 'division-intermediate', 'division-junior',
+     'year-2', 'year-3', 'year-4', 'year-5', 'year-6'].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) { el.innerHTML = lockedNote; }
+    });
+  }
+
   function loadLeaderboardStudents() {
     if (Backend && Backend.isConfigured && Backend.isConfigured() && Backend.backendDataAccess && Backend.backendDataAccess.leaderboardTotals) {
       renderBackendStatus('Checking fake backend leaderboard...');
@@ -355,5 +390,13 @@
     return Promise.resolve(localStudents());
   }
 
-  loadLeaderboardStudents().then(renderAll);
+  if (isAnonPublicView()) {
+    renderBackendStatus('Public view - individual rankings are visible to signed-in staff.');
+    var totals = Backend.backendDataAccess && Backend.backendDataAccess.schoolPublicTotals
+      ? Backend.backendDataAccess.schoolPublicTotals()
+      : Promise.resolve(null);
+    totals.then(renderPublicSummary).catch(function () { renderPublicSummary(null); });
+  } else {
+    loadLeaderboardStudents().then(renderAll);
+  }
 })();

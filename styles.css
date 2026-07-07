@@ -1888,6 +1888,11 @@ html[data-theme="dark"] .admin-hub-tab.active span {
 .stat-box .stat-value { font-size: 1.5rem; font-weight: 700; color: var(--obsidian-navy-3); }
 .stat-box .stat-label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
 
+.public-summary-grid { display: flex; gap: 1rem; flex-wrap: wrap; }
+/* Colour is inherited from the theme's .card p rule (intentional muted tone,
+   readable in both modes); only spacing/size is set here. */
+.public-summary-note { font-size: 0.85rem; margin: 0; }
+
 html[data-theme="dark"] .athlete-card {
   background:
     linear-gradient(135deg, rgba(201,151,34,0.12), transparent 38%),
