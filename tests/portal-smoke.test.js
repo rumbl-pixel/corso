@@ -102,7 +102,7 @@ assert(/assets\/corso-logo\.png/.test(read('index.html')), 'home page should use
 const serviceWorker = read('service-worker.js');
 assert(/CACHE_NAME/.test(serviceWorker), 'service worker should define a cache name');
 assert(/CORE_ASSETS/.test(serviceWorker), 'service worker should cache the core app shell');
-assert(/gwynne-park-run-club-v196/.test(serviceWorker), 'service worker cache should be bumped after today\'s deploy so returning browsers pick up the new build instead of serving stale cache-first assets');
+assert(/gwynne-park-run-club-v197/.test(serviceWorker), 'service worker cache should be bumped after today\'s deploy so returning browsers pick up the new build instead of serving stale cache-first assets');
 assert(/\.\/about\.html/.test(serviceWorker), 'service worker should cache the About page');
 assert(/manifest\.webmanifest/.test(serviceWorker), 'service worker should cache the manifest');
 assert(/app-icon-192\.png/.test(serviceWorker) && /app-icon-512\.png/.test(serviceWorker), 'service worker should cache app icons');
@@ -185,10 +185,12 @@ assert(/Site/.test(adminHtml), 'staff login should label the school identifier a
 assert(/Username/.test(adminHtml), 'staff login should label the identifier as Username');
 assert(/coach01/.test(adminHtml), 'staff login should show a username-style placeholder');
 assert(/DEMO/.test(adminHtml), 'admin login should show a DEMO hint');
-assert(/admin\.js\?v=7/.test(adminHtml), 'admin login should request the current staff auth script');
+assert(/id="admin-demo-login"/.test(adminHtml), 'staff login should offer a one-tap DEMO login button (T18 pre-beta shortlist)');
+assert(/admin\.js\?v=8/.test(adminHtml), 'admin login should request the current staff auth script');
 
 const adminJs = read('admin.js');
 assert(/DEMO/.test(adminJs), 'admin login should handle DEMO bypass');
+assert(/admin-demo-login/.test(adminJs), 'admin.js should wire the one-tap DEMO login button to the demo submit path');
 assert(/siteCodeFromInput/.test(adminJs), 'staff login should clean and validate the 4-digit site code');
 assert(/resolveSchoolIdForSite/.test(adminJs), 'staff login should resolve the site code to a configured school id');
 assert(/site_code/.test(adminJs), 'staff login sessions should persist the selected site code');
@@ -1322,7 +1324,7 @@ assert(/student\.js\?v=21/.test(studentProfileHtml), 'student profile should req
 assert(/goals\.js\?v=5/.test(studentProfileHtml), 'student profile should request a fresh goals script');
 assert(/student\.js\?v=21/.test(studentHtml), 'student login should request the current student portal script');
 assert(/goals\.js\?v=5/.test(studentHtml), 'student login should request a fresh goals script');
-assert(/gwynne-park-run-club-v196/.test(serviceWorker), 'service worker cache should be bumped for the About page refresh');
+assert(/gwynne-park-run-club-v197/.test(serviceWorker), 'service worker cache should be bumped for the About page refresh');
 assert(/backend\.js/.test(serviceWorker), 'service worker should cache the backend adapter');
 assert(/interschool-team\.html/.test(serviceWorker) && /interschool-team\.js/.test(serviceWorker), 'service worker should cache the dedicated interschool team page');
 assertFile('tests/backend-live-style.test.js');

@@ -229,4 +229,18 @@
         errorEl.textContent = error && error.message ? error.message : 'Staff login failed.';
       });
   });
+
+  // One-tap DEMO login (T18 pre-beta shortlist): fill the demo sentinel and
+  // reuse the exact same submit path as typing DEMO by hand — no new auth code.
+  var demoBtn = document.getElementById('admin-demo-login');
+  if (demoBtn) {
+    demoBtn.addEventListener('click', function () {
+      // Fill both required fields so native form validation passes; either one
+      // being DEMO trips the existing demoBypass in the submit handler.
+      document.getElementById('admin-username').value = 'DEMO';
+      document.getElementById('admin-password').value = 'DEMO';
+      if (typeof form.requestSubmit === 'function') { form.requestSubmit(); }
+      else { form.dispatchEvent(new Event('submit', { cancelable: true })); }
+    });
+  }
 })();
