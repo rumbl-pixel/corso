@@ -102,7 +102,7 @@ assert(/assets\/corso-logo\.png/.test(read('index.html')), 'home page should use
 const serviceWorker = read('service-worker.js');
 assert(/CACHE_NAME/.test(serviceWorker), 'service worker should define a cache name');
 assert(/CORE_ASSETS/.test(serviceWorker), 'service worker should cache the core app shell');
-assert(/gwynne-park-run-club-v197/.test(serviceWorker), 'service worker cache should be bumped after today\'s deploy so returning browsers pick up the new build instead of serving stale cache-first assets');
+assert(/gwynne-park-run-club-v198/.test(serviceWorker), 'service worker cache should be bumped after today\'s deploy so returning browsers pick up the new build instead of serving stale cache-first assets');
 assert(/\.\/about\.html/.test(serviceWorker), 'service worker should cache the About page');
 assert(/manifest\.webmanifest/.test(serviceWorker), 'service worker should cache the manifest');
 assert(/app-icon-192\.png/.test(serviceWorker) && /app-icon-512\.png/.test(serviceWorker), 'service worker should cache app icons');
@@ -313,6 +313,9 @@ assert(/PRAISE_MESSAGES/.test(kioskJs), 'kiosk should rotate playful praise mess
 assert(/index\.html/.test(kioskJs) && !/Enter teacher PIN/.test(kioskJs), 'kiosk exit should return to home without a PIN prompt');
 assert(/getUserMedia/.test(kioskJs) && /BarcodeDetector/.test(kioskJs), 'kiosk should support camera barcode scanning when available');
 assert(/camera-scan-btn/.test(read('kiosk.html')), 'kiosk should expose a tap-to-start camera scanning button');
+assert(/playCue/.test(kioskJs) && /AudioContext/.test(kioskJs), 'kiosk should play synthesized audio feedback on scans (T18 shortlist)');
+assert(/rc_kiosk_muted/.test(kioskJs) && /kiosk-mute/.test(read('kiosk.html')), 'kiosk should offer a persisted sound mute toggle');
+assert(/kiosk\.js\?v=1/.test(read('kiosk.html')), 'kiosk.html should cache-bust kiosk.js with a version pin so returning kiosks pick up scan-logic/audio changes');
 
 const scanningJs = read('scanning.js');
 assert(/scanAudit/.test(scanningJs), 'shared scanning should write a basic scan audit trail');
@@ -1324,7 +1327,7 @@ assert(/student\.js\?v=21/.test(studentProfileHtml), 'student profile should req
 assert(/goals\.js\?v=5/.test(studentProfileHtml), 'student profile should request a fresh goals script');
 assert(/student\.js\?v=21/.test(studentHtml), 'student login should request the current student portal script');
 assert(/goals\.js\?v=5/.test(studentHtml), 'student login should request a fresh goals script');
-assert(/gwynne-park-run-club-v197/.test(serviceWorker), 'service worker cache should be bumped for the About page refresh');
+assert(/gwynne-park-run-club-v198/.test(serviceWorker), 'service worker cache should be bumped for the About page refresh');
 assert(/backend\.js/.test(serviceWorker), 'service worker should cache the backend adapter');
 assert(/interschool-team\.html/.test(serviceWorker) && /interschool-team\.js/.test(serviceWorker), 'service worker should cache the dedicated interschool team page');
 assertFile('tests/backend-live-style.test.js');

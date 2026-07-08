@@ -66,6 +66,51 @@
 
   sessionLabel.textContent = 'Session: Run Club — ' + new Date().toISOString().slice(0, 10);
 
+  // --- Audio feedback (T18 shortlist) ---------------------------------------
+  // Synthesized tones via Web Audio so the scan moment is audible at a noisy
+  // track edge — no bundled sound files, works offline. Default on; muteable.
+  var audioCtx = null;
+  var kioskMuted = false;
+  try { kioskMuted = localStorage.getItem('rc_kiosk_muted') === '1'; } catch (e) {}
+
+  function ensureAudio() {
+    if (kioskMuted) { return null; }
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) { return null; }
+    if (!audioCtx) { try { audioCtx = new AC(); } catch (e) { return null; } }
+    // Browsers start the context suspended until a user gesture — a scan
+    // (keyboard from a HID scanner, or a tap) is that gesture.
+    if (audioCtx.state === 'suspended' && audioCtx.resume) { audioCtx.resume(); }
+    return audioCtx;
+  }
+
+  function playTones(notes) {
+    var ctx = ensureAudio();
+    if (!ctx) { return; }
+    var t0 = ctx.currentTime;
+    notes.forEach(function (n, i) {
+      var osc = ctx.createOscillator();
+      var gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = n.f;
+      var start = t0 + (n.at != null ? n.at : i * 0.12);
+      var dur = n.d || 0.14;
+      gain.gain.setValueAtTime(0.0001, start);
+      gain.gain.exponentialRampToValueAtTime(0.25, start + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(start);
+      osc.stop(start + dur + 0.02);
+    });
+  }
+
+  function playCue(type) {
+    if (type === 'milestone') { playTones([{ f: 660, at: 0 }, { f: 880, at: 0.12 }, { f: 1320, at: 0.24, d: 0.22 }]); }
+    else if (type === 'success') { playTones([{ f: 880, d: 0.12 }]); }
+    else if (type === 'error') { playTones([{ f: 200, d: 0.3 }]); }
+  }
+
   function setBanner(state, title, sub) {
     banner.className = 'kiosk-banner kiosk-banner--' + state;
     bannerTitle.textContent = title;
@@ -100,12 +145,14 @@
       var sub = praise + ' • Lap ' + s.laps + ' • ' + s.km.toFixed(2) + ' km';
       if (res.milestone) { sub += ' • 🏅 ' + res.milestone + ' milestone!'; }
       setBanner('success', '✓ Lap logged for ' + s.name, sub);
+      playCue(res.milestone ? 'milestone' : 'success');
       lastScanLabel.textContent = 'Last: ' + s.name + ' at ' + new Date().toLocaleTimeString();
       lapCountLabel.textContent = 'Laps this session: ' + sessionLaps;
       undoBtn.hidden = false;
     } else {
       lastResult = null;
       setBanner('error', '! ' + (res.error || 'Scan error'), 'Please try again or see a teacher');
+      playCue('error');
     }
     scheduleReset();
     scheduleIdle();
@@ -208,6 +255,21 @@
   window.addEventListener('focus', function () { input.focus(); });
 
   Scan.bindScannerInput(input, handleScan, { debounceMs: 120, autoRefocus: true });
+
+  var muteBtn = document.getElementById('kiosk-mute');
+  if (muteBtn) {
+    var renderMute = function () {
+      muteBtn.textContent = kioskMuted ? 'Sound off' : 'Sound on';
+      muteBtn.setAttribute('aria-pressed', String(kioskMuted));
+    };
+    renderMute();
+    muteBtn.addEventListener('click', function () {
+      kioskMuted = !kioskMuted;
+      try { localStorage.setItem('rc_kiosk_muted', kioskMuted ? '1' : '0'); } catch (e) {}
+      renderMute();
+      if (!kioskMuted) { playCue('success'); } // audible confirmation on unmute
+    });
+  }
 
   ready();
   scheduleIdle();
