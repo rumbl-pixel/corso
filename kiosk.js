@@ -135,6 +135,21 @@
     idleTimer = setTimeout(attract, 45000);
   }
 
+  // Pure: pick the success-banner title/sub for the scan context. Mirrored
+  // byte-for-byte in tests/kiosk-banner-copy.test.js (the IIFE isn't importable).
+  function bannerCopyFor(s, res, praise, km) {
+    if (s.laps === 1) {
+      return { title: '🎉 First lap for ' + s.name + '!', sub: 'Welcome to the run club • ' + km };
+    }
+    if (res.milestone) {
+      return { title: '🏅 ' + res.milestone + ' milestone, ' + s.name + '!', sub: praise + ' • Lap ' + s.laps + ' • ' + km };
+    }
+    if (s.laps % 10 === 0) {
+      return { title: '✓ ' + s.laps + ' laps for ' + s.name + '!', sub: 'Round number! • ' + praise + ' • ' + km };
+    }
+    return { title: '✓ Lap logged for ' + s.name, sub: praise + ' • Lap ' + s.laps + ' • ' + km };
+  }
+
   function handleScan(value) {
     var res = Scan.logLap(value);
     if (res.success) {
@@ -142,10 +157,16 @@
       sessionLaps += 1;
       var s = res.student;
       var praise = PRAISE_MESSAGES[sessionLaps % PRAISE_MESSAGES.length];
-      var sub = praise + ' • Lap ' + s.laps + ' • ' + s.km.toFixed(2) + ' km';
-      if (res.milestone) { sub += ' • 🏅 ' + res.milestone + ' milestone!'; }
-      setBanner('success', '✓ Lap logged for ' + s.name, sub);
-      playCue(res.milestone ? 'milestone' : 'success');
+      var km = s.km.toFixed(2) + ' km';
+      // Context-aware banner copy (T18 shortlist). The kiosk logs laps, not
+      // timed PBs, so the celebratory moments here are first-lap and round-lap
+      // (every 10th) rather than a personal-best time. Milestones win first.
+      var copy = bannerCopyFor(s, res, praise, km);
+      setBanner('success', copy.title, copy.sub);
+      // First-lap and round-number laps are celebration moments too, not just
+      // configured milestones — give them the celebratory cue.
+      var celebrate = !!res.milestone || s.laps === 1 || s.laps % 10 === 0;
+      playCue(celebrate ? 'milestone' : 'success');
       lastScanLabel.textContent = 'Last: ' + s.name + ' at ' + new Date().toLocaleTimeString();
       lapCountLabel.textContent = 'Laps this session: ' + sessionLaps;
       undoBtn.hidden = false;
