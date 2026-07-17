@@ -17,6 +17,12 @@ function assertFile(file) {
   assert(fs.existsSync(path.join(root, file)), `${file} should exist`);
 }
 
+function assertSameFile(sourceFile, deployFile) {
+  const source = read(sourceFile).replace(/\r\n/g, '\n');
+  const deploy = read(deployFile).replace(/\r\n/g, '\n');
+  assert(source === deploy, `${sourceFile} should match ${deployFile}; npm run build copies this source file over the served root file`);
+}
+
 assertFile('config.js');
 assertFile('backend.js');
 assertFile('theme.js');
@@ -37,6 +43,19 @@ assertFile('wrangler.toml');
 assertFile('_headers');
 assertFile('scripts/build-cloudflare-pages.js');
 assertFile('docs/cloudflare-pages-deploy.md');
+
+[
+  ['src/backend/backend.js', 'backend.js'],
+  ['src/scanning/scanning.js', 'scanning.js'],
+  ['src/data/tracking.js', 'tracking.js'],
+  ['src/goals/goals.js', 'goals.js'],
+  ['src/goals/admin-goals.js', 'admin-goals.js'],
+  ['src/kiosk/kiosk.html', 'kiosk.html'],
+  ['src/kiosk/kiosk.js', 'kiosk.js'],
+  ['src/kiosk/kiosk.css', 'kiosk.css']
+].forEach(function (pair) {
+  assertSameFile(pair[0], pair[1]);
+});
 
 const brandFiles = [
   'index.html',
