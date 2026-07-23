@@ -93,6 +93,22 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             | tee "$RUNNER_TEMP/corso-athletics-tests.log"
 
+      - name: Launch app on iPad simulator
+        run: |
+          APP_PATH="$RUNNER_TEMP/CorsoDerivedData/Build/Products/Debug-iphonesimulator/AppModule.app"
+          test -d "$APP_PATH"
+          xcrun simctl install "$SIMULATOR_UDID" "$APP_PATH"
+          LAUNCH_OUTPUT=$(xcrun simctl launch \
+            --terminate-running-process \
+            "$SIMULATOR_UDID" \
+            au.com.corso.athletics)
+          echo "$LAUNCH_OUTPUT"
+          echo "$LAUNCH_OUTPUT" | grep -Eq 'au\.com\.corso\.athletics: [0-9]+'
+          sleep 5
+          xcrun simctl io "$SIMULATOR_UDID" screenshot \
+            "$RUNNER_TEMP/CorsoAthletics-Launch.png"
+          test -s "$RUNNER_TEMP/CorsoAthletics-Launch.png"
+
       - name: Package the verified Playgrounds project
         run: |
           ditto -c -k --sequesterRsrc --keepParent \
@@ -116,5 +132,6 @@ jobs:
             ${{ runner.temp }}/corso-athletics-build.log
             ${{ runner.temp }}/corso-athletics-tests.log
             ${{ runner.temp }}/CorsoAthleticsTests.xcresult
+            ${{ runner.temp }}/CorsoAthletics-Launch.png
           if-no-files-found: ignore
           retention-days: 7

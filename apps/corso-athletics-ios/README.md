@@ -26,9 +26,9 @@ from the GitHub Actions run, unzip it in Files, then open
 ## Apple build gate
 
 The repository workflow generates a temporary Xcode project from `project.yml`,
-builds the full application against an iPad simulator SDK and executes the unit
-tests on an available iPad simulator. The generated Xcode project is not
-committed.
+builds the full application against an iPad simulator SDK, executes the unit
+tests, installs the compiled app on an available iPad simulator, launches it and
+captures the rendered screen. The generated Xcode project is not committed.
 
 This gate validates Apple's Swift compiler, SwiftUI, UIKit and PencilKit APIs.
 It does not create a signed App Store or TestFlight build; signing requires an
