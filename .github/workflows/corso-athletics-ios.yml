@@ -1,0 +1,120 @@
+name: Corso Athletics iOS
+
+on:
+  push:
+    branches:
+      - agent/corso-athletics-ios
+    paths:
+      - "apps/corso-athletics-ios/**"
+      - ".github/workflows/corso-athletics-ios.yml"
+  pull_request:
+    paths:
+      - "apps/corso-athletics-ios/**"
+      - ".github/workflows/corso-athletics-ios.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: corso-athletics-ios-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  apple-build-and-test:
+    name: Apple build and iPad tests
+    runs-on: macos-15
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: apps/corso-athletics-ios
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Report Apple toolchain
+        run: |
+          xcodebuild -version
+          xcrun swift --version
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: |
+          xcodegen generate --spec project.yml
+          xcodebuild -list -project CorsoAthletics.xcodeproj
+
+      - name: Build full iPad app
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -project CorsoAthletics.xcodeproj \
+            -scheme AppModule \
+            -configuration Debug \
+            -destination "generic/platform=iOS Simulator" \
+            -derivedDataPath "$RUNNER_TEMP/CorsoDerivedData" \
+            CODE_SIGNING_ALLOWED=NO \
+            | tee "$RUNNER_TEMP/corso-athletics-build.log"
+
+      - name: Select an iPad simulator
+        run: |
+          SIMULATOR_UDID=$(/usr/bin/python3 -c '
+          import json
+          import subprocess
+          devices = json.loads(
+              subprocess.check_output(
+                  ["xcrun", "simctl", "list", "devices", "available", "-j"],
+                  text=True,
+              )
+          )["devices"]
+          for runtime in sorted(devices, reverse=True):
+              for device in devices[runtime]:
+                  if device.get("isAvailable") and "iPad" in device.get("name", ""):
+                      print(device["udid"])
+                      raise SystemExit(0)
+          raise SystemExit("No available iPad simulator was found")
+          ')
+          echo "SIMULATOR_UDID=$SIMULATOR_UDID" >> "$GITHUB_ENV"
+          xcrun simctl boot "$SIMULATOR_UDID" || true
+          xcrun simctl bootstatus "$SIMULATOR_UDID" -b
+
+      - name: Run iPad unit tests
+        run: |
+          set -o pipefail
+          xcodebuild test \
+            -project CorsoAthletics.xcodeproj \
+            -scheme AppModule \
+            -configuration Debug \
+            -destination "platform=iOS Simulator,id=$SIMULATOR_UDID" \
+            -derivedDataPath "$RUNNER_TEMP/CorsoDerivedData" \
+            -resultBundlePath "$RUNNER_TEMP/CorsoAthleticsTests.xcresult" \
+            CODE_SIGNING_ALLOWED=NO \
+            | tee "$RUNNER_TEMP/corso-athletics-tests.log"
+
+      - name: Package the verified Playgrounds project
+        run: |
+          ditto -c -k --sequesterRsrc --keepParent \
+            CorsoAthletics.swiftpm \
+            "$RUNNER_TEMP/CorsoAthletics-0.2.0-Playgrounds.zip"
+
+      - name: Upload verified Playgrounds project
+        uses: actions/upload-artifact@v4
+        with:
+          name: Corso-Athletics-Playgrounds
+          path: ${{ runner.temp }}/CorsoAthletics-0.2.0-Playgrounds.zip
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload Apple diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Corso-Athletics-Apple-Diagnostics
+          path: |
+            ${{ runner.temp }}/corso-athletics-build.log
+            ${{ runner.temp }}/corso-athletics-tests.log
+            ${{ runner.temp }}/CorsoAthleticsTests.xcresult
+          if-no-files-found: ignore
+          retention-days: 7
