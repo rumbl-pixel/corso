@@ -66,6 +66,18 @@ enum AthleticsBackupService {
             return payload
         }
 
+        // Version 15 of the web app exported { exportedAt, data }. Convert that
+        // document before trying the permissive legacy-state decoder. A web
+        // envelope has no root-level AthleticsState fields, so that decoder can
+        // otherwise accept it as an empty workspace and silently discard data.
+        if let web = try? decoder.decode(WebBackupEnvelope.self, from: data) {
+            return AthleticsBackupPayload(
+                schemaVersion: 2,
+                exportedAt: web.exportedAt ?? .now,
+                state: web.data.nativeState
+            )
+        }
+
         // The original web/native pilot exported the state as the JSON root.
         if var legacy = try? decoder.decode(AthleticsState.self, from: data) {
             legacy.normalize()
@@ -73,16 +85,6 @@ enum AthleticsBackupService {
                 schemaVersion: 1,
                 exportedAt: .now,
                 state: legacy
-            )
-        }
-
-        // Version 15 of the web app exported { exportedAt, data }. Convert that
-        // document so a school can move its working web records onto the iPad.
-        if let web = try? decoder.decode(WebBackupEnvelope.self, from: data) {
-            return AthleticsBackupPayload(
-                schemaVersion: 2,
-                exportedAt: web.exportedAt ?? .now,
-                state: web.data.nativeState
             )
         }
 
