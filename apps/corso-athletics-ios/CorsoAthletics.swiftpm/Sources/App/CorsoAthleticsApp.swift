@@ -5,7 +5,7 @@ struct CorsoAthleticsApp: App {
     @State private var store: AthleticsStore
 
     init() {
-        print("Corso Athletics 0.2.0 reached app startup")
+        print("Corso Athletics 0.3.0 reached app startup")
         _store = State(initialValue: AthleticsStore())
     }
 
@@ -69,7 +69,7 @@ private struct CorsoLaunchView: View {
                 .font(.largeTitle.weight(.black))
                 .foregroundStyle(CorsoTheme.navy)
 
-            Text("Starting pilot 0.2.0…")
+            Text("Starting Corso Athletics 0.3.0…")
                 .font(.headline)
                 .foregroundStyle(CorsoTheme.muted)
 
@@ -77,6 +77,6 @@ private struct CorsoLaunchView: View {
                 .tint(CorsoTheme.orange)
         }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Corso Athletics pilot 0.2.0 is starting")
+        .accessibilityLabel("Corso Athletics 0.3.0 is starting")
     }
 }

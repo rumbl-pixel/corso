@@ -46,15 +46,10 @@ final class AthleticsStore {
     /// normalised name, year and class, regardless of capitalisation.
     @discardableResult
     func importAthletes(_ athletes: [Athlete]) -> Int {
-        var identities = Set(state.athletes.map(Self.studentIdentity))
-        var inserted = 0
+        let review = StudentImportReviewer.review(athletes, against: state.athletes)
 
-        for rawAthlete in athletes {
-            var athlete = rawAthlete
-            athlete.normalize()
-            guard identities.insert(Self.studentIdentity(athlete)).inserted else { continue }
+        for athlete in review.studentsToImport {
             state.athletes.append(athlete)
-            inserted += 1
 
             if !state.settings.classes.contains(where: { $0.caseInsensitiveCompare(athlete.className) == .orderedSame }) {
                 state.settings.classes.append(athlete.className)
@@ -64,10 +59,10 @@ final class AthleticsStore {
             }
         }
 
-        guard inserted > 0 else { return 0 }
+        guard !review.studentsToImport.isEmpty else { return 0 }
         state.athletes.sort { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
         persist()
-        return inserted
+        return review.studentsToImport.count
     }
 
     /// Replaces student details without touching their results or stable ID.
@@ -85,6 +80,14 @@ final class AthleticsStore {
     func deleteAthlete(id: UUID) {
         state.athletes.removeAll { $0.id == id }
         state.results.removeAll { $0.athleteID == id }
+        state.teamBoards = state.teamBoards.reduce(into: [:]) { output, entry in
+            var board = entry.value
+            board.teamA.removeAll { $0 == id }
+            board.teamB.removeAll { $0 == id }
+            if board.teamALeader == id { board.teamALeader = nil }
+            if board.teamBLeader == id { board.teamBLeader = nil }
+            output[entry.key] = board
+        }
         persist()
     }
 
@@ -92,6 +95,18 @@ final class AthleticsStore {
         guard let index = state.athletes.firstIndex(where: { $0.id == athleteID }) else { return }
         // Selection is an enum, so assigning a new state atomically removes the old one.
         state.athletes[index].selection = selection
+        persist()
+    }
+
+    func setEvent(_ event: AthleticsEvent, assigned: Bool, for athleteID: UUID) {
+        guard let index = state.athletes.firstIndex(where: { $0.id == athleteID }) else { return }
+        if assigned {
+            if !state.athletes[index].events.contains(event) {
+                state.athletes[index].events.append(event)
+            }
+        } else {
+            state.athletes[index].events.removeAll { $0 == event }
+        }
         persist()
     }
 
@@ -188,6 +203,129 @@ final class AthleticsStore {
         persist()
     }
 
+    func updateSession(
+        week: Int,
+        ballGames: String? = nil,
+        activities: [SessionActivity]? = nil
+    ) {
+        guard let base = TrainingProgram.sessions.first(where: { $0.week == week }) else { return }
+        let existing = state.sessionOverrides[week]
+            ?? SessionOverride(ballGames: base.ballGames, activities: base.activities)
+        state.sessionOverrides[week] = SessionOverride(
+            ballGames: ballGames ?? existing.ballGames,
+            activities: activities ?? existing.activities
+        )
+        persist()
+    }
+
+    func resetSession(week: Int) {
+        state.sessionOverrides.removeValue(forKey: week)
+        persist()
+    }
+
+    func resolvedSession(week: Int) -> TrainingSession? {
+        TrainingProgram.session(for: week, overrides: state.sessionOverrides)
+    }
+
+    func teamBoard(for scope: TeamBoardScope) -> TeamBoard {
+        state.teamBoards[scope.id] ?? TeamBoard()
+    }
+
+    func placeAthlete(
+        _ athleteID: UUID,
+        in destination: TeamPlacement,
+        scope: TeamBoardScope
+    ) {
+        guard let athlete = state.athletes.first(where: { $0.id == athleteID }),
+              athlete.division == scope.division,
+              scope.stage.includes(athlete.selection)
+        else { return }
+
+        var board = teamBoard(for: scope)
+        board.teamA.removeAll { $0 == athleteID }
+        board.teamB.removeAll { $0 == athleteID }
+
+        switch destination {
+        case .available:
+            break
+        case .teamA:
+            board.teamA.append(athleteID)
+        case .teamB:
+            board.teamB.append(athleteID)
+        }
+
+        if destination != .teamA, board.teamALeader == athleteID { board.teamALeader = nil }
+        if destination != .teamB, board.teamBLeader == athleteID { board.teamBLeader = nil }
+        state.teamBoards[scope.id] = board
+        persist()
+    }
+
+    func moveAthlete(
+        _ athleteID: UUID,
+        in team: TeamPlacement,
+        direction: Int,
+        scope: TeamBoardScope
+    ) {
+        guard team != .available, direction == -1 || direction == 1 else { return }
+        var board = teamBoard(for: scope)
+        var athletes = team == .teamA ? board.teamA : board.teamB
+        guard let index = athletes.firstIndex(of: athleteID) else { return }
+        let target = index + direction
+        guard athletes.indices.contains(target) else { return }
+
+        let leader = team == .teamA ? board.teamALeader : board.teamBLeader
+        if athleteID == leader && direction > 0 { return }
+        if target == 0, leader != nil, athleteID != leader { return }
+        athletes.swapAt(index, target)
+
+        if team == .teamA {
+            board.teamA = athletes
+        } else {
+            board.teamB = athletes
+        }
+        state.teamBoards[scope.id] = board
+        persist()
+    }
+
+    func makeLeader(_ athleteID: UUID, in team: TeamPlacement, scope: TeamBoardScope) {
+        guard team != .available else { return }
+        var board = teamBoard(for: scope)
+        let containsAthlete = team == .teamA
+            ? board.teamA.contains(athleteID)
+            : board.teamB.contains(athleteID)
+        guard containsAthlete else { return }
+
+        if team == .teamA {
+            board.teamALeader = athleteID
+            board.teamA.moveToFront(athleteID)
+        } else {
+            board.teamBLeader = athleteID
+            board.teamB.moveToFront(athleteID)
+        }
+        state.teamBoards[scope.id] = board
+        persist()
+    }
+
+    func updatePermissionSlipSettings(_ settings: PermissionSlipSettings) {
+        state.permissionSlips = settings
+        persist()
+    }
+
+    func commitAssistantChange(state nextState: AthleticsState) {
+        state = nextState
+        persist()
+    }
+
+    func restoreWorkspace(_ restoredState: AthleticsState) {
+        state = restoredState
+        state.normalize()
+        if !state.settings.coaches.contains(where: { $0.id == selectedCoachID }) {
+            selectedCoachID = state.settings.coaches.first?.id
+        }
+        persistenceIsWriteBlocked = false
+        persist()
+    }
+
     /// Allows a caller to replace an unreadable archive only after it has
     /// explicitly confirmed data recovery/reset. This is intentionally not
     /// called automatically.
@@ -221,9 +359,4 @@ final class AthleticsStore {
         }
     }
 
-    private static func studentIdentity(_ athlete: Athlete) -> String {
-        [athlete.name, String(athlete.year), athlete.className]
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
-            .joined(separator: "|")
-    }
 }

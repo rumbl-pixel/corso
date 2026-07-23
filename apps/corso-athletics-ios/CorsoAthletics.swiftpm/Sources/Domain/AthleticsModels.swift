@@ -59,6 +59,18 @@ enum AthleticsEvent: String, Codable, CaseIterable, Identifiable, Sendable {
     var id: Self { self }
     var isTimed: Bool { self != .longJump }
     var resultUnit: ResultUnit { isTimed ? .seconds : .metres }
+    var isTeamEvent: Bool {
+        switch self {
+        case .passBall, .tunnelBall, .leaderBall, .sprintRelay:
+            return true
+        default:
+            return false
+        }
+    }
+
+    static let individualEvents: [Self] = [
+        .sprint75, .sprint100, .sprint200, .sprint400, .longJump
+    ]
 }
 
 enum ResultUnit: String, Codable, CaseIterable, Sendable {
@@ -83,6 +95,7 @@ struct Athlete: Codable, Hashable, Identifiable, Sendable {
     var faction: String
     var className: String
     var selection: SquadSelection
+    var events: [AthleticsEvent]
     /// Keys are stable local calendar dates in yyyy-MM-dd format.
     var attendance: [String: AttendanceStatus]
 
@@ -96,6 +109,7 @@ struct Athlete: Codable, Hashable, Identifiable, Sendable {
         faction: String,
         className: String,
         selection: SquadSelection = .classOnly,
+        events: [AthleticsEvent] = [],
         attendance: [String: AttendanceStatus] = [:]
     ) {
         self.id = id
@@ -105,6 +119,7 @@ struct Athlete: Codable, Hashable, Identifiable, Sendable {
         self.faction = faction.studentField(or: "Unassigned")
         self.className = className.studentField(or: "Unassigned")
         self.selection = selection
+        self.events = Array(Set(events)).sorted { $0.rawValue < $1.rawValue }
         self.attendance = attendance.filter { Date.isAttendanceKey($0.key) && $0.value != .unmarked }
     }
 
@@ -113,13 +128,14 @@ struct Athlete: Codable, Hashable, Identifiable, Sendable {
         year = min(max(year, 1), 6)
         faction = faction.studentField(or: "Unassigned")
         className = className.studentField(or: "Unassigned")
+        events = Array(Set(events)).sorted { $0.rawValue < $1.rawValue }
         attendance = attendance.filter { Date.isAttendanceKey($0.key) && $0.value != .unmarked }
     }
 
     private enum CodingKeys: String, CodingKey {
         case id, name, year, yearGroup, gender, division, faction, className
         case legacyClass = "class"
-        case selection, squadStatus, attendance
+        case selection, squadStatus, events, attendance
     }
 
     init(from decoder: Decoder) throws {
@@ -145,6 +161,7 @@ struct Athlete: Codable, Hashable, Identifiable, Sendable {
         selection = (try? values.decode(SquadSelection.self, forKey: .selection))
             ?? (try? values.decode(SquadSelection.self, forKey: .squadStatus))
             ?? .classOnly
+        events = try values.decodeIfPresent([AthleticsEvent].self, forKey: .events) ?? []
         attendance = try values.decodeIfPresent([String: AttendanceStatus].self, forKey: .attendance) ?? [:]
         normalize()
     }
@@ -158,6 +175,7 @@ struct Athlete: Codable, Hashable, Identifiable, Sendable {
         try values.encode(faction, forKey: .faction)
         try values.encode(className, forKey: .className)
         try values.encode(selection, forKey: .selection)
+        try values.encode(events, forKey: .events)
         try values.encode(attendance, forKey: .attendance)
     }
 }
@@ -338,6 +356,10 @@ struct AthleticsState: Codable, Equatable, Sendable {
     var results: [ResultRecord] = []
     var settings = ProgramSettings()
     var currentWeek = 1
+    var sessionOverrides: [Int: SessionOverride] = [:]
+    var teamBoards: [String: TeamBoard] = [:]
+    var assistantAudit: [AssistantAuditRecord] = []
+    var permissionSlips = PermissionSlipSettings()
     /// Past dates are locked by default. Only explicitly unlocked keys appear here.
     var unlockedAttendanceDates: Set<String> = []
 
@@ -360,6 +382,19 @@ struct AthleticsState: Codable, Equatable, Sendable {
         results = results.filter {
             studentIDs.contains($0.athleteID) && $0.isValid && resultIDs.insert($0.id).inserted
         }
+
+        let validSessionWeeks = Set(TrainingProgram.sessions.map(\.week))
+        sessionOverrides = sessionOverrides.filter { week, value in
+            validSessionWeeks.contains(week)
+                && !value.ballGames.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                && !value.activities.isEmpty
+        }
+
+        teamBoards = teamBoards.reduce(into: [:]) { output, entry in
+            var board = entry.value
+            board.normalize(validAthleteIDs: studentIDs)
+            output[entry.key] = board
+        }
     }
 
     func isAttendanceLocked(on date: Date, now: Date = .now, calendar: Calendar = .current) -> Bool {
@@ -369,7 +404,8 @@ struct AthleticsState: Codable, Equatable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case athletes, students, results, settings, currentWeek, unlockedAttendanceDates
+        case athletes, students, results, settings, currentWeek, sessionOverrides
+        case teamBoards, assistantAudit, permissionSlips, unlockedAttendanceDates
     }
 
     init() {}
@@ -382,6 +418,11 @@ struct AthleticsState: Codable, Equatable, Sendable {
         results = try values.decodeIfPresent([ResultRecord].self, forKey: .results) ?? []
         settings = try values.decodeIfPresent(ProgramSettings.self, forKey: .settings) ?? ProgramSettings()
         currentWeek = try values.decodeIfPresent(Int.self, forKey: .currentWeek) ?? 1
+        sessionOverrides = try values.decodeIfPresent([Int: SessionOverride].self, forKey: .sessionOverrides) ?? [:]
+        teamBoards = try values.decodeIfPresent([String: TeamBoard].self, forKey: .teamBoards) ?? [:]
+        assistantAudit = try values.decodeIfPresent([AssistantAuditRecord].self, forKey: .assistantAudit) ?? []
+        permissionSlips = try values.decodeIfPresent(PermissionSlipSettings.self, forKey: .permissionSlips)
+            ?? PermissionSlipSettings()
         unlockedAttendanceDates = try values.decodeIfPresent(Set<String>.self, forKey: .unlockedAttendanceDates) ?? []
         normalize()
     }
@@ -392,6 +433,10 @@ struct AthleticsState: Codable, Equatable, Sendable {
         try values.encode(results, forKey: .results)
         try values.encode(settings, forKey: .settings)
         try values.encode(currentWeek, forKey: .currentWeek)
+        try values.encode(sessionOverrides, forKey: .sessionOverrides)
+        try values.encode(teamBoards, forKey: .teamBoards)
+        try values.encode(assistantAudit, forKey: .assistantAudit)
+        try values.encode(permissionSlips, forKey: .permissionSlips)
         try values.encode(unlockedAttendanceDates, forKey: .unlockedAttendanceDates)
     }
 }

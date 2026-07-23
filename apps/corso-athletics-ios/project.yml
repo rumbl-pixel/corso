@@ -26,8 +26,8 @@ targets:
         # target. The user-facing app name still comes from CFBundleDisplayName.
         PRODUCT_NAME: AppModule
         PRODUCT_BUNDLE_IDENTIFIER: au.com.corso.athletics
-        MARKETING_VERSION: "0.2.0"
-        CURRENT_PROJECT_VERSION: "10"
+        MARKETING_VERSION: "0.3.0"
+        CURRENT_PROJECT_VERSION: "12"
         GENERATE_INFOPLIST_FILE: true
         INFOPLIST_KEY_CFBundleDisplayName: "Corso Athletics"
         INFOPLIST_KEY_UILaunchScreen_Generation: true

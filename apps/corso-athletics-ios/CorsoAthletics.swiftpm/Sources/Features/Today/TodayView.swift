@@ -4,6 +4,9 @@ struct TodayView: View {
     @Environment(AthleticsStore.self) private var store
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @State private var attendancePresented = false
+    let openSession: () -> Void
+    let openResults: (AthleticsEvent) -> Void
+    let openTeams: (TeamEvent) -> Void
 
     private var presentCount: Int {
         store.state.athletes.filter { $0.attendance[Date.now.attendanceKey] == .present }.count
@@ -31,11 +34,21 @@ struct TodayView: View {
                 )
 
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 210), spacing: 16)], spacing: 16) {
-                    EventTile(title: "75m / 100m", subtitle: "Sprints", symbol: "speedometer")
-                    EventTile(title: "200m / 400m", subtitle: "Race rhythm", symbol: "stopwatch")
-                    EventTile(title: "Long Jump", subtitle: "Approach & landing", symbol: "circle.dotted")
-                    EventTile(title: "Team Games", subtitle: "Build positions", symbol: "person.3")
-                    EventTile(title: "Relays", subtitle: "Set runner order", symbol: "medal")
+                    EventTile(title: "75m / 100m", subtitle: "Sprints", symbol: "speedometer") {
+                        openResults(.sprint100)
+                    }
+                    EventTile(title: "200m / 400m", subtitle: "Race rhythm", symbol: "stopwatch") {
+                        openResults(.sprint200)
+                    }
+                    EventTile(title: "Long Jump", subtitle: "Approach & landing", symbol: "circle.dotted") {
+                        openResults(.longJump)
+                    }
+                    EventTile(title: "Team Games", subtitle: "Build positions", symbol: "person.3") {
+                        openTeams(.passBall)
+                    }
+                    EventTile(title: "Relays", subtitle: "Set runner order", symbol: "medal") {
+                        openTeams(.sprintRelay)
+                    }
                 }
             }
             .padding(28)
@@ -50,12 +63,17 @@ struct TodayView: View {
     @ViewBuilder
     private var dashboardCards: some View {
         let settings = store.state.settings
-        let hero = SessionHeroCard(
-            week: store.state.currentWeek,
-            trainingDay: settings.trainingDay,
-            sessionStart: settings.sessionStart,
-            sessionEnd: settings.sessionEnd
-        )
+        let hero = Button(action: openSession) {
+            SessionHeroCard(
+                session: store.resolvedSession(week: store.state.currentWeek),
+                week: store.state.currentWeek,
+                trainingDay: settings.trainingDay,
+                sessionStart: settings.sessionStart,
+                sessionEnd: settings.sessionEnd
+            )
+        }
+        .buttonStyle(.plain)
+        .accessibilityHint("Opens this week's full training program")
         let metrics = VStack(spacing: 18) {
             SquadMetricCard(count: store.state.athletes.count)
             AttendanceCard(percentage: attendancePercentage) {
@@ -95,6 +113,7 @@ struct TodayView: View {
 }
 
 private struct SessionHeroCard: View {
+    let session: TrainingSession?
     let week: Int
     let trainingDay: String
     let sessionStart: String
@@ -107,7 +126,7 @@ private struct SessionHeroCard: View {
         case 9:
             return "Interschool athletics carnival"
         default:
-            return "Week \(week): Build speed with purpose"
+            return "Week \(week): \(session?.title ?? "No scheduled training")"
         }
     }
 
@@ -142,13 +161,21 @@ private struct SessionHeroCard: View {
                     .font(.system(size: 42, weight: .bold, design: .rounded))
                     .foregroundStyle(.white)
                     .fixedSize(horizontal: false, vertical: true)
-                Text("Use class evidence, deliberate practice and clean records to select the strongest fair team.")
+                Text(session?.purpose ?? "Use the Results and Squad workspaces to prepare for carnival day.")
                     .font(.title3)
                     .foregroundStyle(.white.opacity(0.78))
                 Spacer()
-                Label("\(sessionStart)–\(sessionEnd)", systemImage: "clock")
-                    .font(.headline)
-                    .foregroundStyle(.white)
+                HStack {
+                    Label("\(sessionStart)–\(sessionEnd)", systemImage: "clock")
+                    if let session {
+                        Text("· \(session.ballGames)")
+                            .lineLimit(1)
+                    }
+                    Spacer()
+                    Label("Open program", systemImage: "arrow.right")
+                }
+                .font(.headline)
+                .foregroundStyle(.white)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(36)
@@ -249,25 +276,29 @@ private struct EventTile: View {
     let title: String
     let subtitle: String
     let symbol: String
+    let action: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Image(systemName: symbol)
-                .font(.title2.weight(.semibold))
-                .foregroundStyle(CorsoTheme.orange)
-                .frame(width: 54, height: 54)
-                .background(CorsoTheme.orange.opacity(0.09))
-                .clipShape(RoundedRectangle(cornerRadius: 15, style: .continuous))
-            Spacer()
-            Text(title)
-                .font(.title3.weight(.bold))
-                .foregroundStyle(CorsoTheme.ink)
-            Text(subtitle)
-                .font(.subheadline)
-                .foregroundStyle(CorsoTheme.muted)
+        Button(action: action) {
+            VStack(alignment: .leading, spacing: 10) {
+                Image(systemName: symbol)
+                    .font(.title2.weight(.semibold))
+                    .foregroundStyle(CorsoTheme.orange)
+                    .frame(width: 54, height: 54)
+                    .background(CorsoTheme.orange.opacity(0.09))
+                    .clipShape(RoundedRectangle(cornerRadius: 15, style: .continuous))
+                Spacer()
+                Text(title)
+                    .font(.title3.weight(.bold))
+                    .foregroundStyle(CorsoTheme.ink)
+                Text(subtitle)
+                    .font(.subheadline)
+                    .foregroundStyle(CorsoTheme.muted)
+            }
+            .padding(22)
+            .frame(maxWidth: .infinity, minHeight: 205, alignment: .leading)
+            .corsoCard()
         }
-        .padding(22)
-        .frame(maxWidth: .infinity, minHeight: 205, alignment: .leading)
-        .corsoCard()
+        .buttonStyle(.plain)
     }
 }

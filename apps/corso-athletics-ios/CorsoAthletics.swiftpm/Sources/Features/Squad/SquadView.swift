@@ -7,6 +7,7 @@ struct SquadView: View {
     @State private var division: CompetitionDivision?
     @State private var gender: AthleteGender?
     @State private var query = ""
+    @State private var permissionSlipsPresented = false
 
     private var athletes: [Athlete] {
         SquadFilter.apply(
@@ -31,6 +32,10 @@ struct SquadView: View {
             }
         }
         .navigationTitle("Squad")
+        .sheet(isPresented: $permissionSlipsPresented) {
+            NavigationStack { PermissionSlipsView() }
+                .environment(store)
+        }
     }
 
     private var squadHeader: some View {
@@ -38,6 +43,11 @@ struct SquadView: View {
             HStack(alignment: .bottom) {
                 CorsoSectionTitle(eyebrow: "Selection", title: "Build the strongest fair squad")
                 Spacer()
+                Button("Permission slips", systemImage: "doc.text") {
+                    permissionSlipsPresented = true
+                }
+                .buttonStyle(.bordered)
+                .disabled(store.state.athletes.isEmpty)
                 ViewThatFits(in: .horizontal) {
                     Picker("Squad workspace", selection: $workspace) {
                         ForEach(SquadWorkspace.allCases) { item in
@@ -104,6 +114,8 @@ struct SquadView: View {
             List(athletes) { athlete in
                 SquadSelectionRow(athlete: athlete) { selection in
                     store.updateSelection(for: athlete.id, to: selection)
+                } eventUpdate: { event, assigned in
+                    store.setEvent(event, assigned: assigned, for: athlete.id)
                 }
             }
             .listStyle(.plain)
@@ -171,11 +183,13 @@ private struct LabeledMenu<Content: View>: View {
 private struct SquadSelectionRow: View {
     let athlete: Athlete
     let update: (SquadSelection) -> Void
+    let eventUpdate: (AthleticsEvent, Bool) -> Void
 
     var body: some View {
         ViewThatFits(in: .horizontal) {
             HStack(spacing: 16) {
                 athleteSummary
+                eventMenu
                 selectionPicker
                     .pickerStyle(.segmented)
                     .frame(width: 470)
@@ -184,6 +198,7 @@ private struct SquadSelectionRow: View {
             VStack(alignment: .leading, spacing: 10) {
                 athleteSummary
                 HStack {
+                    eventMenu
                     Text("Selection status")
                         .font(.caption.weight(.bold))
                         .foregroundStyle(CorsoTheme.muted)
@@ -217,6 +232,29 @@ private struct SquadSelectionRow: View {
             }
         }
         .accessibilityHint("A student can hold only one selection status")
+    }
+
+    private var eventMenu: some View {
+        Menu {
+            ForEach(AthleticsEvent.allCases) { event in
+                Button {
+                    eventUpdate(event, !athlete.events.contains(event))
+                } label: {
+                    if athlete.events.contains(event) {
+                        Label(event.rawValue, systemImage: "checkmark")
+                    } else {
+                        Text(event.rawValue)
+                    }
+                }
+            }
+        } label: {
+            Label(
+                athlete.events.isEmpty ? "Assign events" : "\(athlete.events.count) events",
+                systemImage: "list.bullet.clipboard"
+            )
+        }
+        .buttonStyle(.bordered)
+        .frame(width: 135)
     }
 
     private func shortLabel(for selection: SquadSelection) -> String {

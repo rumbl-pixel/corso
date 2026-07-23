@@ -1,8 +1,58 @@
 import Foundation
 
+struct StudentCSVImportOptions: Equatable, Sendable {
+    var destinationClass: String?
+    var defaultYear: Int?
+    var requiresClassColumn: Bool
+
+    init(
+        destinationClass: String? = nil,
+        defaultYear: Int? = nil,
+        requiresClassColumn: Bool = false
+    ) {
+        self.destinationClass = destinationClass
+        self.defaultYear = defaultYear
+        self.requiresClassColumn = requiresClassColumn
+    }
+}
+
 struct StudentCSVImport: Sendable {
     let athletes: [Athlete]
     let rejectedRows: [Int]
+}
+
+struct StudentImportReview: Sendable {
+    let studentsToImport: [Athlete]
+    let duplicates: [Athlete]
+}
+
+enum StudentImportReviewer {
+    static func review(_ athletes: [Athlete], against existingAthletes: [Athlete]) -> StudentImportReview {
+        var identities = Set(existingAthletes.map(identity))
+        var studentsToImport: [Athlete] = []
+        var duplicates: [Athlete] = []
+
+        for rawAthlete in athletes {
+            var athlete = rawAthlete
+            athlete.normalize()
+            if identities.insert(identity(athlete)).inserted {
+                studentsToImport.append(athlete)
+            } else {
+                duplicates.append(athlete)
+            }
+        }
+
+        return StudentImportReview(
+            studentsToImport: studentsToImport,
+            duplicates: duplicates
+        )
+    }
+
+    private static func identity(_ athlete: Athlete) -> String {
+        [athlete.name, String(athlete.year), athlete.className]
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
+            .joined(separator: "|")
+    }
 }
 
 enum StudentCSVImportError: LocalizedError, Sendable {
@@ -23,7 +73,10 @@ enum StudentCSVImportError: LocalizedError, Sendable {
 }
 
 enum StudentCSVImporter {
-    static func parse(_ text: String) throws -> StudentCSVImport {
+    static func parse(
+        _ text: String,
+        options: StudentCSVImportOptions = StudentCSVImportOptions()
+    ) throws -> StudentCSVImport {
         let rows = CSVRows.parse(text)
         guard let first = rows.first, !first.allSatisfy({ $0.trimmed.isEmpty }) else {
             throw StudentCSVImportError.emptyFile
@@ -33,27 +86,70 @@ enum StudentCSVImporter {
             let key = normaliseHeader(item.element)
             if output[key] == nil { output[key] = item.offset }
         }
-        let nameIndex = index(in: headers, aliases: ["name", "student", "studentname", "fullname"])
-        let yearIndex = index(in: headers, aliases: ["year", "yeargroup", "grade"])
+        let nameIndex = index(
+            in: headers,
+            aliases: ["name", "student", "studentname", "fullname", "displayname"]
+        )
+        let givenNameIndex = index(
+            in: headers,
+            aliases: ["firstname", "givenname", "preferredname"]
+        )
+        let surnameIndex = index(
+            in: headers,
+            aliases: ["lastname", "surname", "familyname"]
+        )
+        let yearIndex = index(
+            in: headers,
+            aliases: ["year", "yeargroup", "grade", "yearlevel"]
+        )
+        let classIndex = index(
+            in: headers,
+            aliases: ["class", "classname", "homeroom", "form", "formclass"]
+        )
+        let destinationClass = options.destinationClass?.trimmed.nonEmpty
+        let defaultYear = options.defaultYear.flatMap { (1...6).contains($0) ? $0 : nil }
+        let hasSplitName = givenNameIndex != nil && surnameIndex != nil
+
         var missing: [String] = []
-        if nameIndex == nil { missing.append("Name") }
-        if yearIndex == nil { missing.append("Year") }
-        guard let nameIndex, let yearIndex, missing.isEmpty else {
+        if nameIndex == nil && !hasSplitName { missing.append("Name (or First Name + Surname)") }
+        if yearIndex == nil && defaultYear == nil { missing.append("Year") }
+        if destinationClass == nil && options.requiresClassColumn && classIndex == nil {
+            missing.append("Class")
+        }
+        guard missing.isEmpty else {
             throw StudentCSVImportError.missingColumns(missing)
         }
 
         let genderIndex = index(in: headers, aliases: ["gender", "gendergroup", "sex"])
-        let classIndex = index(in: headers, aliases: ["class", "classname", "homeroom"])
-        let factionIndex = index(in: headers, aliases: ["faction", "house", "team"])
+        let factionIndex = index(in: headers, aliases: ["faction", "house", "team", "schoolhouse"])
 
         var athletes: [Athlete] = []
         var rejectedRows: [Int] = []
         for (offset, row) in rows.dropFirst().enumerated() {
             let rowNumber = offset + 2
-            let name = value(at: nameIndex, in: row).trimmed
+            let name: String
+            if let nameIndex {
+                name = value(at: nameIndex, in: row).trimmed
+            } else {
+                name = [
+                    givenNameIndex.map { value(at: $0, in: row).trimmed } ?? "",
+                    surnameIndex.map { value(at: $0, in: row).trimmed } ?? ""
+                ]
+                .filter { !$0.isEmpty }
+                .joined(separator: " ")
+            }
+            let rawYear = yearIndex.map { value(at: $0, in: row).trimmed } ?? ""
+            let year = rawYear.isEmpty ? defaultYear : parseYear(rawYear)
+            let rawClass = classIndex.map { value(at: $0, in: row).trimmed } ?? ""
+            let className = destinationClass ?? rawClass.nonEmpty ?? "Unassigned"
+            let hasRequiredClass = !options.requiresClassColumn
+                || destinationClass != nil
+                || !rawClass.isEmpty
+
             guard !name.isEmpty,
-                  let year = parseYear(value(at: yearIndex, in: row)),
-                  (1...6).contains(year)
+                  let year,
+                  (1...6).contains(year),
+                  hasRequiredClass
             else {
                 if !row.allSatisfy({ $0.trimmed.isEmpty }) { rejectedRows.append(rowNumber) }
                 continue
@@ -65,7 +161,7 @@ enum StudentCSVImporter {
                     year: year,
                     gender: parseGender(genderIndex.map { value(at: $0, in: row) } ?? ""),
                     faction: factionIndex.map { value(at: $0, in: row) } ?? "Unassigned",
-                    className: classIndex.map { value(at: $0, in: row) } ?? "Unassigned"
+                    className: className
                 )
             )
         }
@@ -149,4 +245,5 @@ private enum CSVRows {
 
 private extension String {
     var trimmed: String { trimmingCharacters(in: .whitespacesAndNewlines) }
+    var nonEmpty: String? { isEmpty ? nil : self }
 }

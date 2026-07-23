@@ -18,9 +18,20 @@ Native, iPad-first athletics coaching workspace built with SwiftUI and PencilKit
 - Expanded the destination-symbol switch to conservative Swift syntax for
   compatibility across Swift Playgrounds compiler versions.
 
-## Wednesday pilot scope
+## 0.3.0 web-parity scope
+
+- Tappable Today programming card and event workspace navigation.
+- Native Teams, Results and Sessions areas matching the web athletics build.
+- Editable seven-week programming, completion tracking and current-week controls.
+- Student event assignments, permission-slip PDFs and full backup/restore.
+- Automatic race divisions, on-device video timing and editable result history.
+- Local Ask Corso commands with confirmation, audit history and undo.
+
+## Core pilot scope
 
 - Student register with Year 1–6, derived division, gender, class and faction.
+- Guided CSV import for one class or a whole-school file, with preview, duplicate
+  detection and invalid-row reporting before records are saved.
 - Filterable class result entry with coach/date metadata and fair cohort stars.
 - Date-based attendance, automatic past-day locking and explicit unlocking.
 - Mutually exclusive Class, Provisional, Interschool and Reserve selection.

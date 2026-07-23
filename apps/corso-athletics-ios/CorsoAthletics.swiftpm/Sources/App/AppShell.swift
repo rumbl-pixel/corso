@@ -4,6 +4,9 @@ enum AppDestination: String, CaseIterable, Identifiable {
     case today = "Today"
     case squad = "Squad"
     case classes = "Classes"
+    case teams = "Teams"
+    case results = "Results"
+    case sessions = "Sessions"
     case board = "Board"
     case settings = "Settings"
 
@@ -17,6 +20,12 @@ enum AppDestination: String, CaseIterable, Identifiable {
             return "person.3"
         case .classes:
             return "building.columns"
+        case .teams:
+            return "rectangle.3.group"
+        case .results:
+            return "trophy"
+        case .sessions:
+            return "calendar"
         case .board:
             return "pencil.and.outline"
         case .settings:
@@ -28,6 +37,9 @@ enum AppDestination: String, CaseIterable, Identifiable {
 struct AppShell: View {
     @Bindable var store: AthleticsStore
     @State private var destination: AppDestination = .today
+    @State private var assistantPresented = false
+    @State private var preferredTeamEvent: TeamEvent = .passBall
+    @State private var preferredResultEvent: AthleticsEvent?
 
     var body: some View {
         HStack(spacing: 0) {
@@ -82,11 +94,29 @@ struct AppShell: View {
                 Group {
                     switch destination {
                     case .today:
-                        TodayView()
+                        TodayView(
+                            openSession: {
+                                destination = .sessions
+                            },
+                            openResults: { event in
+                                preferredResultEvent = event
+                                destination = .results
+                            },
+                            openTeams: { event in
+                                preferredTeamEvent = event
+                                destination = .teams
+                            }
+                        )
                     case .squad:
                         SquadView()
                     case .classes:
                         ClassesView()
+                    case .teams:
+                        TeamsView(initialEvent: preferredTeamEvent)
+                    case .results:
+                        ResultsView(initialEvent: preferredResultEvent)
+                    case .sessions:
+                        SessionsView()
                     case .board:
                         WhiteboardView()
                     case .settings:
@@ -95,9 +125,33 @@ struct AppShell: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(CorsoTheme.cream.ignoresSafeArea())
+                .toolbar {
+                    ToolbarItemGroup(placement: .topBarTrailing) {
+                        Picker("Current week", selection: Binding(
+                            get: { store.state.currentWeek },
+                            set: store.setCurrentWeek
+                        )) {
+                            ForEach(1...9, id: \.self) { week in
+                                Text("Week \(week)").tag(week)
+                            }
+                        }
+                        .pickerStyle(.menu)
+
+                        Button {
+                            assistantPresented = true
+                        } label: {
+                            Label("Ask Corso", systemImage: "message.fill")
+                        }
+                        .tint(CorsoTheme.orange)
+                    }
+                }
             }
         }
         .background(CorsoTheme.cream.ignoresSafeArea())
+        .sheet(isPresented: $assistantPresented) {
+            CorsoAssistantView()
+                .environment(store)
+        }
     }
 }
 

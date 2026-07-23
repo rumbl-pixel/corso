@@ -113,13 +113,13 @@ jobs:
         run: |
           ditto -c -k --sequesterRsrc --keepParent \
             CorsoAthletics.swiftpm \
-            "$RUNNER_TEMP/CorsoAthletics-0.2.0-Playgrounds.zip"
+            "$RUNNER_TEMP/CorsoAthletics-0.3.0-Playgrounds.zip"
 
       - name: Upload verified Playgrounds project
         uses: actions/upload-artifact@v4
         with:
           name: Corso-Athletics-Playgrounds
-          path: ${{ runner.temp }}/CorsoAthletics-0.2.0-Playgrounds.zip
+          path: ${{ runner.temp }}/CorsoAthletics-0.3.0-Playgrounds.zip
           if-no-files-found: error
           retention-days: 14
 

@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct SettingsView: View {
     @Environment(AthleticsStore.self) private var store
@@ -7,6 +8,9 @@ struct SettingsView: View {
     @State private var savedPulse = false
     @State private var isConfirmingReset = false
     @State private var resetConfirmation = ""
+    @State private var backupItem: SettingsBackupItem?
+    @State private var backupImporterPresented = false
+    @State private var backupMessage: String?
 
     var body: some View {
         Form {
@@ -99,6 +103,12 @@ struct SettingsView: View {
             }
 
             Section {
+                Button("Export full backup", systemImage: "square.and.arrow.up") {
+                    exportBackup()
+                }
+                Button("Restore from backup", systemImage: "square.and.arrow.down") {
+                    backupImporterPresented = true
+                }
                 Button("Reset this iPad workspace", systemImage: "trash", role: .destructive) {
                     resetConfirmation = ""
                     isConfirmingReset = true
@@ -106,7 +116,7 @@ struct SettingsView: View {
             } header: {
                 Text("Data and recovery")
             } footer: {
-                Text("Reset permanently removes students, results, attendance and settings stored by the app on this iPad. Whiteboards are managed separately in Board.")
+                Text("Backups include students, results, attendance, sessions, team boards, event assignments and permission-slip wording. Whiteboards are exported separately in Board.")
             }
         }
         .navigationTitle("Settings")
@@ -130,10 +140,44 @@ struct SettingsView: View {
         } message: {
             Text("This cannot be undone. Type RESET to confirm.")
         }
+        .sheet(item: $backupItem) { item in
+            CorsoShareSheet(url: item.url)
+        }
+        .fileImporter(
+            isPresented: $backupImporterPresented,
+            allowedContentTypes: [.json],
+            allowsMultipleSelection: false
+        ) { result in
+            do {
+                guard case .success(let urls) = result, let url = urls.first else { return }
+                let payload = try AthleticsBackupService.restore(from: url)
+                store.restoreWorkspace(payload.state)
+                draft = store.state.settings
+                backupMessage = "Backup restored successfully."
+            } catch {
+                backupMessage = error.localizedDescription
+            }
+        }
+        .alert("Backup and restore", isPresented: Binding(
+            get: { backupMessage != nil },
+            set: { if !$0 { backupMessage = nil } }
+        )) {
+            Button("OK", role: .cancel) { backupMessage = nil }
+        } message: {
+            Text(backupMessage ?? "")
+        }
     }
 
     private var isValid: Bool {
         SettingsDraftValidator.isValid(draft)
+    }
+
+    private func exportBackup() {
+        do {
+            backupItem = SettingsBackupItem(url: try AthleticsBackupService.export(store.state))
+        } catch {
+            backupMessage = error.localizedDescription
+        }
     }
 
     private func timeBinding(
@@ -163,6 +207,11 @@ struct SettingsView: View {
     private static let weekdays = [
         "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"
     ]
+}
+
+private struct SettingsBackupItem: Identifiable {
+    let url: URL
+    var id: URL { url }
 }
 
 enum SettingsDraftValidator {

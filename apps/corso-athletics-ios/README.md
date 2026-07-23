@@ -13,6 +13,20 @@ Club. It does not replace the Run Club PWA or share its release pipeline.
   deliberately outside the pilot so the coaching workflows can be stabilised
   first.
 
+## Native feature set
+
+- Today dashboard with a tappable current-session program.
+- Class-based CSV import with preview and duplicate checks.
+- Student records, squad selection and event assignments.
+- Attendance by date with past-day locking.
+- Class capture, result history/editing, automatic race divisions and video timing.
+- Provisional and interschool team boards with ordering and leaders.
+- Editable seven-week training program with completion tracking.
+- Personalised permission-slip PDFs and class-report exports.
+- Multi-page PencilKit coaching board.
+- Local Ask Corso commands with confirmation, audit history and undo.
+- Versioned local persistence plus full JSON backup and restore.
+
 ## Open on iPad
 
 The runnable Swift Playgrounds project is:

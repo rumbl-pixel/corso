@@ -10,8 +10,8 @@ let package = Package(
         .iOSApplication(
             name: "Corso Athletics",
             targets: ["AppModule"],
-            displayVersion: "0.2.0",
-            bundleVersion: "10",
+            displayVersion: "0.3.0",
+            bundleVersion: "12",
             appIcon: .placeholder(icon: .star),
             accentColor: .presetColor(.orange),
             supportedDeviceFamilies: [.pad],

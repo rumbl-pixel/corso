@@ -1,5 +1,4 @@
 import SwiftUI
-import UniformTypeIdentifiers
 
 struct StudentDirectoryView: View {
     @Environment(AthleticsStore.self) private var store
@@ -7,9 +6,7 @@ struct StudentDirectoryView: View {
     @State private var year: Int?
     @State private var faction: String?
     @State private var className: String?
-    @State private var editor: StudentEditorRoute?
-    @State private var isImporting = false
-    @State private var importNotice: ImportNotice?
+    @State private var sheet: StudentSheetRoute?
 
     private var athletes: [Athlete] {
         StudentFilter.apply(
@@ -43,7 +40,7 @@ struct StudentDirectoryView: View {
             } else {
                 List(athletes) { athlete in
                     StudentRow(athlete: athlete) {
-                        editor = .edit(athlete)
+                        sheet = .edit(athlete)
                     } delete: {
                         store.deleteAthlete(id: athlete.id)
                     }
@@ -55,78 +52,46 @@ struct StudentDirectoryView: View {
         .toolbar {
             ToolbarItemGroup(placement: .primaryAction) {
                 Button {
-                    isImporting = true
+                    sheet = .importStudents
                 } label: {
-                    Label("Import CSV", systemImage: "tablecells")
+                    Label("Import students", systemImage: "square.and.arrow.down")
                 }
                 Button {
-                    editor = .add
+                    sheet = .add
                 } label: {
                     Label("Add student", systemImage: "person.badge.plus")
                 }
             }
         }
-        .fileImporter(
-            isPresented: $isImporting,
-            allowedContentTypes: [.commaSeparatedText, .plainText],
-            allowsMultipleSelection: false,
-            onCompletion: importStudents
-        )
-        .alert(item: $importNotice) { notice in
-            Alert(
-                title: Text(notice.title),
-                message: Text(notice.message),
-                dismissButton: .default(Text("OK"))
-            )
-        }
-        .sheet(item: $editor) { route in
-            StudentEditorView(
-                athlete: route.athlete,
-                settings: store.state.settings
-            ) { athlete in
-                if route.isNew {
-                    store.addAthlete(athlete)
-                } else {
-                    store.updateAthlete(athlete)
+        .sheet(item: $sheet) { route in
+            switch route {
+            case .importStudents:
+                StudentImportView(classes: store.state.settings.classes)
+            case .add, .edit(_):
+                StudentEditorView(
+                    athlete: route.athlete,
+                    settings: store.state.settings
+                ) { athlete in
+                    if route.isNew {
+                        store.addAthlete(athlete)
+                    } else {
+                        store.updateAthlete(athlete)
+                    }
                 }
             }
         }
     }
-
-    private func importStudents(_ result: Result<[URL], Error>) {
-        do {
-            guard let url = try result.get().first else { return }
-            let scoped = url.startAccessingSecurityScopedResource()
-            defer { if scoped { url.stopAccessingSecurityScopedResource() } }
-            let text = try String(contentsOf: url, encoding: .utf8)
-            let parsed = try StudentCSVImporter.parse(text)
-            let inserted = store.importAthletes(parsed.athletes)
-            let duplicates = parsed.athletes.count - inserted
-
-            var details = ["\(inserted) student(s) imported."]
-            if duplicates > 0 { details.append("\(duplicates) duplicate(s) skipped.") }
-            if !parsed.rejectedRows.isEmpty {
-                details.append("Invalid row(s): \(parsed.rejectedRows.map(String.init).joined(separator: ", ")).")
-            }
-            importNotice = ImportNotice(title: "Import complete", message: details.joined(separator: "\n"))
-        } catch {
-            importNotice = ImportNotice(title: "Import failed", message: error.localizedDescription)
-        }
-    }
 }
 
-private struct ImportNotice: Identifiable {
-    let id = UUID()
-    let title: String
-    let message: String
-}
-
-enum StudentEditorRoute: Identifiable {
+enum StudentSheetRoute: Identifiable {
+    case importStudents
     case add
     case edit(Athlete)
 
     var id: String {
         switch self {
+        case .importStudents:
+            return "importStudents"
         case .add:
             return "add"
         case .edit(let athlete):
