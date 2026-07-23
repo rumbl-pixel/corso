@@ -98,11 +98,13 @@ struct SettingsView: View {
                 }
             }
 
-            Section("Data and recovery") {
+            Section {
                 Button("Reset this iPad workspace", systemImage: "trash", role: .destructive) {
                     resetConfirmation = ""
                     isConfirmingReset = true
                 }
+            } header: {
+                Text("Data and recovery")
             } footer: {
                 Text("Reset permanently removes students, results, attendance and settings stored by the app on this iPad. Whiteboards are managed separately in Board.")
             }
