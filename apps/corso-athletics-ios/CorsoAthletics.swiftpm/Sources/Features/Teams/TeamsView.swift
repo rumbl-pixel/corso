@@ -18,10 +18,10 @@ struct TeamsView: View {
     private var board: TeamBoard { store.teamBoard(for: scope) }
 
     private var eligible: [Athlete] {
-        store.state.athletes.filter {
-            $0.division == division
-                && stage.includes($0.selection)
-                && (gender.map { group in $0.gender == group } ?? true)
+        store.state.athletes.filter { athlete in
+            athlete.division == division
+                && stage.includes(athlete.selection)
+                && (gender.map { group in athlete.gender == group } ?? true)
         }
     }
 
