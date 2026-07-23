@@ -69,7 +69,7 @@ struct TodayView: View {
                 metrics.frame(minHeight: 310)
             }
         } else {
-            HStack(alignment: .stretch, spacing: 18) {
+            HStack(alignment: .top, spacing: 18) {
                 hero.frame(maxWidth: .infinity)
                 metrics.frame(width: 285)
             }
