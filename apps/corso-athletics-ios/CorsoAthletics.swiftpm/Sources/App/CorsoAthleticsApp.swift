@@ -2,55 +2,70 @@ import SwiftUI
 
 @main
 struct CorsoAthleticsApp: App {
-    @State private var store: AthleticsStore
-
-    init() {
-        print("Corso Athletics 0.3.0 reached app startup")
-        _store = State(initialValue: AthleticsStore())
-    }
-
     var body: some Scene {
         WindowGroup {
-            AppRootView(store: store)
-                .environment(store)
+            CorsoBootstrapView()
                 .tint(CorsoTheme.orange)
                 .preferredColorScheme(.light)
         }
     }
 }
 
-/// Always paints a real launch surface before constructing the navigation
-/// hierarchy. This makes startup visible and avoids an unexplained black
-/// window while Swift Playgrounds installs a newly built pilot.
-private struct AppRootView: View {
-    let store: AthleticsStore
-    @State private var hasStarted = false
+/// Keeps the first render as small as the known-good 0.2.0 launch path.
+/// Persistence and the expanded feature hierarchy are created only after
+/// Swift Playgrounds has presented a visible scene on the physical iPad.
+private struct CorsoBootstrapView: View {
+    private enum Phase: Equatable {
+        case presentingLaunch
+        case loadingWorkspace
+        case running
+    }
+
+    @State private var phase: Phase = .presentingLaunch
+    @State private var store: AthleticsStore?
 
     var body: some View {
         ZStack {
             CorsoTheme.cream
                 .ignoresSafeArea()
 
-            if hasStarted {
-                AppShell(store: store)
-                    .transition(.opacity)
-            } else {
-                CorsoLaunchView()
-                    .transition(.opacity)
+            switch phase {
+            case .presentingLaunch:
+                CorsoLaunchView(status: "Preparing the iPad workspace…")
+            case .loadingWorkspace:
+                CorsoLaunchView(status: "Loading saved athletics data…")
+            case .running:
+                if let store {
+                    AppShell(store: store)
+                        .environment(store)
+                } else {
+                    CorsoLaunchView(status: "Finishing setup…")
+                }
             }
         }
         .task {
-            // Yield one render pass so a visible screen is guaranteed before
-            // the larger split-view hierarchy is installed.
+            guard phase == .presentingLaunch else { return }
+
+            // A real delay, rather than a single yield, guarantees Playgrounds
+            // can commit the lightweight launch scene before model migration
+            // or the expanded navigation hierarchy is constructed.
+            try? await Task.sleep(for: .milliseconds(650))
+            guard !Task.isCancelled else { return }
+
+            phase = .loadingWorkspace
+            try? await Task.sleep(for: .milliseconds(150))
+            guard !Task.isCancelled else { return }
+
+            store = AthleticsStore()
             await Task.yield()
-            withAnimation(.easeOut(duration: 0.2)) {
-                hasStarted = true
-            }
+            phase = .running
         }
     }
 }
 
 private struct CorsoLaunchView: View {
+    let status: String
+
     var body: some View {
         VStack(spacing: 18) {
             ZStack {
@@ -69,7 +84,7 @@ private struct CorsoLaunchView: View {
                 .font(.largeTitle.weight(.black))
                 .foregroundStyle(CorsoTheme.navy)
 
-            Text("Starting Corso Athletics 0.3.0…")
+            Text(status)
                 .font(.headline)
                 .foregroundStyle(CorsoTheme.muted)
 
@@ -77,6 +92,6 @@ private struct CorsoLaunchView: View {
                 .tint(CorsoTheme.orange)
         }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Corso Athletics 0.3.0 is starting")
+        .accessibilityLabel("Corso Athletics 0.3.2. \(status)")
     }
 }

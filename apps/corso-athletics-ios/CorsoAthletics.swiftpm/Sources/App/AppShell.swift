@@ -91,38 +91,22 @@ struct AppShell: View {
             Divider()
 
             NavigationStack {
-                Group {
-                    switch destination {
-                    case .today:
-                        TodayView(
-                            openSession: {
-                                destination = .sessions
-                            },
-                            openResults: { event in
-                                preferredResultEvent = event
-                                destination = .results
-                            },
-                            openTeams: { event in
-                                preferredTeamEvent = event
-                                destination = .teams
-                            }
-                        )
-                    case .squad:
-                        SquadView()
-                    case .classes:
-                        ClassesView()
-                    case .teams:
-                        TeamsView(initialEvent: preferredTeamEvent)
-                    case .results:
-                        ResultsView(initialEvent: preferredResultEvent)
-                    case .sessions:
-                        SessionsView()
-                    case .board:
-                        WhiteboardView()
-                    case .settings:
-                        SettingsView()
+                AppDestinationContent(
+                    destination: destination,
+                    preferredTeamEvent: preferredTeamEvent,
+                    preferredResultEvent: preferredResultEvent,
+                    openSession: {
+                        destination = .sessions
+                    },
+                    openResults: { event in
+                        preferredResultEvent = event
+                        destination = .results
+                    },
+                    openTeams: { event in
+                        preferredTeamEvent = event
+                        destination = .teams
                     }
-                }
+                )
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(CorsoTheme.cream.ignoresSafeArea())
                 .toolbar {
@@ -151,6 +135,44 @@ struct AppShell: View {
         .sheet(isPresented: $assistantPresented) {
             CorsoAssistantView()
                 .environment(store)
+        }
+    }
+}
+
+/// Isolates the expanded feature graph from the stable sidebar shell. SwiftUI
+/// evaluates only the selected destination after the app has completed its
+/// lightweight bootstrap.
+private struct AppDestinationContent: View {
+    let destination: AppDestination
+    let preferredTeamEvent: TeamEvent
+    let preferredResultEvent: AthleticsEvent?
+    let openSession: () -> Void
+    let openResults: (AthleticsEvent) -> Void
+    let openTeams: (TeamEvent) -> Void
+
+    @ViewBuilder
+    var body: some View {
+        switch destination {
+        case .today:
+            TodayView(
+                openSession: openSession,
+                openResults: openResults,
+                openTeams: openTeams
+            )
+        case .squad:
+            SquadView()
+        case .classes:
+            ClassesView()
+        case .teams:
+            TeamsView(initialEvent: preferredTeamEvent)
+        case .results:
+            ResultsView(initialEvent: preferredResultEvent)
+        case .sessions:
+            SessionsView()
+        case .board:
+            WhiteboardView()
+        case .settings:
+            SettingsView()
         }
     }
 }
