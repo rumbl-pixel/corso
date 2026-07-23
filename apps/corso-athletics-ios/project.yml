@@ -22,7 +22,9 @@ targets:
       - path: CorsoAthletics.swiftpm/Sources
     settings:
       base:
-        PRODUCT_NAME: "Corso Athletics"
+        # Keep the executable/module name aligned with the Swift Playgrounds
+        # target. The user-facing app name still comes from CFBundleDisplayName.
+        PRODUCT_NAME: AppModule
         PRODUCT_BUNDLE_IDENTIFIER: au.com.corso.athletics
         MARKETING_VERSION: "0.2.0"
         CURRENT_PROJECT_VERSION: "10"
