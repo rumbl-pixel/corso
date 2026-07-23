@@ -117,7 +117,8 @@ struct Athlete: Codable, Hashable, Identifiable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case id, name, year, yearGroup, gender, division, faction, className, class
+        case id, name, year, yearGroup, gender, division, faction, className
+        case legacyClass = "class"
         case selection, squadStatus, attendance
     }
 
@@ -139,7 +140,7 @@ struct Athlete: Codable, Hashable, Identifiable, Sendable {
             ?? .unspecified
         faction = try values.decodeIfPresent(String.self, forKey: .faction) ?? "Unassigned"
         let currentClass = try values.decodeIfPresent(String.self, forKey: .className)
-        let legacyClass = try values.decodeIfPresent(String.self, forKey: .class)
+        let legacyClass = try values.decodeIfPresent(String.self, forKey: .legacyClass)
         className = currentClass ?? legacyClass ?? "Unassigned"
         selection = (try? values.decode(SquadSelection.self, forKey: .selection))
             ?? (try? values.decode(SquadSelection.self, forKey: .squadStatus))
