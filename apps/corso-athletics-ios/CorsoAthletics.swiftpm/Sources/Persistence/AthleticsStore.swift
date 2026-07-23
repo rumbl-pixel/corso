@@ -296,7 +296,7 @@ final class AthleticsStore {
     ) {
         guard let athlete = state.athletes.first(where: { $0.id == athleteID }),
               athlete.division == scope.division,
-              scope.gender.map { athlete.gender == $0 } ?? true,
+              scope.gender.map({ athlete.gender == $0 }) ?? true,
               scope.stage.includes(athlete.selection)
         else { return }
 
@@ -328,7 +328,7 @@ final class AthleticsStore {
         guard destination != .available,
               let athlete = state.athletes.first(where: { $0.id == athleteID }),
               athlete.division == scope.division,
-              scope.gender.map { athlete.gender == $0 } ?? true,
+              scope.gender.map({ athlete.gender == $0 }) ?? true,
               scope.stage.includes(athlete.selection)
         else {
             if destination == .available {
@@ -369,10 +369,10 @@ final class AthleticsStore {
                 .map(\.value)
                 .min()
             switch (leftBest, rightBest) {
-            case let (left?, right?):
-                return left == right
+            case let (leftValue?, rightValue?):
+                return leftValue == rightValue
                     ? left.name.localizedStandardCompare(right.name) == .orderedAscending
-                    : left < right
+                    : leftValue < rightValue
             case (_?, nil):
                 return true
             case (nil, _?):
