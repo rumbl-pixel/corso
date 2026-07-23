@@ -353,10 +353,10 @@ final class AthleticsStore {
     }
 
     func autoArrangeTeams(scope: TeamBoardScope) {
-        let eligible = state.athletes.filter {
-            $0.division == scope.division
-                && (scope.gender.map { group in $0.gender == group } ?? true)
-                && scope.stage.includes($0.selection)
+        let eligible = state.athletes.filter { athlete in
+            athlete.division == scope.division
+                && (scope.gender.map { athlete.gender == $0 } ?? true)
+                && scope.stage.includes(athlete.selection)
         }
         let event = scope.event.athleticsEvent
         let scored = eligible.sorted { left, right in
