@@ -38,6 +38,55 @@ jobs:
           xcodebuild -version
           xcrun swift --version
 
+      - name: Build the actual Swift Playgrounds package
+        working-directory: apps/corso-athletics-ios/CorsoAthletics.swiftpm
+        run: |
+          set -o pipefail
+          xcodebuild -list -json \
+            | tee "$RUNNER_TEMP/corso-athletics-playgrounds-list.json"
+          PLAYGROUND_SCHEME=$(/usr/bin/python3 -c '
+          import json
+          from pathlib import Path
+
+          data = json.loads(
+              Path("'"$RUNNER_TEMP"'/corso-athletics-playgrounds-list.json").read_text()
+          )
+
+          def schemes(value):
+              if isinstance(value, dict):
+                  current = value.get("schemes")
+                  if isinstance(current, list) and current:
+                      return current
+                  for nested in value.values():
+                      found = schemes(nested)
+                      if found:
+                          return found
+              elif isinstance(value, list):
+                  for nested in value:
+                      found = schemes(nested)
+                      if found:
+                          return found
+              return []
+
+          available = schemes(data)
+          for preferred in ("Corso Athletics", "AppModule"):
+              if preferred in available:
+                  print(preferred)
+                  raise SystemExit(0)
+          if available:
+              print(available[0])
+              raise SystemExit(0)
+          raise SystemExit("The App Playground exposed no Xcode scheme")
+          ')
+          echo "Building App Playground scheme: $PLAYGROUND_SCHEME"
+          xcodebuild build \
+            -scheme "$PLAYGROUND_SCHEME" \
+            -configuration Debug \
+            -destination "generic/platform=iOS Simulator" \
+            -derivedDataPath "$RUNNER_TEMP/CorsoPlaygroundsDerivedData" \
+            CODE_SIGNING_ALLOWED=NO \
+            | tee "$RUNNER_TEMP/corso-athletics-playgrounds-build.log"
+
       - name: Install XcodeGen
         run: brew install xcodegen
 
@@ -129,6 +178,8 @@ jobs:
         with:
           name: Corso-Athletics-Apple-Diagnostics
           path: |
+            ${{ runner.temp }}/corso-athletics-playgrounds-list.json
+            ${{ runner.temp }}/corso-athletics-playgrounds-build.log
             ${{ runner.temp }}/corso-athletics-build.log
             ${{ runner.temp }}/corso-athletics-tests.log
             ${{ runner.temp }}/CorsoAthleticsTests.xcresult
