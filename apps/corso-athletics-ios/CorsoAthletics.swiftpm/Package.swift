@@ -21,10 +21,7 @@ let package = Package(
                 .landscapeLeft,
                 .portraitUpsideDown(.when(deviceFamilies: [.pad]))
             ],
-            additionalInfoPlistContent: [
-                "NSCameraUsageDescription": "Corso uses the camera to record school race footage for on-device frame-by-frame timing.",
-                "NSMicrophoneUsageDescription": "Corso may include ambient audio while recording race footage."
-            ]
+            additionalInfoPlistContentFilePath: "AdditionalInfo.plist"
         )
     ],
     targets: [

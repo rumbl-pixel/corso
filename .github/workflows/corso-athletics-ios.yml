@@ -175,6 +175,7 @@ jobs:
           RELEASE_PACKAGE="$RUNNER_TEMP/CorsoAthletics-0.4.0.swiftpm"
           mkdir -p "$RELEASE_PACKAGE"
           cp CorsoAthletics.swiftpm/Package.swift "$RELEASE_PACKAGE/Package.swift"
+          cp CorsoAthletics.swiftpm/AdditionalInfo.plist "$RELEASE_PACKAGE/AdditionalInfo.plist"
           cp -R CorsoAthletics.swiftpm/Sources "$RELEASE_PACKAGE/Sources"
           ditto -c -k --sequesterRsrc --keepParent \
             "$RELEASE_PACKAGE" \
