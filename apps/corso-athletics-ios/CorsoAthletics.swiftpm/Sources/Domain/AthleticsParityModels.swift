@@ -20,6 +20,38 @@ enum TeamEvent: String, Codable, CaseIterable, Identifiable, Sendable {
             return .sprintRelay
         }
     }
+
+    var guidance: String {
+        switch self {
+        case .passBall:
+            return "Build a clean single-file passing order. Put reliable hands early and a calm finisher last."
+        case .tunnelBall:
+            return "Build a tight tunnel. Put the strongest accurate roller at the back and quick movers through the middle."
+        case .leaderBall:
+            return "The leader faces the line and controls the rhythm. Order receivers for clean catches and fast turns."
+        case .sprintRelay:
+            return "Runner 1 starts, runners 2–3 cover the middle legs, and runner 4 anchors."
+        }
+    }
+
+    func positionLabel(at index: Int, count: Int, isLeader: Bool) -> String {
+        if isLeader { return "Leader" }
+        switch self {
+        case .passBall:
+            return index == count - 1 ? "Finisher" : "Pass \(index + 1)"
+        case .tunnelBall:
+            return index == count - 1 ? "Roller" : "Tunnel \(index + 1)"
+        case .leaderBall:
+            return "Receiver \(index + 1)"
+        case .sprintRelay:
+            switch index {
+            case 0: return "Starter"
+            case 1: return "Leg 2"
+            case 2: return "Leg 3"
+            default: return "Anchor"
+            }
+        }
+    }
 }
 
 enum TeamStage: String, Codable, CaseIterable, Identifiable, Sendable {
@@ -50,9 +82,22 @@ struct TeamBoardScope: Codable, Hashable, Identifiable, Sendable {
     var event: TeamEvent
     var stage: TeamStage
     var division: CompetitionDivision
+    var gender: AthleteGender?
 
     var id: String {
-        "\(event.rawValue)|\(stage.rawValue.lowercased())|\(division.rawValue)"
+        "\(event.rawValue)|\(stage.rawValue.lowercased())|\(division.rawValue)|\(gender?.rawValue ?? "All")"
+    }
+
+    init(
+        event: TeamEvent,
+        stage: TeamStage,
+        division: CompetitionDivision,
+        gender: AthleteGender? = nil
+    ) {
+        self.event = event
+        self.stage = stage
+        self.division = division
+        self.gender = gender
     }
 }
 
@@ -96,8 +141,41 @@ struct TrainingSession: Codable, Equatable, Identifiable, Sendable {
 }
 
 struct SessionOverride: Codable, Equatable, Sendable {
+    var title: String
+    var purpose: String
     var ballGames: String
     var activities: [SessionActivity]
+
+    init(
+        title: String = "",
+        purpose: String = "",
+        ballGames: String,
+        activities: [SessionActivity]
+    ) {
+        self.title = title
+        self.purpose = purpose
+        self.ballGames = ballGames
+        self.activities = activities
+    }
+
+    var isUsable: Bool {
+        !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            || !purpose.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            || !ballGames.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            || !activities.isEmpty
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case title, purpose, ballGames, activities
+    }
+
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        title = try values.decodeIfPresent(String.self, forKey: .title) ?? ""
+        purpose = try values.decodeIfPresent(String.self, forKey: .purpose) ?? ""
+        ballGames = try values.decodeIfPresent(String.self, forKey: .ballGames) ?? ""
+        activities = try values.decodeIfPresent([SessionActivity].self, forKey: .activities) ?? []
+    }
 }
 
 enum PermissionSlipKind: String, Codable, CaseIterable, Identifiable, Sendable {
@@ -349,10 +427,13 @@ enum TrainingProgram {
         guard let override = overrides[week] else { return base }
         return TrainingSession(
             week: base.week,
-            title: base.title,
-            purpose: base.purpose,
-            ballGames: override.ballGames,
-            activities: override.activities
+            title: override.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                ? base.title : override.title,
+            purpose: override.purpose.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                ? base.purpose : override.purpose,
+            ballGames: override.ballGames.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                ? base.ballGames : override.ballGames,
+            activities: override.activities.isEmpty ? base.activities : override.activities
         )
     }
 

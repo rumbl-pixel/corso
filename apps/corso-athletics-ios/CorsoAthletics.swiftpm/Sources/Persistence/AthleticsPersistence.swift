@@ -25,7 +25,7 @@ enum AthleticsPersistenceError: LocalizedError, Sendable {
 }
 
 private struct AthleticsArchive: Codable, Sendable {
-    static let currentSchemaVersion = 3
+    static let currentSchemaVersion = 4
 
     var schemaVersion: Int
     var savedAt: Date

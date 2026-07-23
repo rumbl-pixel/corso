@@ -91,11 +91,23 @@ final class AthleticsStore {
         persist()
     }
 
-    func updateSelection(for athleteID: UUID, to selection: SquadSelection) {
-        guard let index = state.athletes.firstIndex(where: { $0.id == athleteID }) else { return }
+    @discardableResult
+    func updateSelection(for athleteID: UUID, to selection: SquadSelection) -> Bool {
+        guard let index = state.athletes.firstIndex(where: { $0.id == athleteID }) else { return false }
+        guard state.athletes[index].selection != selection else { return true }
+        let currentCount = state.athletes.filter { $0.selection == selection }.count
+        switch selection {
+        case .provisional where currentCount >= state.settings.provisionalAthleteLimit:
+            return false
+        case .interschool where currentCount >= state.settings.interschoolAthleteLimit:
+            return false
+        default:
+            break
+        }
         // Selection is an enum, so assigning a new state atomically removes the old one.
         state.athletes[index].selection = selection
         persist()
+        return true
     }
 
     func setEvent(_ event: AthleticsEvent, assigned: Bool, for athleteID: UUID) {
@@ -119,7 +131,9 @@ final class AthleticsStore {
         calendar: Calendar = .current
     ) -> Bool {
         guard !state.isAttendanceLocked(on: date, now: now, calendar: calendar),
-              let index = state.athletes.firstIndex(where: { $0.id == athleteID })
+              let index = state.athletes.firstIndex(where: { $0.id == athleteID }),
+              state.athletes[index].selection == .provisional
+                || state.athletes[index].selection == .interschool
         else { return false }
         let key = date.attendanceKey(calendar: calendar)
         if status == .unmarked {
@@ -191,6 +205,18 @@ final class AthleticsStore {
     func updateSettings(_ settings: ProgramSettings) {
         var settings = settings
         settings.normalize()
+        let programsWereShared = state.settings.coachProgramsAreShared
+        if programsWereShared, !settings.coachProgramsAreShared {
+            for coach in settings.coaches {
+                state.coachSessionOverrides[coach.id] = state.sessionOverrides
+            }
+        } else if !programsWereShared, settings.coachProgramsAreShared {
+            let sourceCoachID = selectedCoachID ?? settings.coaches.first?.id
+            if let sourceCoachID,
+               let currentCoachProgram = state.coachSessionOverrides[sourceCoachID] {
+                state.sessionOverrides = currentCoachProgram
+            }
+        }
         state.settings = settings
         if !settings.coaches.contains(where: { $0.id == selectedCoachID }) {
             selectedCoachID = settings.coaches.first?.id
@@ -205,26 +231,58 @@ final class AthleticsStore {
 
     func updateSession(
         week: Int,
+        coachID: UUID? = nil,
+        title: String? = nil,
+        purpose: String? = nil,
         ballGames: String? = nil,
         activities: [SessionActivity]? = nil
     ) {
         guard let base = TrainingProgram.sessions.first(where: { $0.week == week }) else { return }
-        let existing = state.sessionOverrides[week]
-            ?? SessionOverride(ballGames: base.ballGames, activities: base.activities)
-        state.sessionOverrides[week] = SessionOverride(
+        let targetCoachID = state.settings.coachProgramsAreShared ? nil : (coachID ?? selectedCoachID)
+        let currentOverrides = overrides(for: targetCoachID)
+        let existing = currentOverrides[week]
+            ?? SessionOverride(
+                title: base.title,
+                purpose: base.purpose,
+                ballGames: base.ballGames,
+                activities: base.activities
+            )
+        var nextOverrides = currentOverrides
+        nextOverrides[week] = SessionOverride(
+            title: title ?? existing.title,
+            purpose: purpose ?? existing.purpose,
             ballGames: ballGames ?? existing.ballGames,
             activities: activities ?? existing.activities
         )
+        setOverrides(nextOverrides, for: targetCoachID)
         persist()
     }
 
-    func resetSession(week: Int) {
-        state.sessionOverrides.removeValue(forKey: week)
+    func resetSession(week: Int, coachID: UUID? = nil) {
+        let targetCoachID = state.settings.coachProgramsAreShared ? nil : (coachID ?? selectedCoachID)
+        var current = overrides(for: targetCoachID)
+        current.removeValue(forKey: week)
+        setOverrides(current, for: targetCoachID)
         persist()
     }
 
-    func resolvedSession(week: Int) -> TrainingSession? {
-        TrainingProgram.session(for: week, overrides: state.sessionOverrides)
+    func resolvedSession(week: Int, coachID: UUID? = nil) -> TrainingSession? {
+        let targetCoachID = state.settings.coachProgramsAreShared ? nil : (coachID ?? selectedCoachID)
+        return TrainingProgram.session(for: week, overrides: overrides(for: targetCoachID))
+    }
+
+    func sessionIsCustom(week: Int, coachID: UUID? = nil) -> Bool {
+        let targetCoachID = state.settings.coachProgramsAreShared ? nil : (coachID ?? selectedCoachID)
+        return overrides(for: targetCoachID)[week] != nil
+    }
+
+    func copyProgram(from sourceCoachID: UUID?, to destinationCoachID: UUID) {
+        guard !state.settings.coachProgramsAreShared,
+              state.settings.coaches.contains(where: { $0.id == destinationCoachID })
+        else { return }
+        let source = overrides(for: sourceCoachID)
+        state.coachSessionOverrides[destinationCoachID] = source
+        persist()
     }
 
     func teamBoard(for scope: TeamBoardScope) -> TeamBoard {
@@ -238,6 +296,7 @@ final class AthleticsStore {
     ) {
         guard let athlete = state.athletes.first(where: { $0.id == athleteID }),
               athlete.division == scope.division,
+              scope.gender.map { athlete.gender == $0 } ?? true,
               scope.stage.includes(athlete.selection)
         else { return }
 
@@ -257,6 +316,92 @@ final class AthleticsStore {
         if destination != .teamA, board.teamALeader == athleteID { board.teamALeader = nil }
         if destination != .teamB, board.teamBLeader == athleteID { board.teamBLeader = nil }
         state.teamBoards[scope.id] = board
+        persist()
+    }
+
+    func placeAthlete(
+        _ athleteID: UUID,
+        in destination: TeamPlacement,
+        at requestedIndex: Int,
+        scope: TeamBoardScope
+    ) {
+        guard destination != .available,
+              let athlete = state.athletes.first(where: { $0.id == athleteID }),
+              athlete.division == scope.division,
+              scope.gender.map { athlete.gender == $0 } ?? true,
+              scope.stage.includes(athlete.selection)
+        else {
+            if destination == .available {
+                placeAthlete(athleteID, in: .available, scope: scope)
+            }
+            return
+        }
+
+        var board = teamBoard(for: scope)
+        board.teamA.removeAll { $0 == athleteID }
+        board.teamB.removeAll { $0 == athleteID }
+        if board.teamALeader == athleteID { board.teamALeader = nil }
+        if board.teamBLeader == athleteID { board.teamBLeader = nil }
+
+        if destination == .teamA {
+            board.teamA.insert(athleteID, at: min(max(requestedIndex, 0), board.teamA.count))
+        } else {
+            board.teamB.insert(athleteID, at: min(max(requestedIndex, 0), board.teamB.count))
+        }
+        state.teamBoards[scope.id] = board
+        persist()
+    }
+
+    func autoArrangeTeams(scope: TeamBoardScope) {
+        let eligible = state.athletes.filter {
+            $0.division == scope.division
+                && (scope.gender.map { group in $0.gender == group } ?? true)
+                && scope.stage.includes($0.selection)
+        }
+        let event = scope.event.athleticsEvent
+        let scored = eligible.sorted { left, right in
+            let leftBest = state.results
+                .filter { $0.athleteID == left.id && $0.event == event }
+                .map(\.value)
+                .min()
+            let rightBest = state.results
+                .filter { $0.athleteID == right.id && $0.event == event }
+                .map(\.value)
+                .min()
+            switch (leftBest, rightBest) {
+            case let (left?, right?):
+                return left == right
+                    ? left.name.localizedStandardCompare(right.name) == .orderedAscending
+                    : left < right
+            case (_?, nil):
+                return true
+            case (nil, _?):
+                return false
+            case (nil, nil):
+                return left.name.localizedStandardCompare(right.name) == .orderedAscending
+            }
+        }
+
+        var teamA: [UUID] = []
+        var teamB: [UUID] = []
+        for (index, athlete) in scored.enumerated() {
+            if scope.event == .sprintRelay, index >= 8 { break }
+            if index.isMultiple(of: 2) {
+                teamA.append(athlete.id)
+            } else {
+                teamB.append(athlete.id)
+            }
+        }
+        if scope.event == .sprintRelay {
+            teamA = relayOrder(teamA)
+            teamB = relayOrder(teamB)
+        }
+        state.teamBoards[scope.id] = TeamBoard(
+            teamA: teamA,
+            teamB: teamB,
+            teamALeader: scope.event == .leaderBall ? teamA.first : nil,
+            teamBLeader: scope.event == .leaderBall ? teamB.first : nil
+        )
         persist()
     }
 
@@ -357,6 +502,26 @@ final class AthleticsStore {
         } catch {
             lastSaveError = error.localizedDescription
         }
+    }
+
+    private func overrides(for coachID: UUID?) -> [Int: SessionOverride] {
+        guard let coachID else { return state.sessionOverrides }
+        return state.coachSessionOverrides[coachID] ?? [:]
+    }
+
+    private func setOverrides(_ overrides: [Int: SessionOverride], for coachID: UUID?) {
+        if let coachID {
+            state.coachSessionOverrides[coachID] = overrides
+        } else {
+            state.sessionOverrides = overrides
+        }
+    }
+
+    private func relayOrder(_ ids: [UUID]) -> [UUID] {
+        guard ids.count >= 2 else { return ids }
+        // Scored input is fastest-first: keep the fastest athlete for anchor,
+        // use the next quickest starter, then preserve the remaining order.
+        return Array(ids.dropFirst()) + [ids[0]]
     }
 
 }

@@ -48,6 +48,7 @@ struct PencilCanvasView: UIViewRepresentable {
     let drawing: PKDrawing
     let canvasRevision: Int
     let paper: WhiteboardPaper
+    let backgroundImageData: Data?
     let allowsFingerDrawing: Bool
     let showsToolPicker: Bool
     let controller: PencilCanvasController
@@ -79,7 +80,7 @@ struct PencilCanvasView: UIViewRepresentable {
         canvas.keyboardDismissMode = .onDrag
 
         context.coordinator.attach(to: canvas, boardID: boardID, revision: canvasRevision)
-        context.coordinator.applyPaper(paper, to: canvas)
+        context.coordinator.applyPaper(paper, backgroundImageData: backgroundImageData, to: canvas)
         context.coordinator.setToolPickerVisible(showsToolPicker, for: canvas)
         controller.register(canvas)
         return canvas
@@ -89,7 +90,7 @@ struct PencilCanvasView: UIViewRepresentable {
         context.coordinator.onDrawingChanged = onDrawingChanged
         context.coordinator.onSqueeze = onSqueeze
         canvas.drawingPolicy = allowsFingerDrawing ? .anyInput : .pencilOnly
-        context.coordinator.applyPaper(paper, to: canvas)
+        context.coordinator.applyPaper(paper, backgroundImageData: backgroundImageData, to: canvas)
         context.coordinator.setToolPickerVisible(showsToolPicker, for: canvas)
 
         if context.coordinator.loadedBoardID != boardID
@@ -119,6 +120,7 @@ struct PencilCanvasView: UIViewRepresentable {
         var loadedRevision = -1
         var isLoadingDrawing = false
         private var appliedPaper: WhiteboardPaper?
+        private var appliedBackgroundHash: Int?
         private let defaultInkingTool = PKInkingTool(
             .pen,
             color: UIColor(CorsoTheme.ink),
@@ -160,10 +162,21 @@ struct PencilCanvasView: UIViewRepresentable {
             }
         }
 
-        func applyPaper(_ paper: WhiteboardPaper, to canvas: PKCanvasView) {
-            guard appliedPaper != paper else { return }
-            canvas.backgroundColor = UIColor(patternImage: WhiteboardPaperRenderer.tile(for: paper))
+        func applyPaper(
+            _ paper: WhiteboardPaper,
+            backgroundImageData: Data?,
+            to canvas: PKCanvasView
+        ) {
+            let backgroundHash = backgroundImageData?.hashValue
+            guard appliedPaper != paper || appliedBackgroundHash != backgroundHash else { return }
+            canvas.backgroundColor = UIColor(
+                patternImage: WhiteboardPaperRenderer.pageImage(
+                    for: paper,
+                    backgroundImageData: backgroundImageData
+                )
+            )
             appliedPaper = paper
+            appliedBackgroundHash = backgroundHash
         }
 
         func canvasViewDrawingDidChange(_ canvasView: PKCanvasView) {
@@ -243,6 +256,19 @@ enum WhiteboardPaperRenderer {
             context.strokeEllipse(in: inset.insetBy(dx: 32, dy: 32))
         }
         context.restoreGState()
+    }
+
+    static func pageImage(for paper: WhiteboardPaper, backgroundImageData: Data?) -> UIImage {
+        guard let backgroundImageData, let background = UIImage(data: backgroundImageData) else {
+            return tile(for: paper)
+        }
+        let size = WhiteboardCanvasMetrics.pageSize
+        let renderer = UIGraphicsImageRenderer(size: size)
+        return renderer.image { _ in
+            let rect = CGRect(origin: .zero, size: size)
+            draw(paper, in: rect)
+            background.draw(in: rect)
+        }
     }
 
     private static func solidTile(color: UIColor) -> UIImage {

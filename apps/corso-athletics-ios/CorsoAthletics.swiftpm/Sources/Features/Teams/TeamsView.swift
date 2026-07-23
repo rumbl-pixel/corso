@@ -5,14 +5,15 @@ struct TeamsView: View {
     @State private var event: TeamEvent
     @State private var stage: TeamStage = .provisional
     @State private var division: CompetitionDivision = .intermediate
-    @State private var gender: AthleteGender?
+    @State private var gender: AthleteGender? = .boys
+    @State private var boardNotice: String?
 
     init(initialEvent: TeamEvent = .passBall) {
         _event = State(initialValue: initialEvent)
     }
 
     private var scope: TeamBoardScope {
-        TeamBoardScope(event: event, stage: stage, division: division)
+        TeamBoardScope(event: event, stage: stage, division: division, gender: gender)
     }
 
     private var board: TeamBoard { store.teamBoard(for: scope) }
@@ -80,6 +81,14 @@ struct TeamsView: View {
             }
         }
         .navigationTitle("Teams")
+        .alert("Coaches workshop", isPresented: Binding(
+            get: { boardNotice != nil },
+            set: { if !$0 { boardNotice = nil } }
+        )) {
+            Button("OK", role: .cancel) { boardNotice = nil }
+        } message: {
+            Text(boardNotice ?? "")
+        }
     }
 
     private var header: some View {
@@ -104,9 +113,23 @@ struct TeamsView: View {
 
                 Picker("Gender", selection: $gender) {
                     Text("All groups").tag(AthleteGender?.none)
-                    ForEach(AthleteGender.allCases) { Text($0.rawValue).tag(Optional($0)) }
+                    ForEach(AthleteGender.coachingGroups) { Text($0.rawValue).tag(Optional($0)) }
                 }
                 .frame(width: 155)
+
+                Menu {
+                    Button("Auto-balance from results", systemImage: "wand.and.stars") {
+                        store.autoArrangeTeams(scope: scope)
+                    }
+                    Button("Send layout to whiteboard", systemImage: "pencil.and.outline") {
+                        sendToWhiteboard()
+                    }
+                    .disabled(board.teamA.isEmpty && board.teamB.isEmpty)
+                } label: {
+                    Label("Workshop", systemImage: "slider.horizontal.3")
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(CorsoTheme.orange)
             }
         }
         .padding(24)
@@ -114,12 +137,7 @@ struct TeamsView: View {
     }
 
     private var guidance: some View {
-        Label(
-            event == .sprintRelay
-                ? "Runner 1 starts, runners 2–3 hold the middle legs, and runner 4 anchors."
-                : "Choose one leader per team. Leaders stay at position one.",
-            systemImage: event == .sprintRelay ? "medal" : "star.fill"
-        )
+        Label(event.guidance, systemImage: event == .sprintRelay ? "medal" : "star.fill")
         .font(.subheadline.weight(.semibold))
         .foregroundStyle(CorsoTheme.navy)
         .padding(14)
@@ -129,6 +147,19 @@ struct TeamsView: View {
 
     private func athletes(for ids: [UUID]) -> [Athlete] {
         ids.compactMap { id in eligible.first(where: { $0.id == id }) }
+    }
+
+    private func sendToWhiteboard() {
+        do {
+            let title = try TeamBoardWhiteboardService.createBoard(
+                scope: scope,
+                board: board,
+                athletes: store.state.athletes
+            )
+            boardNotice = "“\(title)” is ready in Board. Open it to draw, annotate or change the plan with Apple Pencil."
+        } catch {
+            boardNotice = error.localizedDescription
+        }
     }
 }
 
@@ -178,6 +209,11 @@ private struct TeamColumn: View {
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .topLeading)
         .corsoCard()
+        .dropDestination(for: String.self) { values, _ in
+            guard let value = values.first, let athleteID = UUID(uuidString: value) else { return false }
+            store.placeAthlete(athleteID, in: placement, scope: scope)
+            return true
+        }
     }
 
     private func isLeader(_ id: UUID) -> Bool {
@@ -212,9 +248,13 @@ private struct TeamColumn: View {
                             .background(CorsoTheme.navy, in: Circle())
                     }
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(athlete.name + (isLeader ? " · Leader" : ""))
+                        Text(athlete.name)
                             .font(.subheadline.weight(.bold))
-                        Text("Year \(athlete.year) · \(athlete.gender.rawValue)")
+                        Text(
+                            placement == .available
+                                ? "Year \(athlete.year) · \(athlete.gender.rawValue)"
+                                : "\(event.positionLabel(at: index, count: count, isLeader: isLeader)) · Year \(athlete.year)"
+                        )
                             .font(.caption2)
                             .foregroundStyle(CorsoTheme.muted)
                     }
@@ -260,6 +300,20 @@ private struct TeamColumn: View {
                 isLeader ? CorsoTheme.orange.opacity(0.10) : CorsoTheme.navy.opacity(0.045),
                 in: RoundedRectangle(cornerRadius: 12)
             )
+            .draggable(athlete.id.uuidString) {
+                Text(athlete.name)
+                    .font(.headline)
+                    .padding(12)
+                    .background(CorsoTheme.paper, in: RoundedRectangle(cornerRadius: 12))
+            }
+            .dropDestination(for: String.self) { values, _ in
+                guard placement != .available,
+                      let value = values.first,
+                      let athleteID = UUID(uuidString: value)
+                else { return false }
+                store.placeAthlete(athleteID, in: placement, at: index, scope: scope)
+                return true
+            }
         }
     }
 }

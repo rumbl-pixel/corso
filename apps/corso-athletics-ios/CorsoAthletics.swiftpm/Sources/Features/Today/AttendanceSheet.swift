@@ -13,8 +13,11 @@ struct AttendanceSheet: View {
     private var isLocked: Bool { store.state.isAttendanceLocked(on: selectedDate) }
 
     private var filteredAthletes: [Athlete] {
-        guard !query.isEmpty else { return store.state.athletes }
-        return store.state.athletes.filter { $0.name.localizedCaseInsensitiveContains(query) }
+        let attendanceSquad = store.state.athletes.filter {
+            $0.selection == .provisional || $0.selection == .interschool
+        }
+        guard !query.isEmpty else { return attendanceSquad }
+        return attendanceSquad.filter { $0.name.localizedCaseInsensitiveContains(query) }
     }
 
     var body: some View {
@@ -27,7 +30,7 @@ struct AttendanceSheet: View {
                     ContentUnavailableView(
                         "No athletes",
                         systemImage: "person.3",
-                        description: Text("Add students in Squad, then take attendance here.")
+                        description: Text("Move students into Provisional or Interschool selection before taking attendance.")
                     )
                 } else {
                     List(filteredAthletes) { athlete in

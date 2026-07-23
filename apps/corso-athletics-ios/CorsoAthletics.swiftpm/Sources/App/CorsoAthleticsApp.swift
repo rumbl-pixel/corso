@@ -92,6 +92,6 @@ private struct CorsoLaunchView: View {
                 .tint(CorsoTheme.orange)
         }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Corso Athletics 0.3.2. \(status)")
+        .accessibilityLabel("Corso Athletics 0.4.0. \(status)")
     }
 }

@@ -44,6 +44,27 @@ final class WhiteboardLibraryTests: XCTestCase {
         XCTAssertTrue(library.selectedBoard.drawing.strokes.isEmpty)
     }
 
+    func testTeamLayoutBackgroundPersistsAndDuplicates() throws {
+        let store = try WhiteboardDiskStore(directoryURL: temporaryDirectory())
+        let library = WhiteboardLibrary(store: store)
+        let background = Data([0x43, 0x4F, 0x52, 0x53, 0x4F])
+
+        library.createBoard(
+            title: "Pass Ball workshop",
+            backgroundImageData: background
+        )
+        library.duplicateSelectedBoard()
+        library.saveNow()
+
+        let reloaded = WhiteboardLibrary(store: store)
+        XCTAssertEqual(reloaded.boards.count, 3)
+        XCTAssertEqual(reloaded.selectedBoard.backgroundImageData, background)
+        XCTAssertEqual(
+            reloaded.boards.filter { $0.backgroundImageData == background }.count,
+            2
+        )
+    }
+
     private func temporaryDirectory() -> URL {
         FileManager.default.temporaryDirectory
             .appendingPathComponent("WhiteboardTests-\(UUID().uuidString)", isDirectory: true)

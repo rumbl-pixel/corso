@@ -26,87 +26,25 @@ struct PermissionSlipsView: View {
     }
 
     var body: some View {
-        HStack(spacing: 0) {
-            Form {
-                Section {
-                    Picker("Document", selection: $kind) {
-                        ForEach(PermissionSlipKind.allCases) { Text($0.rawValue).tag($0) }
-                    }
-                    .pickerStyle(.segmented)
+        GeometryReader { proxy in
+            if proxy.size.width >= 900 {
+                HStack(spacing: 0) {
+                    permissionEditor
+                        .frame(width: proxy.size.width * 0.62)
+                    Divider()
+                    recipientList
+                        .frame(maxWidth: .infinity)
                 }
-
-                Section("Letter wording") {
-                    TextField("Document title", text: templateBinding(\.title))
-                    TextField("Letter body", text: templateBinding(\.body), axis: .vertical)
-                        .lineLimit(7...14)
-                    TextField("Permission statement", text: templateBinding(\.acknowledgement), axis: .vertical)
-                        .lineLimit(2...4)
-                }
-
-                Section(kind == .provisionalTraining ? "Training details" : "Carnival details") {
-                    if kind == .provisionalTraining {
-                        TextField("Training details", text: $settings.trainingDetails)
-                    } else {
-                        TextField("Carnival details", text: $settings.carnivalDetails)
-                    }
-                    TextField("Contact name", text: $settings.contactName)
-                    TextField("Contact details", text: $settings.contactDetails)
-                }
-
-                Section {
-                    Text("Placeholders: {{studentName}}, {{studentYear}}, {{studentClass}}, {{studentFaction}}, {{studentEvents}}")
-                        .font(.caption)
-                        .foregroundStyle(CorsoTheme.muted)
-                    Button("Restore default wording", systemImage: "arrow.counterclockwise") {
-                        let defaults = PermissionSlipSettings()
-                        settings[kind] = defaults[kind]
-                    }
+            } else {
+                VStack(spacing: 0) {
+                    permissionEditor
+                    Divider()
+                    recipientList
+                        .frame(minHeight: 260)
                 }
             }
-            .frame(minWidth: 440)
-
-            Divider()
-
-            VStack(spacing: 0) {
-                HStack {
-                    VStack(alignment: .leading) {
-                        Text("Recipients").font(.title3.weight(.bold))
-                        Text("\(selectedAthletes.count) of \(eligible.count) selected")
-                            .font(.caption)
-                            .foregroundStyle(CorsoTheme.muted)
-                    }
-                    Spacer()
-                    Button(recipients.count == eligible.count && !eligible.isEmpty ? "Clear" : "Select all") {
-                        if recipients.count == eligible.count {
-                            recipients.removeAll()
-                        } else {
-                            recipients = Set(eligible.map(\.id))
-                        }
-                    }
-                    .buttonStyle(.borderless)
-                }
-                .padding()
-
-                List(eligible) { athlete in
-                    Toggle(isOn: Binding(
-                        get: { recipients.contains(athlete.id) },
-                        set: { selected in
-                            if selected { recipients.insert(athlete.id) }
-                            else { recipients.remove(athlete.id) }
-                        }
-                    )) {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(athlete.name)
-                            Text("Year \(athlete.year) · \(athlete.className) · \(athlete.events.count) events")
-                                .font(.caption)
-                                .foregroundStyle(CorsoTheme.muted)
-                        }
-                    }
-                }
-                .listStyle(.plain)
-            }
-            .frame(minWidth: 330)
         }
+        .background(CorsoTheme.cream)
         .navigationTitle("Permission slips")
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
@@ -139,6 +77,157 @@ struct PermissionSlipsView: View {
             Button("OK", role: .cancel) { exportError = nil }
         } message: {
             Text(exportError ?? "The PDF could not be created.")
+        }
+    }
+
+    private var permissionEditor: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                Picker("Document", selection: $kind) {
+                    ForEach(PermissionSlipKind.allCases) { Text($0.rawValue).tag($0) }
+                }
+                .pickerStyle(.segmented)
+
+                editorCard("Letter wording") {
+                    labeledField("Document title") {
+                        TextField("Document title", text: templateBinding(\.title))
+                            .textFieldStyle(.roundedBorder)
+                    }
+                    labeledField("Letter body") {
+                        TextEditor(text: templateBinding(\.body))
+                            .frame(minHeight: 190)
+                            .padding(8)
+                            .background(.white, in: RoundedRectangle(cornerRadius: 10))
+                            .overlay {
+                                RoundedRectangle(cornerRadius: 10)
+                                    .stroke(CorsoTheme.sand)
+                            }
+                    }
+                    labeledField("Permission statement") {
+                        TextField(
+                            "Permission statement",
+                            text: templateBinding(\.acknowledgement),
+                            axis: .vertical
+                        )
+                        .lineLimit(2...4)
+                        .textFieldStyle(.roundedBorder)
+                    }
+                }
+
+                editorCard(kind == .provisionalTraining ? "Training details" : "Carnival details") {
+                    if kind == .provisionalTraining {
+                        labeledField("Training details") {
+                            TextField("Training details", text: $settings.trainingDetails)
+                                .textFieldStyle(.roundedBorder)
+                        }
+                    } else {
+                        labeledField("Carnival details") {
+                            TextField("Carnival details", text: $settings.carnivalDetails)
+                                .textFieldStyle(.roundedBorder)
+                        }
+                    }
+                    labeledField("Contact name") {
+                        TextField("Contact name", text: $settings.contactName)
+                            .textFieldStyle(.roundedBorder)
+                    }
+                    labeledField("Contact details") {
+                        TextField("Contact details", text: $settings.contactDetails)
+                            .textFieldStyle(.roundedBorder)
+                    }
+                }
+
+                HStack(alignment: .top) {
+                    Text("Placeholders: {{studentName}}, {{studentYear}}, {{studentClass}}, {{studentFaction}}, {{studentEvents}}")
+                        .font(.caption)
+                        .foregroundStyle(CorsoTheme.muted)
+                        .textSelection(.enabled)
+                    Spacer()
+                    Button("Restore default wording", systemImage: "arrow.counterclockwise") {
+                        let defaults = PermissionSlipSettings()
+                        settings[kind] = defaults[kind]
+                    }
+                    .buttonStyle(.borderless)
+                }
+            }
+            .padding(22)
+        }
+    }
+
+    private var recipientList: some View {
+        VStack(spacing: 0) {
+            HStack {
+                VStack(alignment: .leading) {
+                    Text("Recipients").font(.title3.weight(.bold))
+                    Text("\(selectedAthletes.count) of \(eligible.count) selected")
+                        .font(.caption)
+                        .foregroundStyle(CorsoTheme.muted)
+                }
+                Spacer()
+                Button(recipients.count == eligible.count && !eligible.isEmpty ? "Clear" : "Select all") {
+                    if recipients.count == eligible.count {
+                        recipients.removeAll()
+                    } else {
+                        recipients = Set(eligible.map(\.id))
+                    }
+                }
+                .buttonStyle(.borderless)
+            }
+            .padding()
+
+            if eligible.isEmpty {
+                ContentUnavailableView(
+                    "No eligible students",
+                    systemImage: "doc.text",
+                    description: Text("Select students for this squad stage first.")
+                )
+            } else {
+                List(eligible) { athlete in
+                    Toggle(isOn: Binding(
+                        get: { recipients.contains(athlete.id) },
+                        set: { selected in
+                            if selected { recipients.insert(athlete.id) }
+                            else { recipients.remove(athlete.id) }
+                        }
+                    )) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(athlete.name)
+                            Text("Year \(athlete.year) · \(athlete.className) · \(athlete.events.count) events")
+                                .font(.caption)
+                                .foregroundStyle(CorsoTheme.muted)
+                        }
+                    }
+                }
+                .listStyle(.plain)
+            }
+        }
+        .background(CorsoTheme.paper)
+    }
+
+    private func editorCard<Content: View>(
+        _ title: String,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text(title.uppercased())
+                .font(.caption.weight(.heavy))
+                .tracking(0.8)
+                .foregroundStyle(CorsoTheme.muted)
+            content()
+        }
+        .padding(18)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .corsoCard()
+    }
+
+    private func labeledField<Content: View>(
+        _ label: String,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(label)
+                .font(.caption.weight(.bold))
+                .foregroundStyle(CorsoTheme.muted)
+            content()
         }
     }
 

@@ -13,6 +13,10 @@ enum AthleteGender: String, Codable, CaseIterable, Identifiable, Sendable {
     case unspecified = "Unspecified"
 
     var id: Self { self }
+
+    /// "Unspecified" remains decodable for old imports, but it is not offered
+    /// as a coaching group in the current app.
+    static let coachingGroups: [Self] = [.boys, .girls]
 }
 
 enum CompetitionDivision: String, Codable, CaseIterable, Identifiable, Sendable {
@@ -272,6 +276,9 @@ struct ProgramSettings: Codable, Equatable, Sendable {
     var factions = ["Unassigned", "Red", "Blue", "Yellow", "Green"]
     var classes = ["Unassigned"]
     var coaches = [Coach(name: "Coach 1")]
+    var provisionalAthleteLimit = 40
+    var interschoolAthleteLimit = 32
+    var coachProgramsAreShared = true
 
     mutating func normalize() {
         schoolName = schoolName.studentField(or: "Corso Athletics")
@@ -289,6 +296,8 @@ struct ProgramSettings: Codable, Equatable, Sendable {
             return Coach(id: coach.id, name: name)
         }
         if coaches.isEmpty { coaches = [Coach(name: "Coach 1")] }
+        provisionalAthleteLimit = min(max(provisionalAthleteLimit, 1), 500)
+        interschoolAthleteLimit = min(max(interschoolAthleteLimit, 1), 500)
     }
 
     private static func validTime(_ value: String) -> Bool {
@@ -309,6 +318,7 @@ struct ProgramSettings: Codable, Equatable, Sendable {
 
     private enum CodingKeys: String, CodingKey {
         case schoolName, termLabel, trainingDay, sessionStart, sessionEnd, factions, classes, coaches
+        case provisionalAthleteLimit, interschoolAthleteLimit, coachProgramsAreShared
         case trainingTime
     }
 
@@ -335,6 +345,9 @@ struct ProgramSettings: Codable, Equatable, Sendable {
             ?? ["Unassigned", "Red", "Blue", "Yellow", "Green"]
         classes = try values.decodeIfPresent([String].self, forKey: .classes) ?? ["Unassigned"]
         coaches = try values.decodeIfPresent([Coach].self, forKey: .coaches) ?? [Coach(name: "Coach 1")]
+        provisionalAthleteLimit = try values.decodeIfPresent(Int.self, forKey: .provisionalAthleteLimit) ?? 40
+        interschoolAthleteLimit = try values.decodeIfPresent(Int.self, forKey: .interschoolAthleteLimit) ?? 32
+        coachProgramsAreShared = try values.decodeIfPresent(Bool.self, forKey: .coachProgramsAreShared) ?? true
         normalize()
     }
 
@@ -348,6 +361,9 @@ struct ProgramSettings: Codable, Equatable, Sendable {
         try values.encode(factions, forKey: .factions)
         try values.encode(classes, forKey: .classes)
         try values.encode(coaches, forKey: .coaches)
+        try values.encode(provisionalAthleteLimit, forKey: .provisionalAthleteLimit)
+        try values.encode(interschoolAthleteLimit, forKey: .interschoolAthleteLimit)
+        try values.encode(coachProgramsAreShared, forKey: .coachProgramsAreShared)
     }
 }
 
@@ -357,6 +373,7 @@ struct AthleticsState: Codable, Equatable, Sendable {
     var settings = ProgramSettings()
     var currentWeek = 1
     var sessionOverrides: [Int: SessionOverride] = [:]
+    var coachSessionOverrides: [UUID: [Int: SessionOverride]] = [:]
     var teamBoards: [String: TeamBoard] = [:]
     var assistantAudit: [AssistantAuditRecord] = []
     var permissionSlips = PermissionSlipSettings()
@@ -386,8 +403,17 @@ struct AthleticsState: Codable, Equatable, Sendable {
         let validSessionWeeks = Set(TrainingProgram.sessions.map(\.week))
         sessionOverrides = sessionOverrides.filter { week, value in
             validSessionWeeks.contains(week)
-                && !value.ballGames.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                && !value.activities.isEmpty
+                && value.isUsable
+        }
+        let validCoachIDs = Set(settings.coaches.map(\.id))
+        coachSessionOverrides = coachSessionOverrides.reduce(into: [:]) { output, entry in
+            guard validCoachIDs.contains(entry.key) else { return }
+            let weeks = entry.value.filter { week, value in
+                validSessionWeeks.contains(week) && value.isUsable
+            }
+            if !weeks.isEmpty {
+                output[entry.key] = weeks
+            }
         }
 
         teamBoards = teamBoards.reduce(into: [:]) { output, entry in
@@ -404,7 +430,7 @@ struct AthleticsState: Codable, Equatable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case athletes, students, results, settings, currentWeek, sessionOverrides
+        case athletes, students, results, settings, currentWeek, sessionOverrides, coachSessionOverrides
         case teamBoards, assistantAudit, permissionSlips, unlockedAttendanceDates
     }
 
@@ -419,6 +445,10 @@ struct AthleticsState: Codable, Equatable, Sendable {
         settings = try values.decodeIfPresent(ProgramSettings.self, forKey: .settings) ?? ProgramSettings()
         currentWeek = try values.decodeIfPresent(Int.self, forKey: .currentWeek) ?? 1
         sessionOverrides = try values.decodeIfPresent([Int: SessionOverride].self, forKey: .sessionOverrides) ?? [:]
+        coachSessionOverrides = try values.decodeIfPresent(
+            [UUID: [Int: SessionOverride]].self,
+            forKey: .coachSessionOverrides
+        ) ?? [:]
         teamBoards = try values.decodeIfPresent([String: TeamBoard].self, forKey: .teamBoards) ?? [:]
         assistantAudit = try values.decodeIfPresent([AssistantAuditRecord].self, forKey: .assistantAudit) ?? []
         permissionSlips = try values.decodeIfPresent(PermissionSlipSettings.self, forKey: .permissionSlips)
@@ -434,6 +464,7 @@ struct AthleticsState: Codable, Equatable, Sendable {
         try values.encode(settings, forKey: .settings)
         try values.encode(currentWeek, forKey: .currentWeek)
         try values.encode(sessionOverrides, forKey: .sessionOverrides)
+        try values.encode(coachSessionOverrides, forKey: .coachSessionOverrides)
         try values.encode(teamBoards, forKey: .teamBoards)
         try values.encode(assistantAudit, forKey: .assistantAudit)
         try values.encode(permissionSlips, forKey: .permissionSlips)

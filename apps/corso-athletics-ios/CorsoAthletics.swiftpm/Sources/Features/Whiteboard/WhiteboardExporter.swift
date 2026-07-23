@@ -50,6 +50,9 @@ enum WhiteboardExporter {
         let image = renderer.image { _ in
             let rect = CGRect(origin: .zero, size: size)
             WhiteboardPaperRenderer.draw(board.paper, in: rect)
+            if let data = board.backgroundImageData, let background = UIImage(data: data) {
+                background.draw(in: rect)
+            }
             board.drawing.image(from: rect, scale: 2).draw(in: rect)
         }
         guard let data = image.pngData() else {
@@ -64,6 +67,9 @@ enum WhiteboardExporter {
         return renderer.pdfData { context in
             context.beginPage()
             WhiteboardPaperRenderer.draw(board.paper, in: pageRect)
+            if let data = board.backgroundImageData, let background = UIImage(data: data) {
+                background.draw(in: pageRect)
+            }
             board.drawing.image(from: pageRect, scale: 1).draw(in: pageRect)
         }
     }

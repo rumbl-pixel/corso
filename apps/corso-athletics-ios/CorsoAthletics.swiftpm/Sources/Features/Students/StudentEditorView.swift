@@ -22,7 +22,7 @@ struct StudentEditorView: View {
         self.save = save
         _name = State(initialValue: athlete?.name ?? "")
         _year = State(initialValue: athlete?.year ?? 3)
-        _gender = State(initialValue: athlete?.gender ?? .unspecified)
+        _gender = State(initialValue: athlete?.gender == .girls ? .girls : .boys)
         _faction = State(initialValue: athlete?.faction ?? settings.factions.first ?? "Unassigned")
         _className = State(initialValue: athlete?.className ?? settings.classes.first ?? "Unassigned")
     }
@@ -43,7 +43,7 @@ struct StudentEditorView: View {
                     }
                     LabeledContent("Division", value: CompetitionDivision.forYear(year).rawValue)
                     Picker("Gender", selection: $gender) {
-                        ForEach(AthleteGender.allCases) { Text($0.rawValue).tag($0) }
+                        ForEach(AthleteGender.coachingGroups) { Text($0.rawValue).tag($0) }
                     }
                 }
 

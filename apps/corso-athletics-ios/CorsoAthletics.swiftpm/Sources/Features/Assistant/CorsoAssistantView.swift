@@ -269,7 +269,12 @@ enum CorsoAssistantEngine {
             guard stage.includes(athlete.selection) else {
                 return .error("\(athlete.name) must be provisional, interschool or reserve before joining a team.")
             }
-            let scope = TeamBoardScope(event: teamEvent, stage: stage, division: athlete.division)
+            let scope = TeamBoardScope(
+                event: teamEvent,
+                stage: stage,
+                division: athlete.division,
+                gender: athlete.gender == .unspecified ? nil : athlete.gender
+            )
             return .proposal(AssistantProposal(
                 command: command,
                 title: "Update team",
@@ -314,13 +319,21 @@ enum CorsoAssistantEngine {
             auditAction = .result
 
         case .attendance(let athleteID, let status):
-            guard let index = state.athletes.firstIndex(where: { $0.id == athleteID }) else { return false }
+            guard let index = state.athletes.firstIndex(where: { $0.id == athleteID }),
+                  state.athletes[index].selection == .provisional
+                    || state.athletes[index].selection == .interschool
+            else { return false }
             state.athletes[index].attendance[Date.now.attendanceKey] = status
             targetID = athleteID
             auditAction = .attendance
 
         case .selection(let athleteID, let selection):
             guard let index = state.athletes.firstIndex(where: { $0.id == athleteID }) else { return false }
+            let count = state.athletes.filter { $0.selection == selection }.count
+            if state.athletes[index].selection != selection {
+                if selection == .provisional, count >= state.settings.provisionalAthleteLimit { return false }
+                if selection == .interschool, count >= state.settings.interschoolAthleteLimit { return false }
+            }
             state.athletes[index].selection = selection
             targetID = athleteID
             auditAction = .selection
@@ -328,6 +341,7 @@ enum CorsoAssistantEngine {
         case .team(let athleteID, let placement, let scope):
             guard let athlete = state.athletes.first(where: { $0.id == athleteID }),
                   athlete.division == scope.division,
+                  scope.gender.map { athlete.gender == $0 } ?? true,
                   scope.stage.includes(athlete.selection)
             else { return false }
             var board = state.teamBoards[scope.id] ?? TeamBoard()

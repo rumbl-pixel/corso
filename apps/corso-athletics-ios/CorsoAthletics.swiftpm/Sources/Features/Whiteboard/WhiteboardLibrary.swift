@@ -14,6 +14,7 @@ struct WhiteboardBoard: Codable, Equatable, Identifiable, Sendable {
     var id: UUID
     var title: String
     var paper: WhiteboardPaper
+    var backgroundImageData: Data?
     var drawingData: Data
     var createdAt: Date
     var updatedAt: Date
@@ -22,6 +23,7 @@ struct WhiteboardBoard: Codable, Equatable, Identifiable, Sendable {
         id: UUID = UUID(),
         title: String,
         paper: WhiteboardPaper = .plain,
+        backgroundImageData: Data? = nil,
         drawingData: Data = PKDrawing().dataRepresentation(),
         createdAt: Date = .now,
         updatedAt: Date = .now
@@ -29,6 +31,7 @@ struct WhiteboardBoard: Codable, Equatable, Identifiable, Sendable {
         self.id = id
         self.title = title
         self.paper = paper
+        self.backgroundImageData = backgroundImageData
         self.drawingData = drawingData
         self.createdAt = createdAt
         self.updatedAt = updatedAt
@@ -136,11 +139,16 @@ final class WhiteboardLibrary {
     }
 
     @discardableResult
-    func createBoard(title: String? = nil, paper: WhiteboardPaper = .plain) -> UUID {
+    func createBoard(
+        title: String? = nil,
+        paper: WhiteboardPaper = .plain,
+        backgroundImageData: Data? = nil
+    ) -> UUID {
         let baseTitle = title?.trimmingCharacters(in: .whitespacesAndNewlines)
         let board = WhiteboardBoard(
             title: (baseTitle?.isEmpty == false ? baseTitle! : nextUntitledName()),
-            paper: paper
+            paper: paper,
+            backgroundImageData: backgroundImageData
         )
         boards.insert(board, at: 0)
         selectedBoardID = board.id
@@ -154,6 +162,7 @@ final class WhiteboardLibrary {
         let copy = WhiteboardBoard(
             title: uniqueName(for: "\(source.title) copy"),
             paper: source.paper,
+            backgroundImageData: source.backgroundImageData,
             drawingData: source.drawingData
         )
         boards.insert(copy, at: 0)

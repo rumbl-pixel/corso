@@ -8,13 +8,19 @@ struct TodayView: View {
     let openResults: (AthleticsEvent) -> Void
     let openTeams: (TeamEvent) -> Void
 
+    private var attendanceAthletes: [Athlete] {
+        store.state.athletes.filter {
+            $0.selection == .provisional || $0.selection == .interschool
+        }
+    }
+
     private var presentCount: Int {
-        store.state.athletes.filter { $0.attendance[Date.now.attendanceKey] == .present }.count
+        attendanceAthletes.filter { $0.attendance[Date.now.attendanceKey] == .present }.count
     }
 
     private var attendancePercentage: Int {
-        guard !store.state.athletes.isEmpty else { return 0 }
-        return Int((Double(presentCount) / Double(store.state.athletes.count) * 100).rounded())
+        guard !attendanceAthletes.isEmpty else { return 0 }
+        return Int((Double(presentCount) / Double(attendanceAthletes.count) * 100).rounded())
     }
 
     var body: some View {

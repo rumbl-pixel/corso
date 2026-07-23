@@ -319,7 +319,7 @@ private struct RaceDivisionsView: View {
                         ForEach(1...6, id: \.self) { Text("Year \($0)").tag($0) }
                     }
                     Picker("Gender", selection: $gender) {
-                        ForEach(AthleteGender.allCases) { Text($0.rawValue).tag($0) }
+                        ForEach(AthleteGender.coachingGroups) { Text($0.rawValue).tag($0) }
                     }
                     Picker("Maximum", selection: $maximumSize) {
                         ForEach([4, 6, 8], id: \.self) { Text("\($0) runners").tag($0) }
@@ -397,9 +397,13 @@ private struct RaceVideoTimerView: View {
     @State private var player: AVPlayer?
     @State private var videoURL: URL?
     @State private var importerPresented = false
+    @State private var cameraPresented = false
+    @State private var videoUsesSecurityScope = false
     @State private var startTime: Double?
     @State private var finishTimes: [UUID: Double] = [:]
-    @State private var frameRate = 30
+    @State private var playheadSeconds = 0.0
+    @State private var timeObserver: Any?
+    @State private var videoMessage: String?
 
     private var eligible: [Athlete] {
         store.state.athletes.filter { $0.year == year && $0.gender == gender }
@@ -417,14 +421,10 @@ private struct RaceVideoTimerView: View {
                         ForEach(1...6, id: \.self) { Text("Year \($0)").tag($0) }
                     }
                     Picker("Gender", selection: $gender) {
-                        ForEach(AthleteGender.allCases) { Text($0.rawValue).tag($0) }
+                        ForEach(AthleteGender.coachingGroups) { Text($0.rawValue).tag($0) }
                     }
                     Picker("Race", selection: $event) {
                         ForEach(Self.raceEvents) { Text($0.rawValue).tag($0) }
-                    }
-                    Picker("Video frame rate", selection: $frameRate) {
-                        Text("30 fps").tag(30)
-                        Text("60 fps").tag(60)
                     }
                 }
 
@@ -441,7 +441,14 @@ private struct RaceVideoTimerView: View {
                 }
 
                 Section {
-                    Button("Record or choose race video", systemImage: "video") {
+                    Button("Record race in Corso", systemImage: "camera.fill") {
+                        if RaceVideoCaptureView.cameraIsAvailable {
+                            cameraPresented = true
+                        } else {
+                            videoMessage = "A camera is not available on this device. Choose an existing race video instead."
+                        }
+                    }
+                    Button("Choose existing video", systemImage: "folder") {
                         importerPresented = true
                     }
                 } footer: {
@@ -460,7 +467,7 @@ private struct RaceVideoTimerView: View {
 
                     HStack {
                         Button("Previous frame", systemImage: "backward.frame") { step(-1) }
-                        Text(currentSeconds.formatted(.number.precision(.fractionLength(3))) + "s")
+                        Text(playheadSeconds.formatted(.number.precision(.fractionLength(3))) + "s")
                             .font(.headline.monospacedDigit())
                             .frame(minWidth: 90)
                         Button("Next frame", systemImage: "forward.frame") { step(1) }
@@ -521,29 +528,42 @@ private struct RaceVideoTimerView: View {
             allowsMultipleSelection: false
         ) { result in
             guard case .success(let urls) = result, let url = urls.first else { return }
-            videoURL?.stopAccessingSecurityScopedResource()
-            _ = url.startAccessingSecurityScopedResource()
-            videoURL = url
-            player = AVPlayer(url: url)
-            player?.rate = 0.25
-            startTime = nil
-            finishTimes = [:]
+            loadVideo(url, securityScoped: true)
+        }
+        .sheet(isPresented: $cameraPresented) {
+            RaceVideoCaptureView { url in
+                cameraPresented = false
+                if let url {
+                    loadVideo(url, securityScoped: false)
+                }
+            }
+            .ignoresSafeArea()
+        }
+        .alert("Race video", isPresented: Binding(
+            get: { videoMessage != nil },
+            set: { if !$0 { videoMessage = nil } }
+        )) {
+            Button("OK", role: .cancel) { videoMessage = nil }
+        } message: {
+            Text(videoMessage ?? "")
         }
         .onDisappear {
-            player?.pause()
-            videoURL?.stopAccessingSecurityScopedResource()
+            releaseVideo()
         }
     }
 
     private var currentSeconds: Double {
-        player?.currentTime().seconds.finiteOrZero ?? 0
+        playheadSeconds
     }
 
     private func step(_ direction: Int) {
-        guard let player else { return }
+        guard let player, let item = player.currentItem else { return }
         player.pause()
-        let next = max(0, currentSeconds + Double(direction) / Double(frameRate))
-        player.seek(to: CMTime(seconds: next, preferredTimescale: 600), toleranceBefore: .zero, toleranceAfter: .zero)
+        item.step(byCount: direction)
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(45))
+            playheadSeconds = player.currentTime().seconds.finiteOrZero
+        }
     }
 
     private func elapsed(for athleteID: UUID) -> Double? {
@@ -563,6 +583,39 @@ private struct RaceVideoTimerView: View {
             )
         }
         dismiss()
+    }
+
+    private func loadVideo(_ url: URL, securityScoped: Bool) {
+        releaseVideo()
+        let startedScope = securityScoped && url.startAccessingSecurityScopedResource()
+        videoUsesSecurityScope = startedScope
+        videoURL = url
+        let nextPlayer = AVPlayer(url: url)
+        nextPlayer.rate = 0
+        player = nextPlayer
+        playheadSeconds = 0
+        startTime = nil
+        finishTimes = [:]
+        timeObserver = nextPlayer.addPeriodicTimeObserver(
+            forInterval: CMTime(value: 1, timescale: 120),
+            queue: .main
+        ) { time in
+            Task { @MainActor in
+                playheadSeconds = time.seconds.finiteOrZero
+            }
+        }
+    }
+
+    private func releaseVideo() {
+        player?.pause()
+        if let timeObserver, let player {
+            player.removeTimeObserver(timeObserver)
+        }
+        timeObserver = nil
+        if videoUsesSecurityScope {
+            videoURL?.stopAccessingSecurityScopedResource()
+        }
+        videoUsesSecurityScope = false
     }
 
     private static let raceEvents: [AthleticsEvent] = [

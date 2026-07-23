@@ -4,6 +4,120 @@ import XCTest
 
 final class ParityFeatureTests: XCTestCase {
     @MainActor
+    func testSquadLimitsAndAttendanceScopeAreEnforced() throws {
+        let persistence = MemoryAthleticsPersistence()
+        let store = AthleticsStore(persistence: persistence)
+        var settings = store.state.settings
+        settings.provisionalAthleteLimit = 1
+        settings.interschoolAthleteLimit = 1
+        store.updateSettings(settings)
+
+        let first = Athlete(
+            name: "First Athlete",
+            year: 4,
+            gender: .boys,
+            faction: "Red",
+            className: "4A"
+        )
+        let second = Athlete(
+            name: "Second Athlete",
+            year: 4,
+            gender: .girls,
+            faction: "Blue",
+            className: "4B"
+        )
+        store.addAthlete(first)
+        store.addAthlete(second)
+
+        XCTAssertFalse(store.markAttendance(for: first.id, on: .now, as: .present))
+        XCTAssertTrue(store.updateSelection(for: first.id, to: .provisional))
+        XCTAssertFalse(store.updateSelection(for: second.id, to: .provisional))
+        XCTAssertTrue(store.markAttendance(for: first.id, on: .now, as: .present))
+        XCTAssertTrue(store.updateSelection(for: second.id, to: .reserve))
+        XCTAssertFalse(store.markAttendance(for: second.id, on: .now, as: .present))
+    }
+
+    @MainActor
+    func testCoachProgramsCanBeSeparateThenShared() throws {
+        let store = AthleticsStore(persistence: MemoryAthleticsPersistence())
+        let first = Coach(name: "Coach One")
+        let second = Coach(name: "Coach Two")
+        var settings = store.state.settings
+        settings.coaches = [first, second]
+        settings.coachProgramsAreShared = false
+        store.updateSettings(settings)
+
+        store.updateSession(
+            week: 1,
+            coachID: first.id,
+            title: "Starts and speed",
+            purpose: "Coach One focus",
+            ballGames: "Pass Ball",
+            activities: [
+                SessionActivity(
+                    id: "custom-one",
+                    time: "0–12",
+                    activity: "Custom starts",
+                    detail: "Coach-written detail"
+                )
+            ]
+        )
+        XCTAssertEqual(store.resolvedSession(week: 1, coachID: first.id)?.title, "Starts and speed")
+        XCTAssertNotEqual(store.resolvedSession(week: 1, coachID: second.id)?.title, "Starts and speed")
+
+        store.copyProgram(from: first.id, to: second.id)
+        XCTAssertEqual(store.resolvedSession(week: 1, coachID: second.id)?.purpose, "Coach One focus")
+
+        settings = store.state.settings
+        store.selectedCoachID = second.id
+        settings.coachProgramsAreShared = true
+        store.updateSettings(settings)
+        XCTAssertEqual(store.resolvedSession(week: 1)?.title, "Starts and speed")
+    }
+
+    @MainActor
+    func testTeamBoardsAreSeparatedByGenderAndSupportDropPosition() throws {
+        let store = AthleticsStore(persistence: MemoryAthleticsPersistence())
+        let boy = Athlete(
+            name: "Boy Runner",
+            year: 4,
+            gender: .boys,
+            faction: "Red",
+            className: "4A",
+            selection: .provisional
+        )
+        let girl = Athlete(
+            name: "Girl Runner",
+            year: 4,
+            gender: .girls,
+            faction: "Blue",
+            className: "4B",
+            selection: .provisional
+        )
+        store.addAthlete(boy)
+        store.addAthlete(girl)
+        let boysScope = TeamBoardScope(
+            event: .passBall,
+            stage: .provisional,
+            division: .intermediate,
+            gender: .boys
+        )
+        let girlsScope = TeamBoardScope(
+            event: .passBall,
+            stage: .provisional,
+            division: .intermediate,
+            gender: .girls
+        )
+
+        store.placeAthlete(boy.id, in: .teamA, at: 0, scope: boysScope)
+        store.placeAthlete(girl.id, in: .teamA, at: 0, scope: boysScope)
+        store.placeAthlete(girl.id, in: .teamB, at: 0, scope: girlsScope)
+
+        XCTAssertEqual(store.teamBoard(for: boysScope).teamA, [boy.id])
+        XCTAssertEqual(store.teamBoard(for: girlsScope).teamB, [girl.id])
+    }
+
+    @MainActor
     func testEventAssignmentsSessionOverridesAndTeamBoardsPersist() throws {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent("CorsoParityTests-\(UUID().uuidString)", isDirectory: true)
@@ -247,4 +361,12 @@ final class ParityFeatureTests: XCTestCase {
         XCTAssertEqual(restored.athletes.first?.attendance["2026-07-23"], .present)
         XCTAssertEqual(restored.results.first?.value, 14.21)
     }
+}
+
+private final class MemoryAthleticsPersistence: AthleticsPersisting, @unchecked Sendable {
+    private var value = AthleticsState()
+
+    func load() throws -> AthleticsState { value }
+    func save(_ state: AthleticsState) throws { value = state }
+    func reset(to state: AthleticsState) throws { value = state }
 }

@@ -8,6 +8,7 @@ struct SquadView: View {
     @State private var gender: AthleteGender?
     @State private var query = ""
     @State private var permissionSlipsPresented = false
+    @State private var capacityMessage: String?
 
     private var athletes: [Athlete] {
         SquadFilter.apply(
@@ -35,6 +36,14 @@ struct SquadView: View {
         .sheet(isPresented: $permissionSlipsPresented) {
             NavigationStack { PermissionSlipsView() }
                 .environment(store)
+        }
+        .alert("Squad limit reached", isPresented: Binding(
+            get: { capacityMessage != nil },
+            set: { if !$0 { capacityMessage = nil } }
+        )) {
+            Button("OK", role: .cancel) { capacityMessage = nil }
+        } message: {
+            Text(capacityMessage ?? "")
         }
     }
 
@@ -85,11 +94,21 @@ struct SquadView: View {
                     LabeledMenu(title: "Gender group", value: gender?.rawValue ?? "All") {
                         Button("All groups") { gender = nil }
                         Divider()
-                        ForEach(AthleteGender.allCases) { item in
+                        ForEach(AthleteGender.coachingGroups) { item in
                             Button(item.rawValue) { gender = item }
                         }
                     }
                     Spacer()
+                    capacityBadge(
+                        "Provisional",
+                        count: store.state.athletes.filter { $0.selection == .provisional }.count,
+                        limit: store.state.settings.provisionalAthleteLimit
+                    )
+                    capacityBadge(
+                        "Interschool",
+                        count: store.state.athletes.filter { $0.selection == .interschool }.count,
+                        limit: store.state.settings.interschoolAthleteLimit
+                    )
                     Text("\(athletes.count) shown")
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(CorsoTheme.muted)
@@ -113,7 +132,12 @@ struct SquadView: View {
         } else {
             List(athletes) { athlete in
                 SquadSelectionRow(athlete: athlete) { selection in
-                    store.updateSelection(for: athlete.id, to: selection)
+                    if !store.updateSelection(for: athlete.id, to: selection) {
+                        let limit = selection == .provisional
+                            ? store.state.settings.provisionalAthleteLimit
+                            : store.state.settings.interschoolAthleteLimit
+                        capacityMessage = "\(selection.rawValue) is capped at \(limit) athletes. Change the limit in Settings or move another athlete first."
+                    }
                 } eventUpdate: { event, assigned in
                     store.setEvent(event, assigned: assigned, for: athlete.id)
                 }
@@ -121,6 +145,18 @@ struct SquadView: View {
             .listStyle(.plain)
             .searchable(text: $query, prompt: "Find student in squad")
         }
+    }
+
+    private func capacityBadge(_ title: String, count: Int, limit: Int) -> some View {
+        Text("\(title) \(count)/\(limit)")
+            .font(.caption.weight(.bold))
+            .foregroundStyle(count >= limit ? .red : CorsoTheme.muted)
+            .padding(.horizontal, 9)
+            .padding(.vertical, 5)
+            .background(
+                (count >= limit ? Color.red : CorsoTheme.navy).opacity(0.08),
+                in: Capsule()
+            )
     }
 }
 

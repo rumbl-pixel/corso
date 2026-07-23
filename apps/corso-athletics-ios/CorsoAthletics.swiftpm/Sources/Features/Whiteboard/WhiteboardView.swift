@@ -7,6 +7,7 @@ struct WhiteboardView: View {
     @State private var canvasController = PencilCanvasController()
     @State private var showsToolPicker = true
     @State private var allowsFingerDrawing = false
+    @State private var focusMode = false
     @State private var renameText = ""
     @State private var isRenaming = false
     @State private var isConfirmingClear = false
@@ -17,7 +18,7 @@ struct WhiteboardView: View {
     var body: some View {
         GeometryReader { proxy in
             Group {
-                if proxy.size.width >= 1_020 {
+                if proxy.size.width >= 1_020, !focusMode {
                     HStack(spacing: 18) {
                         boardSidebar
                             .frame(width: 230)
@@ -29,7 +30,7 @@ struct WhiteboardView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .padding(22)
+        .padding(12)
         .background(CorsoTheme.cream.ignoresSafeArea())
         .alert("Rename board", isPresented: $isRenaming) {
             TextField("Board name", text: $renameText)
@@ -69,9 +70,11 @@ struct WhiteboardView: View {
     }
 
     private func workspace(showsCompactBoardPicker: Bool) -> some View {
-        VStack(alignment: .leading, spacing: 14) {
-            header
-            if showsCompactBoardPicker {
+        VStack(alignment: .leading, spacing: 10) {
+            if !focusMode {
+                header
+            }
+            if showsCompactBoardPicker, !focusMode {
                 compactBoardPicker
             }
             drawingToolbar
@@ -186,6 +189,12 @@ struct WhiteboardView: View {
             .tint(CorsoTheme.orange)
             .accessibilityHint("When off, one finger pans and only Apple Pencil writes")
 
+            Toggle(isOn: $focusMode) {
+                Label("Focus board", systemImage: "arrow.up.left.and.arrow.down.right")
+            }
+            .toggleStyle(.button)
+            .tint(CorsoTheme.orange)
+
             Picker("Paper", selection: paperBinding) {
                 ForEach(WhiteboardPaper.allCases) { paper in
                     Text(paper.rawValue).tag(paper)
@@ -234,6 +243,7 @@ struct WhiteboardView: View {
 
             Menu {
                 Toggle("Allow finger drawing", isOn: $allowsFingerDrawing)
+                Toggle("Focus board", isOn: $focusMode)
                 Picker("Paper", selection: paperBinding) {
                     ForEach(WhiteboardPaper.allCases) { paper in
                         Text(paper.rawValue).tag(paper)
@@ -338,6 +348,7 @@ struct WhiteboardView: View {
                 drawing: library.selectedBoard.drawing,
                 canvasRevision: library.canvasRevision,
                 paper: library.selectedBoard.paper,
+                backgroundImageData: library.selectedBoard.backgroundImageData,
                 allowsFingerDrawing: allowsFingerDrawing,
                 showsToolPicker: showsToolPicker,
                 controller: canvasController,
@@ -345,15 +356,6 @@ struct WhiteboardView: View {
                 onSqueeze: { showsToolPicker = true }
             )
 
-            if !allowsFingerDrawing {
-                Label("Pencil writes · finger pans and zooms", systemImage: "applepencil")
-                    .font(.caption.weight(.semibold))
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                    .background(.ultraThinMaterial, in: Capsule())
-                    .padding(14)
-                    .allowsHitTesting(false)
-            }
         }
         .background(Color.white)
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))

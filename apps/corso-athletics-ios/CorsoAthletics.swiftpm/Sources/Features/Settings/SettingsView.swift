@@ -66,6 +66,42 @@ struct SettingsView: View {
                 Text("Finish typing before saving. Blank coach names are not saved.")
             }
 
+            Section {
+                Picker(
+                    "Programming",
+                    selection: $draft.coachProgramsAreShared
+                ) {
+                    Text("One shared program").tag(true)
+                    Text("Separate coach programs").tag(false)
+                }
+                .pickerStyle(.segmented)
+            } header: {
+                Text("Coach programs")
+            } footer: {
+                Text(
+                    draft.coachProgramsAreShared
+                        ? "Every coach sees and edits the same seven-week program."
+                        : "Each coach can open, edit and inspect their own program from Sessions."
+                )
+            }
+
+            Section {
+                Stepper(
+                    "Provisional athletes: \(draft.provisionalAthleteLimit)",
+                    value: $draft.provisionalAthleteLimit,
+                    in: 1...500
+                )
+                Stepper(
+                    "Interschool athletes: \(draft.interschoolAthleteLimit)",
+                    value: $draft.interschoolAthleteLimit,
+                    in: 1...500
+                )
+            } header: {
+                Text("Squad capacity")
+            } footer: {
+                Text("Reserves do not use an interschool place. Change these limits at any time.")
+            }
+
             EditableNameListSection(
                 title: "Factions",
                 addLabel: "Add faction",

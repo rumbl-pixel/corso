@@ -3,7 +3,7 @@ import SwiftUI
 import UIKit
 
 struct AthleticsBackupPayload: Codable, Sendable {
-    static let currentSchemaVersion = 3
+    static let currentSchemaVersion = 4
 
     var schemaVersion: Int
     var exportedAt: Date
@@ -208,6 +208,8 @@ private struct WebSessionOverride: Decodable {
 
     func native(week: Int) -> SessionOverride {
         SessionOverride(
+            title: "",
+            purpose: "",
             ballGames: ballGames,
             activities: activities.enumerated().map { index, activity in
                 SessionActivity(
