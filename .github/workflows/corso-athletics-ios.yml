@@ -91,6 +91,13 @@ jobs:
             -derivedDataPath "$RUNNER_TEMP/CorsoPlaygroundsDerivedData" \
             CODE_SIGNING_ALLOWED=NO \
             | tee "$RUNNER_TEMP/corso-athletics-playgrounds-build.log"
+          xcodebuild build \
+            -scheme "$PLAYGROUND_SCHEME" \
+            -configuration Debug \
+            -destination "generic/platform=iOS" \
+            -derivedDataPath "$RUNNER_TEMP/CorsoPlaygroundsDeviceDerivedData" \
+            CODE_SIGNING_ALLOWED=NO \
+            | tee "$RUNNER_TEMP/corso-athletics-playgrounds-device-build.log"
 
       - name: Install XcodeGen
         run: brew install xcodegen
@@ -165,15 +172,25 @@ jobs:
 
       - name: Package the verified Playgrounds project
         run: |
+          RELEASE_PACKAGE="$RUNNER_TEMP/CorsoAthletics-0.3.1.swiftpm"
+          mkdir -p "$RELEASE_PACKAGE"
+          cp CorsoAthletics.swiftpm/Package.swift "$RELEASE_PACKAGE/Package.swift"
+          cp -R CorsoAthletics.swiftpm/Sources "$RELEASE_PACKAGE/Sources"
           ditto -c -k --sequesterRsrc --keepParent \
-            CorsoAthletics.swiftpm \
-            "$RUNNER_TEMP/CorsoAthletics-0.3.0-Playgrounds.zip"
+            "$RELEASE_PACKAGE" \
+            "$RUNNER_TEMP/CorsoAthletics-0.3.1-Playgrounds.zip"
+          unzip -l "$RUNNER_TEMP/CorsoAthletics-0.3.1-Playgrounds.zip"
+          if unzip -Z1 "$RUNNER_TEMP/CorsoAthletics-0.3.1-Playgrounds.zip" \
+            | grep -Eq '(^|/)(Tests|\.git|__MACOSX)(/|$)'; then
+            echo "Release archive contains development-only files"
+            exit 1
+          fi
 
       - name: Upload verified Playgrounds project
         uses: actions/upload-artifact@v4
         with:
           name: Corso-Athletics-Playgrounds
-          path: ${{ runner.temp }}/CorsoAthletics-0.3.0-Playgrounds.zip
+          path: ${{ runner.temp }}/CorsoAthletics-0.3.1-Playgrounds.zip
           if-no-files-found: error
           retention-days: 14
 
@@ -185,6 +202,7 @@ jobs:
           path: |
             ${{ runner.temp }}/corso-athletics-playgrounds-list.json
             ${{ runner.temp }}/corso-athletics-playgrounds-build.log
+            ${{ runner.temp }}/corso-athletics-playgrounds-device-build.log
             ${{ runner.temp }}/corso-athletics-build.log
             ${{ runner.temp }}/corso-athletics-tests.log
             ${{ runner.temp }}/CorsoAthleticsTests.xcresult

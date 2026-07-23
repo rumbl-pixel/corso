@@ -4,14 +4,14 @@ import PackageDescription
 import AppleProductTypes
 
 let package = Package(
-    name: "CorsoAthletics",
+    name: "CorsoAthletics031",
     platforms: [.iOS("17.5")],
     products: [
         .iOSApplication(
             name: "Corso Athletics",
             targets: ["AppModule"],
-            displayVersion: "0.3.0",
-            bundleVersion: "12",
+            displayVersion: "0.3.1",
+            bundleVersion: "13",
             appIcon: .placeholder(icon: .star),
             accentColor: .presetColor(.orange),
             supportedDeviceFamilies: [.pad],
