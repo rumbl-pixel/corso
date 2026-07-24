@@ -1,0 +1,59 @@
+name: CorsoAthletics
+
+options:
+  bundleIdPrefix: au.com.corso
+  deploymentTarget:
+    iOS: "17.5"
+  createIntermediateGroups: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.10"
+    IPHONEOS_DEPLOYMENT_TARGET: "17.5"
+    TARGETED_DEVICE_FAMILY: "2"
+    SUPPORTS_MACCATALYST: false
+    SWIFT_STRICT_CONCURRENCY: minimal
+
+targets:
+  AppModule:
+    type: application
+    platform: iOS
+    sources:
+      - path: CorsoAthletics.swiftpm/Sources
+    settings:
+      base:
+        # Keep the executable/module name aligned with the Swift Playgrounds
+        # target. The user-facing app name still comes from CFBundleDisplayName.
+        PRODUCT_NAME: AppModule
+        PRODUCT_BUNDLE_IDENTIFIER: au.com.corso.athletics
+        MARKETING_VERSION: "0.5.3"
+        CURRENT_PROJECT_VERSION: "19"
+        GENERATE_INFOPLIST_FILE: true
+        INFOPLIST_KEY_CFBundleDisplayName: "Corso Athletics"
+        INFOPLIST_KEY_UILaunchScreen_Generation: true
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: true
+        INFOPLIST_KEY_NSCameraUsageDescription: "Corso uses the camera for authorised school race footage and on-device frame-by-frame timing. Corso does not publish or upload the footage."
+        INFOPLIST_KEY_NSMicrophoneUsageDescription: "Corso may include ambient audio while recording authorised school race footage for on-device timing."
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        CODE_SIGNING_ALLOWED: false
+    scheme:
+      testTargets:
+        - AppModuleTests
+      gatherCoverageData: true
+
+  AppModuleTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: CorsoAthletics.swiftpm/Tests
+    dependencies:
+      - target: AppModule
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: au.com.corso.athletics.tests
+        GENERATE_INFOPLIST_FILE: true
+        CODE_SIGNING_ALLOWED: false
