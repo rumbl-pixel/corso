@@ -172,16 +172,16 @@ jobs:
 
       - name: Package the verified Playgrounds project
         run: |
-          RELEASE_PACKAGE="$RUNNER_TEMP/CorsoAthletics-0.5.2.swiftpm"
+          RELEASE_PACKAGE="$RUNNER_TEMP/CorsoAthletics-0.5.3.swiftpm"
           mkdir -p "$RELEASE_PACKAGE"
           cp CorsoAthletics.swiftpm/Package.swift "$RELEASE_PACKAGE/Package.swift"
           cp CorsoAthletics.swiftpm/AdditionalInfo.plist "$RELEASE_PACKAGE/AdditionalInfo.plist"
           cp -R CorsoAthletics.swiftpm/Sources "$RELEASE_PACKAGE/Sources"
           ditto -c -k --sequesterRsrc --keepParent \
             "$RELEASE_PACKAGE" \
-            "$RUNNER_TEMP/CorsoAthletics-0.5.2-Playgrounds.zip"
-          unzip -l "$RUNNER_TEMP/CorsoAthletics-0.5.2-Playgrounds.zip"
-          if unzip -Z1 "$RUNNER_TEMP/CorsoAthletics-0.5.2-Playgrounds.zip" \
+            "$RUNNER_TEMP/CorsoAthletics-0.5.3-Playgrounds.zip"
+          unzip -l "$RUNNER_TEMP/CorsoAthletics-0.5.3-Playgrounds.zip"
+          if unzip -Z1 "$RUNNER_TEMP/CorsoAthletics-0.5.3-Playgrounds.zip" \
             | grep -Eq '(^|/)(Tests|\.git|__MACOSX)(/|$)'; then
             echo "Release archive contains development-only files"
             exit 1
@@ -191,7 +191,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Corso-Athletics-Playgrounds
-          path: ${{ runner.temp }}/CorsoAthletics-0.5.2-Playgrounds.zip
+          path: ${{ runner.temp }}/CorsoAthletics-0.5.3-Playgrounds.zip
           if-no-files-found: error
           retention-days: 14
 
