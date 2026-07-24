@@ -26,14 +26,14 @@ targets:
         # target. The user-facing app name still comes from CFBundleDisplayName.
         PRODUCT_NAME: AppModule
         PRODUCT_BUNDLE_IDENTIFIER: au.com.corso.athletics
-        MARKETING_VERSION: "0.4.0"
-        CURRENT_PROJECT_VERSION: "15"
+        MARKETING_VERSION: "0.5.1"
+        CURRENT_PROJECT_VERSION: "17"
         GENERATE_INFOPLIST_FILE: true
         INFOPLIST_KEY_CFBundleDisplayName: "Corso Athletics"
         INFOPLIST_KEY_UILaunchScreen_Generation: true
         INFOPLIST_KEY_UIApplicationSceneManifest_Generation: true
-        INFOPLIST_KEY_NSCameraUsageDescription: "Corso uses the camera to record school race footage for on-device frame-by-frame timing."
-        INFOPLIST_KEY_NSMicrophoneUsageDescription: "Corso may include ambient audio while recording race footage."
+        INFOPLIST_KEY_NSCameraUsageDescription: "Corso uses the camera for authorised school race footage and on-device frame-by-frame timing. Corso does not publish or upload the footage."
+        INFOPLIST_KEY_NSMicrophoneUsageDescription: "Corso may include ambient audio while recording authorised school race footage for on-device timing."
         INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad:
           - UIInterfaceOrientationPortrait
           - UIInterfaceOrientationPortraitUpsideDown

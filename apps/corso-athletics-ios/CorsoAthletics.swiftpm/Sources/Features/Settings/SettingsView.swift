@@ -11,6 +11,7 @@ struct SettingsView: View {
     @State private var backupItem: SettingsBackupItem?
     @State private var backupImporterPresented = false
     @State private var backupMessage: String?
+    @State private var isConfirmingBackupExport = false
 
     var body: some View {
         Form {
@@ -85,6 +86,8 @@ struct SettingsView: View {
                 )
             }
 
+            PilotReadinessSettingsSection(readiness: $draft.pilotReadiness)
+
             Section {
                 Stepper(
                     "Provisional athletes: \(draft.provisionalAthleteLimit)",
@@ -101,6 +104,8 @@ struct SettingsView: View {
             } footer: {
                 Text("Reserves do not use an interschool place. Change these limits at any time.")
             }
+
+            TeamRulesSettingsSection(draft: $draft)
 
             EditableNameListSection(
                 title: "Factions",
@@ -140,8 +145,9 @@ struct SettingsView: View {
 
             Section {
                 Button("Export full backup", systemImage: "square.and.arrow.up") {
-                    exportBackup()
+                    isConfirmingBackupExport = true
                 }
+                .disabled(!draft.pilotReadiness.isStudentDataReady)
                 Button("Restore from backup", systemImage: "square.and.arrow.down") {
                     backupImporterPresented = true
                 }
@@ -152,7 +158,7 @@ struct SettingsView: View {
             } header: {
                 Text("Data and recovery")
             } footer: {
-                Text("Backups include students, results, attendance, sessions, team boards, event assignments and permission-slip wording. Whiteboards are exported separately in Board.")
+                Text("Backups include students, results, attendance, sessions, team boards, event assignments and permission-slip wording. Export only to approved school storage. Whiteboards are exported separately in Board.")
             }
         }
         .navigationTitle("Settings")
@@ -175,6 +181,17 @@ struct SettingsView: View {
             .disabled(resetConfirmation != "RESET")
         } message: {
             Text("This cannot be undone. Type RESET to confirm.")
+        }
+        .confirmationDialog(
+            "Export full student-data backup?",
+            isPresented: $isConfirmingBackupExport,
+            titleVisibility: .visible
+        ) {
+            Button("Export to approved school storage") {
+                exportBackup()
+            }
+        } message: {
+            Text("This file includes student, result and attendance data. Do not send it through personal email, messages or personal cloud storage.")
         }
         .sheet(item: $backupItem) { item in
             CorsoShareSheet(url: item.url)
@@ -243,6 +260,83 @@ struct SettingsView: View {
     private static let weekdays = [
         "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"
     ]
+}
+
+private struct PilotReadinessSettingsSection: View {
+    @Binding var readiness: PilotReadiness
+
+    var body: some View {
+        Section {
+            Toggle("Local school pilot approval confirmed", isOn: $readiness.localPilotApprovalConfirmed)
+            Toggle("School-managed, passcode-protected iPad", isOn: $readiness.schoolDeviceConfirmed)
+            Toggle("Approved school recordkeeping process confirmed", isOn: $readiness.recordkeepingProcessConfirmed)
+            Toggle("Parent/carer video permission confirmed", isOn: $readiness.videoPermissionConfirmed)
+        } header: {
+            Text("Before live student use")
+        } footer: {
+            VStack(alignment: .leading, spacing: 5) {
+                Text("Student imports are unlocked after the first three checks. Race video is unlocked only after all four checks.")
+                Text("Corso is a staff-only coaching workspace. Keep health, behaviour and other sensitive information out of notes, and transfer official permissions and final records to the school-approved system.")
+            }
+        }
+    }
+}
+
+private struct TeamRulesSettingsSection: View {
+    @Binding var draft: ProgramSettings
+
+    var body: some View {
+        Section {
+            ForEach(TeamEvent.allCases) { event in
+                TeamRuleEditor(
+                    event: event,
+                    rule: Binding {
+                        draft.teamRule(for: event)
+                    } set: { rule in
+                        draft.teamEventRules[event.rawValue] = rule
+                    }
+                )
+            }
+        } header: {
+            Text("Team-event rules")
+        } footer: {
+            Text("Use your carnival’s official team size and position order. Corso’s defaults are coaching guides and can be changed for local rules.")
+        }
+    }
+}
+
+private struct TeamRuleEditor: View {
+    let event: TeamEvent
+    @Binding var rule: TeamEventRule
+    @State private var isExpanded = false
+
+    var body: some View {
+        DisclosureGroup(isExpanded: $isExpanded) {
+            Stepper("Athletes per team: \(rule.teamSize)", value: $rule.teamSize, in: 2...30)
+            TextField("Position labels, separated by commas", text: positionLabels)
+                .textInputAutocapitalization(.words)
+            TextField("Rule and coaching note", text: $rule.ruleNote, axis: .vertical)
+                .lineLimit(2...5)
+        } label: {
+            HStack {
+                Text(event.rawValue)
+                Spacer()
+                Text("\(rule.teamSize) per team")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(CorsoTheme.muted)
+            }
+        }
+    }
+
+    private var positionLabels: Binding<String> {
+        Binding {
+            rule.positionLabels.joined(separator: ", ")
+        } set: { value in
+            rule.positionLabels = value
+                .split(separator: ",", omittingEmptySubsequences: true)
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+        }
+    }
 }
 
 private struct SettingsBackupItem: Identifiable {

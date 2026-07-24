@@ -139,6 +139,7 @@ final class ParityFeatureTests: XCTestCase {
         store.setEvent(.longJump, assigned: true, for: athlete.id)
         store.updateSession(
             week: 1,
+            outcome: "Use a consistent two-point start",
             ballGames: "Leader Ball",
             activities: [
                 SessionActivity(
@@ -160,10 +161,38 @@ final class ParityFeatureTests: XCTestCase {
 
         let reloaded = AthleticsStore(persistence: persistence)
         XCTAssertEqual(Set(reloaded.state.athletes[0].events), [.sprint100, .longJump])
+        XCTAssertEqual(reloaded.resolvedSession(week: 1)?.outcome, "Use a consistent two-point start")
         XCTAssertEqual(reloaded.resolvedSession(week: 1)?.ballGames, "Leader Ball")
         XCTAssertEqual(reloaded.resolvedSession(week: 1)?.activities.first?.completed, true)
         XCTAssertEqual(reloaded.teamBoard(for: scope).teamA, [athlete.id])
         XCTAssertEqual(reloaded.teamBoard(for: scope).teamALeader, athlete.id)
+    }
+
+    @MainActor
+    func testSavedCustomActivitiesPersistAndCreateFreshSessionRows() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("CorsoSavedActivities-\(UUID().uuidString)", isDirectory: true)
+        let fileURL = directory.appendingPathComponent("state.json")
+        addTeardownBlock { try? FileManager.default.removeItem(at: directory) }
+        let persistence = FileAthleticsPersistence(fileURL: fileURL)
+        let store = AthleticsStore(persistence: persistence)
+        let activity = SessionActivity(
+            id: "coach-created",
+            time: "10–15",
+            activity: "Partner reaction starts",
+            detail: "Two whistle starts, then swap leader."
+        )
+
+        XCTAssertTrue(store.saveSessionActivityForReuse(activity))
+        XCTAssertFalse(store.saveSessionActivityForReuse(activity))
+        let saved = try XCTUnwrap(store.state.savedSessionActivities.first)
+        let reusableRow = saved.makeSessionActivity()
+        XCTAssertEqual(reusableRow.activity, activity.activity)
+        XCTAssertNotEqual(reusableRow.id, activity.id)
+
+        let reloaded = AthleticsStore(persistence: persistence)
+        XCTAssertEqual(reloaded.state.savedSessionActivities.count, 1)
+        XCTAssertEqual(reloaded.state.savedSessionActivities.first?.detail, activity.detail)
     }
 
     func testRaceDivisionBuilderBalancesAndLeavesUntimedVisible() {
@@ -232,6 +261,11 @@ final class ParityFeatureTests: XCTestCase {
         XCTAssertEqual(state.athletes.first?.events, [])
         XCTAssertTrue(state.sessionOverrides.isEmpty)
         XCTAssertTrue(state.teamBoards.isEmpty)
+        XCTAssertTrue(state.teamSkillProfiles.isEmpty)
+        XCTAssertEqual(
+            state.settings.teamRule(for: .sprintRelay).positionLabels,
+            ["Starter", "Leg 2", "Leg 3", "Anchor"]
+        )
         XCTAssertTrue(state.assistantAudit.isEmpty)
         XCTAssertEqual(state.permissionSlips, PermissionSlipSettings())
     }
@@ -260,6 +294,14 @@ final class ParityFeatureTests: XCTestCase {
                 )
             ]
         )
+        var skillProfile = TeamSkillProfile()
+        skillProfile[.handling] = 4
+        skillProfile[.reliability] = 5
+        state.teamSkillProfiles[athlete.id] = skillProfile
+        var passBallRule = state.settings.teamRule(for: .passBall)
+        passBallRule.teamSize = 8
+        passBallRule.normalize(for: .passBall)
+        state.settings.teamEventRules[TeamEvent.passBall.rawValue] = passBallRule
         state.permissionSlips.contactName = "Coach Lee"
 
         let url = try AthleticsBackupService.export(state)
@@ -268,6 +310,8 @@ final class ParityFeatureTests: XCTestCase {
 
         XCTAssertEqual(restored.athletes.first?.events, [.sprint100, .sprintRelay])
         XCTAssertEqual(restored.sessionOverrides[1]?.activities.first?.detail, "Backup detail")
+        XCTAssertEqual(restored.teamSkillProfiles[athlete.id]?[.reliability], 5)
+        XCTAssertEqual(restored.settings.teamRule(for: .passBall).teamSize, 8)
         XCTAssertEqual(restored.permissionSlips.contactName, "Coach Lee")
     }
 

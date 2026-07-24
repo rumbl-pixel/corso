@@ -30,8 +30,11 @@ struct WhiteboardView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .padding(12)
+        .padding(.horizontal, 12)
+        .padding(.top, 0)
+        .padding(.bottom, 6)
         .background(CorsoTheme.cream.ignoresSafeArea())
+        .toolbar(.hidden, for: .navigationBar)
         .alert("Rename board", isPresented: $isRenaming) {
             TextField("Board name", text: $renameText)
             Button("Cancel", role: .cancel) {}
@@ -70,15 +73,18 @@ struct WhiteboardView: View {
     }
 
     private func workspace(showsCompactBoardPicker: Bool) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 6) {
             if !focusMode {
-                header
-            }
-            if showsCompactBoardPicker, !focusMode {
-                compactBoardPicker
+                if showsCompactBoardPicker {
+                    compactBoardHeader
+                } else {
+                    header
+                }
             }
             drawingToolbar
             canvas
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                .layoutPriority(1)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -132,8 +138,18 @@ struct WhiteboardView: View {
     }
 
     private var header: some View {
-        HStack(alignment: .firstTextBaseline) {
-            CorsoSectionTitle(eyebrow: "Apple Pencil", title: library.selectedBoard.title)
+        HStack(spacing: 10) {
+            Image(systemName: "pencil.and.outline")
+                .foregroundStyle(CorsoTheme.orange)
+            VStack(alignment: .leading, spacing: 1) {
+                Text("TRAINING BOARD")
+                    .font(.caption2.weight(.heavy))
+                    .tracking(1)
+                    .foregroundStyle(CorsoTheme.muted)
+                Text(library.selectedBoard.title)
+                    .font(.subheadline.weight(.bold))
+                    .lineLimit(1)
+            }
             Spacer()
             HStack(spacing: 6) {
                 if library.isSaving {
@@ -148,6 +164,25 @@ struct WhiteboardView: View {
                     .foregroundStyle(CorsoTheme.muted)
             }
         }
+        .frame(minHeight: 34)
+    }
+
+    /// In portrait, merge the board title and board selector into one compact
+    /// row. That returns roughly 50 points of height to the drawing surface.
+    private var compactBoardHeader: some View {
+        HStack(spacing: 10) {
+            Label("Board", systemImage: "pencil.and.outline")
+                .font(.caption.weight(.heavy))
+                .foregroundStyle(CorsoTheme.muted)
+
+            compactBoardPicker
+
+            if library.isSaving {
+                ProgressView()
+                    .controlSize(.mini)
+            }
+        }
+        .frame(height: 38)
     }
 
     private var drawingToolbar: some View {
@@ -211,6 +246,7 @@ struct WhiteboardView: View {
         }
         .buttonStyle(.bordered)
         .labelStyle(.titleAndIcon)
+        .controlSize(.small)
     }
 
     private var compactDrawingToolbar: some View {
@@ -261,6 +297,7 @@ struct WhiteboardView: View {
             boardActionsMenu
         }
         .buttonStyle(.bordered)
+        .controlSize(.small)
     }
 
     private func exportMenu(showsTitle: Bool) -> some View {
@@ -330,7 +367,7 @@ struct WhiteboardView: View {
             .font(.subheadline.weight(.semibold))
             .foregroundStyle(CorsoTheme.ink)
             .padding(.horizontal, 12)
-            .frame(height: 44)
+            .frame(height: 36)
             .background(CorsoTheme.paper)
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             .overlay {

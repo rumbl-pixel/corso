@@ -3,7 +3,7 @@ import SwiftUI
 import UIKit
 
 struct AthleticsBackupPayload: Codable, Sendable {
-    static let currentSchemaVersion = 4
+    static let currentSchemaVersion = 6
 
     var schemaVersion: Int
     var exportedAt: Date

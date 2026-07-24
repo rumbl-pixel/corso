@@ -442,17 +442,13 @@ private struct RaceVideoTimerView: View {
 
                 Section {
                     Button("Record race in Corso", systemImage: "camera.fill") {
-                        if RaceVideoCaptureView.cameraIsAvailable {
-                            cameraPresented = true
-                        } else {
-                            videoMessage = "A camera is not available on this device. Choose an existing race video instead."
-                        }
+                        beginCameraCapture()
                     }
                     Button("Choose existing video", systemImage: "folder") {
-                        importerPresented = true
+                        chooseExistingVideo()
                     }
                 } footer: {
-                    Text("The video stays on this iPad. Only the saved race times become results.")
+                    Text("Corso does not save race video after this review. Complete the video permission check in Settings before using either option.")
                 }
             }
             .frame(width: 360)
@@ -554,6 +550,26 @@ private struct RaceVideoTimerView: View {
 
     private var currentSeconds: Double {
         playheadSeconds
+    }
+
+    private func beginCameraCapture() {
+        guard store.state.settings.pilotReadiness.isVideoReady else {
+            videoMessage = "Before using race video, confirm local pilot approval, the school-managed device, approved recordkeeping process and parent/carer video permission in Settings."
+            return
+        }
+        if RaceVideoCaptureView.cameraIsAvailable {
+            cameraPresented = true
+        } else {
+            videoMessage = "A camera is not available on this device. Choose an existing race video instead."
+        }
+    }
+
+    private func chooseExistingVideo() {
+        guard store.state.settings.pilotReadiness.isVideoReady else {
+            videoMessage = "Before using race video, confirm local pilot approval, the school-managed device, approved recordkeeping process and parent/carer video permission in Settings."
+            return
+        }
+        importerPresented = true
     }
 
     private func step(_ direction: Int) {

@@ -25,7 +25,7 @@ enum AthleticsPersistenceError: LocalizedError, Sendable {
 }
 
 private struct AthleticsArchive: Codable, Sendable {
-    static let currentSchemaVersion = 4
+    static let currentSchemaVersion = 6
 
     var schemaVersion: Int
     var savedAt: Date
@@ -78,6 +78,14 @@ struct FileAthleticsPersistence: AthleticsPersisting {
             at: fileURL.deletingLastPathComponent(),
             withIntermediateDirectories: true
         )
+        // Student data stays local to the protected app container. Excluding
+        // this directory from device-cloud backups avoids silently copying a
+        // pilot roster to a personal backup service; staff export backups only
+        // through an approved school process.
+        var values = URLResourceValues()
+        values.isExcludedFromBackup = true
+        var directory = fileURL.deletingLastPathComponent()
+        try directory.setResourceValues(values)
 
         var state = state
         state.normalize()
@@ -97,6 +105,12 @@ struct FileAthleticsPersistence: AthleticsPersisting {
         }
 
         try data.write(to: fileURL, options: [.atomic, .completeFileProtection])
+        var primary = fileURL
+        try primary.setResourceValues(values)
+        if FileManager.default.fileExists(atPath: backupURL.path) {
+            var backup = backupURL
+            try backup.setResourceValues(values)
+        }
     }
 
     func reset(to state: AthleticsState) throws {

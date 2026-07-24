@@ -95,6 +95,25 @@ final class AthleticsPersistenceTests: XCTestCase {
         XCTAssertTrue(store.state.settings.classes.contains("4Z"))
     }
 
+    func testPilotReadinessDefaultsSafelyAndSurvivesSettingsCoding() throws {
+        var settings = ProgramSettings()
+        XCTAssertFalse(settings.pilotReadiness.isStudentDataReady)
+        XCTAssertFalse(settings.pilotReadiness.isVideoReady)
+
+        settings.pilotReadiness.localPilotApprovalConfirmed = true
+        settings.pilotReadiness.schoolDeviceConfirmed = true
+        settings.pilotReadiness.recordkeepingProcessConfirmed = true
+        XCTAssertTrue(settings.pilotReadiness.isStudentDataReady)
+        XCTAssertFalse(settings.pilotReadiness.isVideoReady)
+
+        settings.pilotReadiness.videoPermissionConfirmed = true
+        let decoded = try JSONDecoder().decode(
+            ProgramSettings.self,
+            from: JSONEncoder().encode(settings)
+        )
+        XCTAssertTrue(decoded.pilotReadiness.isVideoReady)
+    }
+
     @MainActor
     func testResetRemovesPreviousWorkspaceAndBackupGeneration() throws {
         let directory = FileManager.default.temporaryDirectory

@@ -234,6 +234,7 @@ final class AthleticsStore {
         coachID: UUID? = nil,
         title: String? = nil,
         purpose: String? = nil,
+        outcome: String? = nil,
         ballGames: String? = nil,
         activities: [SessionActivity]? = nil
     ) {
@@ -244,6 +245,7 @@ final class AthleticsStore {
             ?? SessionOverride(
                 title: base.title,
                 purpose: base.purpose,
+                outcome: base.outcome,
                 ballGames: base.ballGames,
                 activities: base.activities
             )
@@ -251,10 +253,34 @@ final class AthleticsStore {
         nextOverrides[week] = SessionOverride(
             title: title ?? existing.title,
             purpose: purpose ?? existing.purpose,
+            outcome: outcome ?? existing.outcome,
             ballGames: ballGames ?? existing.ballGames,
             activities: activities ?? existing.activities
         )
         setOverrides(nextOverrides, for: targetCoachID)
+        persist()
+    }
+
+    /// Saves a coach-created activity as a reusable template without bringing
+    /// its completion state into another week's session.
+    @discardableResult
+    func saveSessionActivityForReuse(_ activity: SessionActivity) -> Bool {
+        let saved = SavedSessionActivity(sessionActivity: activity)
+        guard saved.isUsable else { return false }
+        let duplicate = state.savedSessionActivities.contains {
+            $0.time.caseInsensitiveCompare(saved.time) == .orderedSame
+                && $0.activity.caseInsensitiveCompare(saved.activity) == .orderedSame
+                && $0.detail.caseInsensitiveCompare(saved.detail) == .orderedSame
+        }
+        guard !duplicate else { return false }
+        state.savedSessionActivities.insert(saved, at: 0)
+        persist()
+        return true
+    }
+
+    func deleteSavedSessionActivity(id: UUID) {
+        guard state.savedSessionActivities.contains(where: { $0.id == id }) else { return }
+        state.savedSessionActivities.removeAll { $0.id == id }
         persist()
     }
 
@@ -285,8 +311,52 @@ final class AthleticsStore {
         persist()
     }
 
+    @discardableResult
+    func replaceProgram(
+        with payload: CoachProgramSharePayload,
+        destinationCoachID: UUID?
+    ) -> Bool {
+        let validWeeks = Set(TrainingProgram.sessions.map(\.week))
+        let sessions = payload.sessions.filter { week, session in
+            validWeeks.contains(week) && session.isUsable
+        }
+        guard !sessions.isEmpty else { return false }
+
+        if state.settings.coachProgramsAreShared {
+            state.sessionOverrides = sessions
+        } else {
+            guard let destinationCoachID,
+                  state.settings.coaches.contains(where: { $0.id == destinationCoachID })
+            else { return false }
+            state.coachSessionOverrides[destinationCoachID] = sessions
+        }
+        persist()
+        return true
+    }
+
     func teamBoard(for scope: TeamBoardScope) -> TeamBoard {
-        state.teamBoards[scope.id] ?? TeamBoard()
+        var board = state.teamBoards[scope.id] ?? TeamBoard()
+        let limit = state.settings.teamRule(for: scope.event).teamSize
+        board.teamA = Array(board.teamA.prefix(limit))
+        board.teamB = Array(board.teamB.prefix(limit))
+        board.normalize(validAthleteIDs: Set(state.athletes.map(\.id)))
+        return board
+    }
+
+    func teamSkillProfile(for athleteID: UUID) -> TeamSkillProfile {
+        state.teamSkillProfiles[athleteID] ?? TeamSkillProfile()
+    }
+
+    func updateTeamSkillProfile(_ profile: TeamSkillProfile, for athleteID: UUID) {
+        guard state.athletes.contains(where: { $0.id == athleteID }) else { return }
+        var profile = profile
+        profile.normalize()
+        if profile.ratings.isEmpty {
+            state.teamSkillProfiles.removeValue(forKey: athleteID)
+        } else {
+            state.teamSkillProfiles[athleteID] = profile
+        }
+        persist()
     }
 
     func placeAthlete(
@@ -308,8 +378,10 @@ final class AthleticsStore {
         case .available:
             break
         case .teamA:
+            guard board.teamA.count < state.settings.teamRule(for: scope.event).teamSize else { return }
             board.teamA.append(athleteID)
         case .teamB:
+            guard board.teamB.count < state.settings.teamRule(for: scope.event).teamSize else { return }
             board.teamB.append(athleteID)
         }
 
@@ -344,65 +416,34 @@ final class AthleticsStore {
         if board.teamBLeader == athleteID { board.teamBLeader = nil }
 
         if destination == .teamA {
+            guard board.teamA.count < state.settings.teamRule(for: scope.event).teamSize else { return }
             board.teamA.insert(athleteID, at: min(max(requestedIndex, 0), board.teamA.count))
         } else {
+            guard board.teamB.count < state.settings.teamRule(for: scope.event).teamSize else { return }
             board.teamB.insert(athleteID, at: min(max(requestedIndex, 0), board.teamB.count))
         }
         state.teamBoards[scope.id] = board
         persist()
     }
 
-    func autoArrangeTeams(scope: TeamBoardScope) {
+    @discardableResult
+    func autoArrangeTeams(scope: TeamBoardScope) -> TeamArrangement {
         let eligible = state.athletes.filter { athlete in
             athlete.division == scope.division
                 && (scope.gender.map { athlete.gender == $0 } ?? true)
                 && scope.stage.includes(athlete.selection)
         }
-        let event = scope.event.athleticsEvent
-        let scored = eligible.sorted { left, right in
-            let leftBest = state.results
-                .filter { $0.athleteID == left.id && $0.event == event }
-                .map(\.value)
-                .min()
-            let rightBest = state.results
-                .filter { $0.athleteID == right.id && $0.event == event }
-                .map(\.value)
-                .min()
-            switch (leftBest, rightBest) {
-            case let (leftValue?, rightValue?):
-                return leftValue == rightValue
-                    ? left.name.localizedStandardCompare(right.name) == .orderedAscending
-                    : leftValue < rightValue
-            case (_?, nil):
-                return true
-            case (nil, _?):
-                return false
-            case (nil, nil):
-                return left.name.localizedStandardCompare(right.name) == .orderedAscending
-            }
-        }
-
-        var teamA: [UUID] = []
-        var teamB: [UUID] = []
-        for (index, athlete) in scored.enumerated() {
-            if scope.event == .sprintRelay, index >= 8 { break }
-            if index.isMultiple(of: 2) {
-                teamA.append(athlete.id)
-            } else {
-                teamB.append(athlete.id)
-            }
-        }
-        if scope.event == .sprintRelay {
-            teamA = relayOrder(teamA)
-            teamB = relayOrder(teamB)
-        }
-        state.teamBoards[scope.id] = TeamBoard(
-            teamA: teamA,
-            teamB: teamB,
-            teamALeader: scope.event == .leaderBall ? teamA.first : nil,
-            teamBLeader: scope.event == .leaderBall ? teamB.first : nil
+        let arrangement = TeamOptimizer.arrange(
+            scope: scope,
+            eligible: eligible,
+            results: state.results,
+            skillProfiles: state.teamSkillProfiles,
+            rule: state.settings.teamRule(for: scope.event)
         )
+        guard arrangement.assignedCount > 0 else { return arrangement }
+        state.teamBoards[scope.id] = arrangement.board
         persist()
+        return arrangement
     }
 
     func moveAthlete(
@@ -515,13 +556,6 @@ final class AthleticsStore {
         } else {
             state.sessionOverrides = overrides
         }
-    }
-
-    private func relayOrder(_ ids: [UUID]) -> [UUID] {
-        guard ids.count >= 2 else { return ids }
-        // Scored input is fastest-first: keep the fastest athlete for anchor,
-        // use the next quickest starter, then preserve the remaining order.
-        return Array(ids.dropFirst()) + [ids[0]]
     }
 
 }

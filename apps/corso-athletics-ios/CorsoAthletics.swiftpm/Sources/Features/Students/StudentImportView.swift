@@ -61,6 +61,10 @@ struct StudentImportView: View {
         assignmentMode == .classesFromFile || destinationClass != nil
     }
 
+    private var isStudentDataReady: Bool {
+        store.state.settings.pilotReadiness.isStudentDataReady
+    }
+
     var body: some View {
         NavigationStack {
             Group {
@@ -199,6 +203,15 @@ struct StudentImportView: View {
         parsedImport: StudentCSVImport,
         review: StudentImportReview
     ) -> some View {
+        if !isStudentDataReady {
+            Section {
+                Label("Complete the two student-data checks in Settings before importing real students.", systemImage: "lock.shield")
+                    .foregroundStyle(CorsoTheme.orangeDark)
+            } footer: {
+                Text("Confirm local pilot approval, a school-managed device and the approved recordkeeping process. You can still inspect this CSV without importing it.")
+            }
+        }
+
         Section("Review before importing") {
             LabeledContent("Ready to import", value: "\(review.studentsToImport.count)")
             LabeledContent("Duplicates skipped", value: "\(review.duplicates.count)")
@@ -254,7 +267,7 @@ struct StudentImportView: View {
             }
             .buttonStyle(.borderedProminent)
             .tint(CorsoTheme.orange)
-            .disabled(review.studentsToImport.isEmpty)
+            .disabled(review.studentsToImport.isEmpty || !isStudentDataReady)
         }
     }
 

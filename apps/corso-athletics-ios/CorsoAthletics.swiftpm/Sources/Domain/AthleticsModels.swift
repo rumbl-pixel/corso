@@ -267,6 +267,24 @@ struct Coach: Codable, Hashable, Identifiable, Sendable {
     }
 }
 
+/// A small, explicit readiness record for a school pilot. It is not an
+/// approval workflow; it makes the staff checks required before handling
+/// student data or video visible inside the app.
+struct PilotReadiness: Codable, Equatable, Sendable {
+    var localPilotApprovalConfirmed = false
+    var schoolDeviceConfirmed = false
+    var recordkeepingProcessConfirmed = false
+    var videoPermissionConfirmed = false
+
+    var isStudentDataReady: Bool {
+        localPilotApprovalConfirmed && schoolDeviceConfirmed && recordkeepingProcessConfirmed
+    }
+
+    var isVideoReady: Bool {
+        isStudentDataReady && videoPermissionConfirmed
+    }
+}
+
 struct ProgramSettings: Codable, Equatable, Sendable {
     var schoolName = "Corso Athletics"
     var termLabel = "Term 3"
@@ -279,6 +297,8 @@ struct ProgramSettings: Codable, Equatable, Sendable {
     var provisionalAthleteLimit = 40
     var interschoolAthleteLimit = 32
     var coachProgramsAreShared = true
+    var teamEventRules = TeamEventRule.defaults
+    var pilotReadiness = PilotReadiness()
 
     mutating func normalize() {
         schoolName = schoolName.studentField(or: "Corso Athletics")
@@ -298,6 +318,13 @@ struct ProgramSettings: Codable, Equatable, Sendable {
         if coaches.isEmpty { coaches = [Coach(name: "Coach 1")] }
         provisionalAthleteLimit = min(max(provisionalAthleteLimit, 1), 500)
         interschoolAthleteLimit = min(max(interschoolAthleteLimit, 1), 500)
+        let defaults = TeamEventRule.defaults
+        let existingRules = teamEventRules
+        teamEventRules = TeamEvent.allCases.reduce(into: defaults) { output, event in
+            var rule = existingRules[event.rawValue] ?? defaults[event.rawValue]!
+            rule.normalize(for: event)
+            output[event.rawValue] = rule
+        }
     }
 
     private static func validTime(_ value: String) -> Bool {
@@ -319,6 +346,7 @@ struct ProgramSettings: Codable, Equatable, Sendable {
     private enum CodingKeys: String, CodingKey {
         case schoolName, termLabel, trainingDay, sessionStart, sessionEnd, factions, classes, coaches
         case provisionalAthleteLimit, interschoolAthleteLimit, coachProgramsAreShared
+        case teamEventRules, pilotReadiness
         case trainingTime
     }
 
@@ -348,6 +376,12 @@ struct ProgramSettings: Codable, Equatable, Sendable {
         provisionalAthleteLimit = try values.decodeIfPresent(Int.self, forKey: .provisionalAthleteLimit) ?? 40
         interschoolAthleteLimit = try values.decodeIfPresent(Int.self, forKey: .interschoolAthleteLimit) ?? 32
         coachProgramsAreShared = try values.decodeIfPresent(Bool.self, forKey: .coachProgramsAreShared) ?? true
+        teamEventRules = try values.decodeIfPresent(
+            [String: TeamEventRule].self,
+            forKey: .teamEventRules
+        ) ?? TeamEventRule.defaults
+        pilotReadiness = try values.decodeIfPresent(PilotReadiness.self, forKey: .pilotReadiness)
+            ?? PilotReadiness()
         normalize()
     }
 
@@ -364,6 +398,12 @@ struct ProgramSettings: Codable, Equatable, Sendable {
         try values.encode(provisionalAthleteLimit, forKey: .provisionalAthleteLimit)
         try values.encode(interschoolAthleteLimit, forKey: .interschoolAthleteLimit)
         try values.encode(coachProgramsAreShared, forKey: .coachProgramsAreShared)
+        try values.encode(teamEventRules, forKey: .teamEventRules)
+        try values.encode(pilotReadiness, forKey: .pilotReadiness)
+    }
+
+    func teamRule(for event: TeamEvent) -> TeamEventRule {
+        teamEventRules[event.rawValue] ?? TeamEventRule.defaultRule(for: event)
     }
 }
 
@@ -374,7 +414,9 @@ struct AthleticsState: Codable, Equatable, Sendable {
     var currentWeek = 1
     var sessionOverrides: [Int: SessionOverride] = [:]
     var coachSessionOverrides: [UUID: [Int: SessionOverride]] = [:]
+    var savedSessionActivities: [SavedSessionActivity] = []
     var teamBoards: [String: TeamBoard] = [:]
+    var teamSkillProfiles: [UUID: TeamSkillProfile] = [:]
     var assistantAudit: [AssistantAuditRecord] = []
     var permissionSlips = PermissionSlipSettings()
     /// Past dates are locked by default. Only explicitly unlocked keys appear here.
@@ -416,10 +458,34 @@ struct AthleticsState: Codable, Equatable, Sendable {
             }
         }
 
+        var savedActivityKeys = Set<String>()
+        savedSessionActivities = savedSessionActivities.compactMap { saved in
+            let copy = SavedSessionActivity(
+                id: saved.id,
+                time: saved.time,
+                activity: saved.activity,
+                detail: saved.detail,
+                createdAt: saved.createdAt
+            )
+            let key = [copy.time, copy.activity, copy.detail]
+                .joined(separator: "\u{1F}")
+                .folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
+            guard copy.isUsable, savedActivityKeys.insert(key).inserted else { return nil }
+            return copy
+        }.sorted { $0.createdAt > $1.createdAt }
+
         teamBoards = teamBoards.reduce(into: [:]) { output, entry in
             var board = entry.value
             board.normalize(validAthleteIDs: studentIDs)
             output[entry.key] = board
+        }
+        teamSkillProfiles = teamSkillProfiles.reduce(into: [:]) { output, entry in
+            guard studentIDs.contains(entry.key) else { return }
+            var profile = entry.value
+            profile.normalize()
+            if !profile.ratings.isEmpty {
+                output[entry.key] = profile
+            }
         }
     }
 
@@ -431,7 +497,8 @@ struct AthleticsState: Codable, Equatable, Sendable {
 
     private enum CodingKeys: String, CodingKey {
         case athletes, students, results, settings, currentWeek, sessionOverrides, coachSessionOverrides
-        case teamBoards, assistantAudit, permissionSlips, unlockedAttendanceDates
+        case savedSessionActivities
+        case teamBoards, teamSkillProfiles, assistantAudit, permissionSlips, unlockedAttendanceDates
     }
 
     init() {}
@@ -449,7 +516,15 @@ struct AthleticsState: Codable, Equatable, Sendable {
             [UUID: [Int: SessionOverride]].self,
             forKey: .coachSessionOverrides
         ) ?? [:]
+        savedSessionActivities = try values.decodeIfPresent(
+            [SavedSessionActivity].self,
+            forKey: .savedSessionActivities
+        ) ?? []
         teamBoards = try values.decodeIfPresent([String: TeamBoard].self, forKey: .teamBoards) ?? [:]
+        teamSkillProfiles = try values.decodeIfPresent(
+            [UUID: TeamSkillProfile].self,
+            forKey: .teamSkillProfiles
+        ) ?? [:]
         assistantAudit = try values.decodeIfPresent([AssistantAuditRecord].self, forKey: .assistantAudit) ?? []
         permissionSlips = try values.decodeIfPresent(PermissionSlipSettings.self, forKey: .permissionSlips)
             ?? PermissionSlipSettings()
@@ -465,7 +540,9 @@ struct AthleticsState: Codable, Equatable, Sendable {
         try values.encode(currentWeek, forKey: .currentWeek)
         try values.encode(sessionOverrides, forKey: .sessionOverrides)
         try values.encode(coachSessionOverrides, forKey: .coachSessionOverrides)
+        try values.encode(savedSessionActivities, forKey: .savedSessionActivities)
         try values.encode(teamBoards, forKey: .teamBoards)
+        try values.encode(teamSkillProfiles, forKey: .teamSkillProfiles)
         try values.encode(assistantAudit, forKey: .assistantAudit)
         try values.encode(permissionSlips, forKey: .permissionSlips)
         try values.encode(unlockedAttendanceDates, forKey: .unlockedAttendanceDates)

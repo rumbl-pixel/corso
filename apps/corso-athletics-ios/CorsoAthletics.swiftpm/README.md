@@ -18,6 +18,42 @@ Native, iPad-first athletics coaching workspace built with SwiftUI and PencilKit
 - Expanded the destination-symbol switch to conservative Swift syntax for
   compatibility across Swift Playgrounds compiler versions.
 
+## 0.5.2 iPad layout & reusable-program update
+
+- The navigation rail now scales to the actual iPad width in portrait, with a
+  protected minimum target size so it never overlaps the workspace.
+- Week switching and Ask Corso moved from the top bar to an expandable
+  Workspace control at the bottom of the sidebar.
+- Each weekly session now shows a short editable **goal** instead of a
+  potentially misleading ball-game label; team-game work remains editable in
+  the expanded program.
+- Coaches can save a custom activity once and reuse it in any later week.
+- The Board removes the empty navigation bar, combines its portrait title and
+  board selector into one compact row, and gives the canvas the released space.
+
+## 0.5.1 iPad pilot & programming update
+
+- Portrait iPads use a compact navigation rail so the coaching workspace keeps
+  most of the screen width.
+- Program editing has local undo, editable weekly titles and a concise sprint,
+  relay and long-jump drill library informed by the supplied coaching guides.
+- Teams now shows a full-width game/relay selector instead of condensed labels.
+- The Board starts higher and makes its canvas consume the remaining screen.
+- Live student import and race-video use are gated behind visible staff pilot
+  checks for device, recordkeeping and parent/carer video permission.
+- Local state files use complete file protection and are excluded from device
+  cloud backups; export only through the school-approved process.
+
+## 0.5.0 coaching workshop
+
+- Configurable team sizes, position labels and local carnival-rule notes.
+- Relay suggestions based on recorded 75m/100m pace; untimed athletes remain
+  available for coach judgement.
+- Ball-game suggestions based on coach-entered catching, passing, rolling,
+  movement, leadership and reliability ratings.
+- Program-only sharing between iPads with a destination preview before import.
+- Shared program files contain no student, result, attendance or permission data.
+
 ## 0.3.0 web-parity scope
 
 - Tappable Today programming card and event workspace navigation.
@@ -39,8 +75,9 @@ Native, iPad-first athletics coaching workspace built with SwiftUI and PencilKit
 - Native PencilKit whiteboards with Pencil-only mode, templates, autosave and export.
 - Versioned local persistence, atomic writes, file protection and backup recovery.
 
-Records are stored on the iPad. This pilot does not yet sync with the web app or
-another coach's device.
+Records are stored in the protected iPad app container and excluded from device
+cloud backups. Coach programs can be shared manually between devices, but the
+pilot does not yet live-sync with the web app or another coach's device.
 
 ## Run on iPad
 

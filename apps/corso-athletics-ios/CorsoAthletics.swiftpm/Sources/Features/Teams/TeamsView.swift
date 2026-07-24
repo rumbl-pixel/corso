@@ -1,3 +1,4 @@
+import Foundation
 import SwiftUI
 
 struct TeamsView: View {
@@ -7,6 +8,7 @@ struct TeamsView: View {
     @State private var division: CompetitionDivision = .intermediate
     @State private var gender: AthleteGender? = .boys
     @State private var boardNotice: String?
+    @State private var arrangementSummary: String?
 
     init(initialEvent: TeamEvent = .passBall) {
         _event = State(initialValue: initialEvent)
@@ -17,6 +19,7 @@ struct TeamsView: View {
     }
 
     private var board: TeamBoard { store.teamBoard(for: scope) }
+    private var rule: TeamEventRule { store.state.settings.teamRule(for: event) }
 
     private var eligible: [Athlete] {
         store.state.athletes.filter { athlete in
@@ -46,6 +49,14 @@ struct TeamsView: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 16) {
                         guidance
+                        if let arrangementSummary {
+                            Label(arrangementSummary, systemImage: "checklist")
+                                .font(.subheadline)
+                                .foregroundStyle(CorsoTheme.navy)
+                                .padding(14)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .background(CorsoTheme.green.opacity(0.12), in: RoundedRectangle(cornerRadius: 14))
+                        }
                         HStack(alignment: .top, spacing: 14) {
                             TeamColumn(
                                 title: "Available athletes",
@@ -54,6 +65,7 @@ struct TeamsView: View {
                                 placement: .available,
                                 board: board,
                                 event: event,
+                                rule: rule,
                                 scope: scope
                             )
                             TeamColumn(
@@ -63,6 +75,7 @@ struct TeamsView: View {
                                 placement: .teamA,
                                 board: board,
                                 event: event,
+                                rule: rule,
                                 scope: scope
                             )
                             TeamColumn(
@@ -72,6 +85,7 @@ struct TeamsView: View {
                                 placement: .teamB,
                                 board: board,
                                 event: event,
+                                rule: rule,
                                 scope: scope
                             )
                         }
@@ -95,49 +109,105 @@ struct TeamsView: View {
         VStack(alignment: .leading, spacing: 15) {
             CorsoSectionTitle(eyebrow: "Selection-only workspace", title: "Team positions")
 
-            HStack(spacing: 12) {
-                Picker("Event", selection: $event) {
-                    ForEach(TeamEvent.allCases) { Text($0.rawValue).tag($0) }
+            eventPicker
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 12) {
+                    filters
+                    workshopMenu
                 }
-                .pickerStyle(.segmented)
-
-                Picker("Stage", selection: $stage) {
-                    ForEach(TeamStage.allCases) { Text($0.rawValue).tag($0) }
+                VStack(alignment: .leading, spacing: 10) {
+                    filters
+                    workshopMenu
                 }
-                .frame(width: 170)
-
-                Picker("Division", selection: $division) {
-                    ForEach(CompetitionDivision.allCases) { Text($0.rawValue).tag($0) }
-                }
-                .frame(width: 170)
-
-                Picker("Gender", selection: $gender) {
-                    Text("All groups").tag(AthleteGender?.none)
-                    ForEach(AthleteGender.coachingGroups) { Text($0.rawValue).tag(Optional($0)) }
-                }
-                .frame(width: 155)
-
-                Menu {
-                    Button("Auto-balance from results", systemImage: "wand.and.stars") {
-                        store.autoArrangeTeams(scope: scope)
-                    }
-                    Button("Send layout to whiteboard", systemImage: "pencil.and.outline") {
-                        sendToWhiteboard()
-                    }
-                    .disabled(board.teamA.isEmpty && board.teamB.isEmpty)
-                } label: {
-                    Label("Workshop", systemImage: "slider.horizontal.3")
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(CorsoTheme.orange)
             }
         }
         .padding(24)
         .background(CorsoTheme.paper)
     }
 
+    private var eventPicker: some View {
+        Menu {
+            ForEach(TeamEvent.allCases) { choice in
+                Button {
+                    event = choice
+                } label: {
+                    if event == choice {
+                        Label(choice.rawValue, systemImage: "checkmark")
+                    } else {
+                        Text(choice.rawValue)
+                    }
+                }
+            }
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: event == .sprintRelay ? "medal" : "figure.run")
+                    .font(.title3.weight(.semibold))
+                    .foregroundStyle(CorsoTheme.orange)
+                    .frame(width: 38, height: 38)
+                    .background(CorsoTheme.orange.opacity(0.11), in: RoundedRectangle(cornerRadius: 10))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("GAME OR RELAY")
+                        .font(.caption2.weight(.heavy))
+                        .tracking(1)
+                        .foregroundStyle(CorsoTheme.muted)
+                    Text(event.rawValue)
+                        .font(.headline.weight(.bold))
+                        .foregroundStyle(CorsoTheme.ink)
+                }
+                Spacer()
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(CorsoTheme.muted)
+            }
+            .padding(12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(CorsoTheme.cream, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .stroke(CorsoTheme.sand, lineWidth: 1)
+            }
+        }
+        .accessibilityLabel("Choose game or relay: \(event.rawValue)")
+    }
+
+    private var filters: some View {
+        HStack(spacing: 12) {
+            Picker("Stage", selection: $stage) {
+                ForEach(TeamStage.allCases) { Text($0.rawValue).tag($0) }
+            }
+            .frame(width: 170)
+
+            Picker("Division", selection: $division) {
+                ForEach(CompetitionDivision.allCases) { Text($0.rawValue).tag($0) }
+            }
+            .frame(width: 170)
+
+            Picker("Gender", selection: $gender) {
+                Text("All groups").tag(AthleteGender?.none)
+                ForEach(AthleteGender.coachingGroups) { Text($0.rawValue).tag(Optional($0)) }
+            }
+            .frame(width: 155)
+        }
+    }
+
+    private var workshopMenu: some View {
+        Menu {
+            Button("Suggest balanced teams", systemImage: "wand.and.stars") {
+                arrangementSummary = store.autoArrangeTeams(scope: scope).summary
+            }
+            Button("Send layout to whiteboard", systemImage: "pencil.and.outline") {
+                sendToWhiteboard()
+            }
+            .disabled(board.teamA.isEmpty && board.teamB.isEmpty)
+        } label: {
+            Label("Workshop", systemImage: "slider.horizontal.3")
+        }
+        .buttonStyle(.borderedProminent)
+        .tint(CorsoTheme.orange)
+    }
+
     private var guidance: some View {
-        Label(event.guidance, systemImage: event == .sprintRelay ? "medal" : "star.fill")
+        Label(rule.ruleNote, systemImage: event == .sprintRelay ? "medal" : "star.fill")
         .font(.subheadline.weight(.semibold))
         .foregroundStyle(CorsoTheme.navy)
         .padding(14)
@@ -171,6 +241,7 @@ private struct TeamColumn: View {
     let placement: TeamPlacement
     let board: TeamBoard
     let event: TeamEvent
+    let rule: TeamEventRule
     let scope: TeamBoardScope
 
     var body: some View {
@@ -183,7 +254,7 @@ private struct TeamColumn: View {
                     Text(title).font(.title3.weight(.bold))
                 }
                 Spacer()
-                Text(event == .sprintRelay && placement != .available ? "\(athletes.count)/4" : "\(athletes.count)")
+                Text(placement != .available ? "\(athletes.count)/\(rule.teamSize)" : "\(athletes.count)")
                     .font(.headline.monospacedDigit())
             }
 
@@ -201,6 +272,7 @@ private struct TeamColumn: View {
                         count: athletes.count,
                         isLeader: isLeader(athlete.id),
                         event: event,
+                        rule: rule,
                         scope: scope
                     )
                 }
@@ -235,7 +307,23 @@ private struct TeamColumn: View {
         let count: Int
         let isLeader: Bool
         let event: TeamEvent
+        let rule: TeamEventRule
         let scope: TeamBoardScope
+        @State private var skillEditorPresented = false
+
+        private var evidenceText: String {
+            if event == .sprintRelay,
+               let evidence = TeamOptimizer.relayEvidence(
+                   for: athlete.id,
+                   results: store.state.results
+               ) {
+                return String(format: "%@ %.2fs", evidence.event.rawValue, evidence.time)
+            }
+            let profile = store.teamSkillProfile(for: athlete.id)
+            return profile.assessmentCount == 0
+                ? "Skills not rated"
+                : "\(profile.assessmentCount)/\(TeamSkill.allCases.count) skills rated"
+        }
 
         var body: some View {
             VStack(alignment: .leading, spacing: 8) {
@@ -253,10 +341,24 @@ private struct TeamColumn: View {
                         Text(
                             placement == .available
                                 ? "Year \(athlete.year) · \(athlete.gender.rawValue)"
-                                : "\(event.positionLabel(at: index, count: count, isLeader: isLeader)) · Year \(athlete.year)"
+                                : "\(isLeader ? "Leader" : rule.positionLabel(at: index)) · Year \(athlete.year)"
                         )
                             .font(.caption2)
                             .foregroundStyle(CorsoTheme.muted)
+                    }
+                }
+
+                HStack {
+                    Label(evidenceText, systemImage: event == .sprintRelay ? "stopwatch" : "slider.horizontal.3")
+                        .font(.caption2)
+                        .foregroundStyle(CorsoTheme.muted)
+                    Spacer()
+                    if event != .sprintRelay {
+                        Button("Rate skills") {
+                            skillEditorPresented = true
+                        }
+                        .font(.caption.weight(.semibold))
+                        .buttonStyle(.borderless)
                     }
                 }
 
@@ -314,6 +416,76 @@ private struct TeamColumn: View {
                 store.placeAthlete(athleteID, in: placement, at: index, scope: scope)
                 return true
             }
+            .sheet(isPresented: $skillEditorPresented) {
+                TeamSkillEditor(athlete: athlete, event: event)
+                    .environment(store)
+            }
+        }
+    }
+}
+
+private struct TeamSkillEditor: View {
+    @Environment(\.dismiss) private var dismiss
+    @Environment(AthleticsStore.self) private var store
+    let athlete: Athlete
+    let event: TeamEvent
+    @State private var profile = TeamSkillProfile()
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    Text("Rate only what you have observed. Corso needs at least two relevant ratings before including an athlete in a ball-game suggestion.")
+                        .font(.subheadline)
+                        .foregroundStyle(CorsoTheme.muted)
+                }
+
+                Section("Ball-game evidence") {
+                    ForEach(TeamSkill.allCases) { skill in
+                        HStack {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(skill.rawValue)
+                                if TeamOptimizer.relevantSkills(for: event).contains(skill) {
+                                    Text("Used for \(event.rawValue)")
+                                        .font(.caption2)
+                                        .foregroundStyle(CorsoTheme.orangeDark)
+                                }
+                            }
+                            Spacer()
+                            Picker(skill.rawValue, selection: ratingBinding(for: skill)) {
+                                Text("Not rated").tag(Int?.none)
+                                ForEach(1...5, id: \.self) { value in
+                                    Text("\(value)/5").tag(Optional(value))
+                                }
+                            }
+                            .labelsHidden()
+                        }
+                    }
+                }
+            }
+            .navigationTitle(athlete.name)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        store.updateTeamSkillProfile(profile, for: athlete.id)
+                        dismiss()
+                    }
+                }
+            }
+            .onAppear {
+                profile = store.teamSkillProfile(for: athlete.id)
+            }
+        }
+    }
+
+    private func ratingBinding(for skill: TeamSkill) -> Binding<Int?> {
+        Binding {
+            profile[skill]
+        } set: { value in
+            profile[skill] = value
         }
     }
 }

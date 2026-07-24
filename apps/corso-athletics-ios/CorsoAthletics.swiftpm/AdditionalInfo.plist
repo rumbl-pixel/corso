@@ -3,8 +3,8 @@
 <plist version="1.0">
 <dict>
     <key>NSCameraUsageDescription</key>
-    <string>Corso uses the camera to record school race footage for on-device frame-by-frame timing.</string>
+    <string>Corso uses the camera for authorised school race footage and on-device frame-by-frame timing. Corso does not publish or upload the footage.</string>
     <key>NSMicrophoneUsageDescription</key>
-    <string>Corso may include ambient audio while recording race footage.</string>
+    <string>Corso may include ambient audio while recording authorised school race footage for on-device timing.</string>
 </dict>
 </plist>

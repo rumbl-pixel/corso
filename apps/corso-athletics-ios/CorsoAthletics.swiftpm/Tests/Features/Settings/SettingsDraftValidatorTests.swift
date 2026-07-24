@@ -17,4 +17,20 @@ final class SettingsDraftValidatorTests: XCTestCase {
         settings.classes = [""]
         XCTAssertFalse(SettingsDraftValidator.isValid(settings))
     }
+
+    func testTeamRuleNormalizationMatchesConfiguredTeamSize() {
+        var settings = ProgramSettings()
+        settings.teamEventRules[TeamEvent.leaderBall.rawValue] = TeamEventRule(
+            teamSize: 5,
+            positionLabels: ["Leader", "Receiver"],
+            ruleNote: ""
+        )
+
+        settings.normalize()
+
+        let rule = settings.teamRule(for: .leaderBall)
+        XCTAssertEqual(rule.teamSize, 5)
+        XCTAssertEqual(rule.positionLabels.count, 5)
+        XCTAssertFalse(rule.ruleNote.isEmpty)
+    }
 }
