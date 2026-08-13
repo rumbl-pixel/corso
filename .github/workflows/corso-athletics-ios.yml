@@ -1,0 +1,212 @@
+name: Corso Athletics iOS
+
+on:
+  push:
+    branches:
+      - agent/corso-athletics-ios
+    paths:
+      - "apps/corso-athletics-ios/**"
+      - ".github/workflows/corso-athletics-ios.yml"
+  pull_request:
+    paths:
+      - "apps/corso-athletics-ios/**"
+      - ".github/workflows/corso-athletics-ios.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: corso-athletics-ios-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  apple-build-and-test:
+    name: Apple build and iPad tests
+    runs-on: macos-15
+    timeout-minutes: 30
+    env:
+      # Swift Playground 4.7 on iPad uses Swift 6 and the iOS 26 SDK.
+      # Pin CI to the same toolchain generation instead of the runner's
+      # older default Xcode 16.4 installation.
+      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+    defaults:
+      run:
+        working-directory: apps/corso-athletics-ios
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Report Apple toolchain
+        run: |
+          xcodebuild -version
+          xcrun swift --version
+
+      - name: Build the actual Swift Playgrounds package
+        working-directory: apps/corso-athletics-ios/CorsoAthletics.swiftpm
+        run: |
+          set -o pipefail
+          xcodebuild -list -json \
+            | tee "$RUNNER_TEMP/corso-athletics-playgrounds-list.json"
+          PLAYGROUND_SCHEME=$(/usr/bin/python3 -c '
+          import json
+          from pathlib import Path
+
+          data = json.loads(
+              Path("'"$RUNNER_TEMP"'/corso-athletics-playgrounds-list.json").read_text()
+          )
+
+          def schemes(value):
+              if isinstance(value, dict):
+                  current = value.get("schemes")
+                  if isinstance(current, list) and current:
+                      return current
+                  for nested in value.values():
+                      found = schemes(nested)
+                      if found:
+                          return found
+              elif isinstance(value, list):
+                  for nested in value:
+                      found = schemes(nested)
+                      if found:
+                          return found
+              return []
+
+          available = schemes(data)
+          for preferred in ("Corso Athletics", "AppModule"):
+              if preferred in available:
+                  print(preferred)
+                  raise SystemExit(0)
+          if available:
+              print(available[0])
+              raise SystemExit(0)
+          raise SystemExit("The App Playground exposed no Xcode scheme")
+          ')
+          echo "Building App Playground scheme: $PLAYGROUND_SCHEME"
+          xcodebuild build \
+            -scheme "$PLAYGROUND_SCHEME" \
+            -configuration Debug \
+            -destination "generic/platform=iOS Simulator" \
+            -derivedDataPath "$RUNNER_TEMP/CorsoPlaygroundsDerivedData" \
+            CODE_SIGNING_ALLOWED=NO \
+            | tee "$RUNNER_TEMP/corso-athletics-playgrounds-build.log"
+          xcodebuild build \
+            -scheme "$PLAYGROUND_SCHEME" \
+            -configuration Debug \
+            -destination "generic/platform=iOS" \
+            -derivedDataPath "$RUNNER_TEMP/CorsoPlaygroundsDeviceDerivedData" \
+            CODE_SIGNING_ALLOWED=NO \
+            | tee "$RUNNER_TEMP/corso-athletics-playgrounds-device-build.log"
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: |
+          xcodegen generate --spec project.yml
+          xcodebuild -list -project CorsoAthletics.xcodeproj
+
+      - name: Build full iPad app
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -project CorsoAthletics.xcodeproj \
+            -scheme AppModule \
+            -configuration Debug \
+            -destination "generic/platform=iOS Simulator" \
+            -derivedDataPath "$RUNNER_TEMP/CorsoDerivedData" \
+            CODE_SIGNING_ALLOWED=NO \
+            | tee "$RUNNER_TEMP/corso-athletics-build.log"
+
+      - name: Select an iPad simulator
+        run: |
+          SIMULATOR_UDID=$(/usr/bin/python3 -c '
+          import json
+          import subprocess
+          devices = json.loads(
+              subprocess.check_output(
+                  ["xcrun", "simctl", "list", "devices", "available", "-j"],
+                  text=True,
+              )
+          )["devices"]
+          for runtime in sorted(devices, reverse=True):
+              for device in devices[runtime]:
+                  if device.get("isAvailable") and "iPad" in device.get("name", ""):
+                      print(device["udid"])
+                      raise SystemExit(0)
+          raise SystemExit("No available iPad simulator was found")
+          ')
+          echo "SIMULATOR_UDID=$SIMULATOR_UDID" >> "$GITHUB_ENV"
+          xcrun simctl boot "$SIMULATOR_UDID" || true
+          xcrun simctl bootstatus "$SIMULATOR_UDID" -b
+
+      - name: Run iPad unit tests
+        run: |
+          set -o pipefail
+          xcodebuild test \
+            -project CorsoAthletics.xcodeproj \
+            -scheme AppModule \
+            -configuration Debug \
+            -destination "platform=iOS Simulator,id=$SIMULATOR_UDID" \
+            -derivedDataPath "$RUNNER_TEMP/CorsoDerivedData" \
+            -resultBundlePath "$RUNNER_TEMP/CorsoAthleticsTests.xcresult" \
+            CODE_SIGNING_ALLOWED=NO \
+            | tee "$RUNNER_TEMP/corso-athletics-tests.log"
+
+      - name: Launch app on iPad simulator
+        run: |
+          APP_PATH="$RUNNER_TEMP/CorsoDerivedData/Build/Products/Debug-iphonesimulator/AppModule.app"
+          test -d "$APP_PATH"
+          xcrun simctl install "$SIMULATOR_UDID" "$APP_PATH"
+          LAUNCH_OUTPUT=$(xcrun simctl launch \
+            --terminate-running-process \
+            "$SIMULATOR_UDID" \
+            au.com.corso.athletics)
+          echo "$LAUNCH_OUTPUT"
+          echo "$LAUNCH_OUTPUT" | grep -Eq 'au\.com\.corso\.athletics: [0-9]+'
+          sleep 5
+          xcrun simctl io "$SIMULATOR_UDID" screenshot \
+            "$RUNNER_TEMP/CorsoAthletics-Launch.png"
+          test -s "$RUNNER_TEMP/CorsoAthletics-Launch.png"
+
+      - name: Package the verified Playgrounds project
+        run: |
+          RELEASE_PACKAGE="$RUNNER_TEMP/CorsoAthletics-0.5.3.swiftpm"
+          mkdir -p "$RELEASE_PACKAGE"
+          cp CorsoAthletics.swiftpm/Package.swift "$RELEASE_PACKAGE/Package.swift"
+          cp CorsoAthletics.swiftpm/AdditionalInfo.plist "$RELEASE_PACKAGE/AdditionalInfo.plist"
+          cp -R CorsoAthletics.swiftpm/Sources "$RELEASE_PACKAGE/Sources"
+          ditto -c -k --sequesterRsrc --keepParent \
+            "$RELEASE_PACKAGE" \
+            "$RUNNER_TEMP/CorsoAthletics-0.5.3-Playgrounds.zip"
+          unzip -l "$RUNNER_TEMP/CorsoAthletics-0.5.3-Playgrounds.zip"
+          if unzip -Z1 "$RUNNER_TEMP/CorsoAthletics-0.5.3-Playgrounds.zip" \
+            | grep -Eq '(^|/)(Tests|\.git|__MACOSX)(/|$)'; then
+            echo "Release archive contains development-only files"
+            exit 1
+          fi
+
+      - name: Upload verified Playgrounds project
+        uses: actions/upload-artifact@v4
+        with:
+          name: Corso-Athletics-Playgrounds
+          path: ${{ runner.temp }}/CorsoAthletics-0.5.3-Playgrounds.zip
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload Apple diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Corso-Athletics-Apple-Diagnostics
+          path: |
+            ${{ runner.temp }}/corso-athletics-playgrounds-list.json
+            ${{ runner.temp }}/corso-athletics-playgrounds-build.log
+            ${{ runner.temp }}/corso-athletics-playgrounds-device-build.log
+            ${{ runner.temp }}/corso-athletics-build.log
+            ${{ runner.temp }}/corso-athletics-tests.log
+            ${{ runner.temp }}/CorsoAthleticsTests.xcresult
+            ${{ runner.temp }}/CorsoAthletics-Launch.png
+          if-no-files-found: ignore
+          retention-days: 7
