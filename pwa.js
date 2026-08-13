@@ -5,8 +5,14 @@
   // the existing Coach Hub workout builder and safely no-ops elsewhere.
   if (document.getElementById('training-library-list')) {
     var athletics = document.createElement('script');
-    athletics.src = 'athletics-drill-library.js?v=1';
+    athletics.src = 'athletics-drill-library.js?v=2';
     athletics.defer = true;
+    athletics.onload = function () {
+      var equipment = document.createElement('script');
+      equipment.src = 'athletics-equipment.js?v=1';
+      equipment.defer = true;
+      document.head.appendChild(equipment);
+    };
     document.head.appendChild(athletics);
   }
 
